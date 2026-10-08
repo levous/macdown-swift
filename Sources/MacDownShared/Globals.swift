@@ -28,5 +28,5 @@ public enum MacDownGlobals {
         "pipedContentFileToOpenOnNextLaunch"
 
     public static let shortVersion = "1.0"
-    public static let bundleVersion = "1"
+    public static let bundleVersion = "2"
 }
