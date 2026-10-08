@@ -45,7 +45,7 @@ The HTML output has to stay identical to the original app. Renderer changes in C
 
 ## App ↔ shell utility
 
-`macdown-cmd` and the app communicate only through the shared user defaults suite and keys in `MacDownShared/Globals.swift` (`filesToOpenOnNextLaunch`, `pipedContentFileToOpenOnNextLaunch`). Changing those keys, or the bundle identifier `com.uranusjr.macdown-swift`, requires changing both sides. Preference keys in `Preferences.swift` must keep matching the original app's user defaults keys.
+`macdown-cmd` and the app communicate only through the shared user defaults suite and keys in `MacDownShared/Globals.swift` (`filesToOpenOnNextLaunch`, `pipedContentFileToOpenOnNextLaunch`). Changing those keys, or the bundle identifier `io.github.levous.macdown-swift`, requires changing both sides. Preference keys in `Preferences.swift` must keep matching the original app's user defaults keys.
 
 ## Localization
 

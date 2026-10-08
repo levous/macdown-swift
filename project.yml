@@ -4,7 +4,7 @@
 #
 name: MacDown
 options:
-  bundleIdPrefix: com.uranusjr
+  bundleIdPrefix: io.github.levous
   deploymentTarget:
     macOS: "15.0"
   createIntermediateGroups: true
@@ -34,7 +34,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: MacDown
-        PRODUCT_BUNDLE_IDENTIFIER: com.uranusjr.macdown-swift
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.levous.macdown-swift
         INFOPLIST_FILE: App/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -64,7 +64,7 @@ targets:
       base:
         PRODUCT_NAME: macdown
         PRODUCT_MODULE_NAME: MacDownCommand
-        PRODUCT_BUNDLE_IDENTIFIER: com.uranusjr.macdown-swift.cmd
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.levous.macdown-swift.cmd
         ENABLE_HARDENED_RUNTIME: YES
     dependencies:
       - package: MacDownCore

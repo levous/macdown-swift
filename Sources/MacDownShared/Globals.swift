@@ -15,7 +15,7 @@ public enum MacDownGlobals {
     /// Bundle identifier of the application. This deliberately differs from
     /// the original Objective-C MacDown (`com.uranusjr.macdown`) so the two
     /// can be installed side by side.
-    public static let applicationBundleIdentifier = "com.uranusjr.macdown-swift"
+    public static let applicationBundleIdentifier = "io.github.levous.macdown-swift"
 
     /// Suite used by the shell utility to hand files to the application.
     public static let applicationSuiteName = applicationBundleIdentifier

@@ -93,7 +93,7 @@ document's location exactly as before.
 
 ## Differences from the original
 
-- **Bundle identifier** is `com.uranusjr.macdown-swift`, so the port can be
+- **Bundle identifier** is `io.github.levous.macdown-swift`, so the port can be
   installed next to the original. Preferences therefore start fresh (the keys
   are the same; copy the original's plist to migrate).
 - **Removed:** Sparkle updates, the Touch Bar, AppleScript dictionary, and the
