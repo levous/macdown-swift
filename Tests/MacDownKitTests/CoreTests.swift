@@ -231,6 +231,9 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(preferences.extensionTables)
         #expect(preferences.editorStyleName == "Tomorrow+")
         #expect(preferences.htmlTemplateName == "Default")
+        #expect(preferences.htmlSyntaxHighlighting)
+        #expect(preferences.htmlMermaid)
+        #expect(!preferences.htmlGraphviz)
 
         let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         preferences.editorBaseFont = font

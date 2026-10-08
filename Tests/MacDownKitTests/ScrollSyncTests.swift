@@ -98,6 +98,7 @@ import Testing
     }
 }
 
+extension LiveDocumentTests {
 /// Drives a real editor and preview, at unequal widths.
 @MainActor @Suite(.serialized) struct ScrollSyncIntegrationTests {
     static let image = "![tall](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzg4OCIvPjwvc3ZnPg==)"
@@ -346,4 +347,5 @@ import Testing
         #expect(controller.editorAnchors.map(\.kind) == preview)
         }
     }
+}
 }

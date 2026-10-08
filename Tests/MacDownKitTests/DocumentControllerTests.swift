@@ -10,7 +10,8 @@ import Testing
 @testable import MacDownKit
 
 @MainActor
-@Suite(.serialized) struct DocumentControllerTests {
+extension LiveDocumentTests {
+@MainActor @Suite(.serialized) struct DocumentControllerTests {
     func makeController(_ text: String) -> (DocumentController, NSWindow) {
         let controller = DocumentController(document: MarkdownDocument(text: text),
                                             fileURL: nil)
@@ -260,4 +261,64 @@ import Testing
         defaults.set(true, forKey: key)
         #expect(PreviewController().webView.isInspectable)
     }
+
+    // MARK: Mermaid
+
+    @Test func rendersMermaidDiagrams() async throws {
+        let preferences = Preferences.shared
+        let saved = (preferences.htmlSyntaxHighlighting, preferences.htmlMermaid)
+        preferences.htmlSyntaxHighlighting = true
+        preferences.htmlMermaid = true
+        defer {
+            preferences.htmlSyntaxHighlighting = saved.0
+            preferences.htmlMermaid = saved.1
+        }
+        let text = """
+            # Diagrams
+
+            ```mermaid
+            graph TD
+                A[Start] --> B[Finish]
+            ```
+
+            ```mermaid
+            mindmap
+              root((MacDown))
+                Editor
+                Preview
+            ```
+
+            ```mermaid
+            graph TD
+                A --> 
+            ```
+            """
+        let (controller, window) = makeController(text)
+        defer { controller.tearDown(); window.close() }
+        let count = "document.querySelectorAll('.mermaid-diagram > svg').length"
+        let errors = "document.querySelectorAll('.mermaid-error').length"
+
+        // A flowchart and a mindmap (new since Mermaid 8) draw; the broken
+        // one reports an error in place.
+        #expect(await waitUntil(timeout: 20) { await evaluate(controller, count) as? Int == 2 })
+        #expect(await evaluate(controller, errors) as? Int == 1)
+        #expect(await evaluate(controller,
+            "document.querySelector('.mermaid-diagram svg').textContent.indexOf('Start') >= 0")
+            as? Bool == true)
+        #expect(await evaluate(controller,
+            "document.body.lastElementChild.id.indexOf('macdown-mermaid') < 0") as? Bool == true)
+
+        // Editing redraws in place, once.
+        _ = await evaluate(controller, "window.macdownMarker = 1; 0")
+        controller.markdown = text.replacingOccurrences(of: "Finish", with: "Done")
+        #expect(await waitUntil(timeout: 20) {
+            await evaluate(controller,
+                "Array.prototype.some.call(document.querySelectorAll('.mermaid-diagram svg'), "
+                + "function (s) { return s.textContent.indexOf('Done') >= 0; })") as? Bool == true
+        })
+        #expect(await evaluate(controller, "window.macdownMarker") as? Int == 1)
+        #expect(await evaluate(controller, count) as? Int == 2)
+        #expect(await evaluate(controller, errors) as? Int == 1)
+    }
+}
 }

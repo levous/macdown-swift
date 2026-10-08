@@ -60,4 +60,4 @@ Debug builds write a JSON report of each preview render (Prism tokens, TOC links
 
 ## Tests
 
-The tests use Swift Testing (`@Suite`/`@Test`), not XCTest. `DocumentControllerTests` is `.serialized` and drives a real `DocumentController` with a live WKWebView. Test fixtures are in `Tests/MacDownKitTests/Resources`.
+The tests use Swift Testing (`@Suite`/`@Test`), not XCTest, which runs suites in parallel. Suites that drive a real `DocumentController` with a live WKWebView or change `Preferences.shared` (`DocumentControllerTests`, `ScrollSyncIntegrationTests`) are nested in the serialized `LiveDocumentTests` suite so they don't interfere; put new ones there too. WebKit doesn't run animation frames in the (off-screen) test windows, so the page's scroll and layout reports don't fire; tests call `PreviewController.pageDidScroll(to:)` / `pageLayoutDidChange()` instead. Test fixtures are in `Tests/MacDownKitTests/Resources`.

@@ -170,7 +170,7 @@ public enum PageBuilder {
     }
 
     static func mermaidStylesheets() -> [Asset] {
-        [.css(extensionURL("mermaid.forest", "css"))]
+        [.css(extensionURL("mermaid", "css"))]
     }
 
     static func mermaidScripts() -> [Asset] {

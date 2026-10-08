@@ -1,0 +1,11 @@
+/* Mermaid draws and styles its own SVG; this only covers errors. */
+.mermaid-diagram {
+  text-align: center;
+}
+
+.mermaid-error {
+  margin-top: 0.5em;
+  color: #b00020;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}

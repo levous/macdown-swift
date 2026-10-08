@@ -334,6 +334,8 @@ public final class Preferences {
         editorLineSpacing = 3.0
         editorSyncScrolling = true
         htmlStyleName = "GitHub2"
+        htmlSyntaxHighlighting = true
+        htmlMermaid = true
         htmlDefaultDirectoryUrl = URL(fileURLWithPath: NSHomeDirectory(),
                                       isDirectory: true)
     }

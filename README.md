@@ -4,6 +4,8 @@ A port of [MacDown](https://github.com/MacDownApp/macdown), the open source
 Markdown editor for macOS, from Objective-C/AppKit/WebView to **Swift 6** and
 **SwiftUI**.
 
+![MacDown Screenshot](Screenshots/macdown-and-i.png)
+
 The port keeps MacDown's behavior, rendering output and preferences:
 
 - Live preview, rendered with the same patched [hoedown](https://github.com/hoedown/hoedown)
@@ -120,6 +122,9 @@ document's location exactly as before.
   never translated in the original, such as the link error alerts) fall back
   to English. Re-run the script after adding UI strings:
   `python3 Tools/import_localizations.py /path/to/original/macdown`.
+- **Mermaid** is version 12 (the original bundled 8.4), so newer diagram
+  types such as mindmaps, timelines and C4 work. Diagrams use Mermaid's
+  `forest` theme, and syntax errors are shown under the diagram's source.
 - **MathJax** loads directly from the CDN (it always needed an Internet
   connection; the bundled loader shim is no longer needed).
 - **Ensure newline at end of file** adds the newline to the saved file

@@ -186,7 +186,9 @@ public final class DocumentController: NSObject {
                 self?.editorStorageDidProcessEditing(attributesOnly: attributesOnly)
             }
         })
-        observe(.preferencesDidChange, nil) { [weak self] key in
+        // Only the preferences this controller reads, not other instances
+        // (such as ones made for other user defaults suites).
+        observe(.preferencesDidChange, preferences) { [weak self] key in
             self?.preferenceDidChange(key)
         }
         observe(.didRequestEditorSetup, nil) { [weak self] key in

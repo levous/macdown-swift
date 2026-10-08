@@ -183,8 +183,8 @@ public final class PreviewController: NSObject {
     }
 
     /// Replaces the nodes between the body markers, then does what loading
-    /// the page would: highlights code, runs `load` handlers (Mermaid and
-    /// Graphviz), disables task list checkboxes (tasklist.js) and typesets
+    /// the page would: highlights code, draws Mermaid diagrams, runs `load`
+    /// handlers (Graphviz), disables task list checkboxes (tasklist.js) and typesets
     /// math. Resolves to the scroll offset once images have loaded, so
     /// metrics are final, or to -1 if the markers are missing.
     private static let replaceBodyScript = """
@@ -210,9 +210,10 @@ public final class PreviewController: NSObject {
         window.scrollTo(window.scrollX, y);
 
         if (window.Prism) Prism.highlightAll();
-        // Only Mermaid and Graphviz need their load handlers again; other
-        // listeners (MathJax's startup) shouldn't run twice.
-        if (window.mermaid || window.Viz) window.dispatchEvent(new Event("load"));
+        if (window.MacDownMermaid) await MacDownMermaid.render();
+        // Graphviz renders from a load handler; other load listeners
+        // (MathJax's startup) shouldn't run twice.
+        if (window.Viz) window.dispatchEvent(new Event("load"));
         Array.prototype.forEach.call(
           document.getElementsByClassName("task-list-item"), function (item) {
             var input = item.getElementsByTagName("input")[0];
