@@ -151,10 +151,15 @@ xcodegen generate --quiet
 DERIVED="$WORK/DerivedData"
 SIGNING_SETTINGS=(CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
 if [[ -n "$SIGNING_IDENTITY" ]]; then
+    # The package's targets sign automatically by default, which conflicts
+    # with a manually chosen identity, so make every target sign manually.
     SIGNING_SETTINGS=(
+        "CODE_SIGN_STYLE=Manual"
         "CODE_SIGN_IDENTITY=$SIGNING_IDENTITY"
         "DEVELOPMENT_TEAM=$TEAM_ID"
         "OTHER_CODE_SIGN_FLAGS=--timestamp"
+        # Otherwise Xcode adds get-task-allow, which notarization rejects.
+        "CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO"
     )
 fi
 xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Release \
