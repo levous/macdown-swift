@@ -248,11 +248,17 @@ public enum PageBuilder {
         ])
     }
 
+    /// Comments around the body in preview pages, so the preview can
+    /// replace the body without reloading the page.
+    static let previewBodyStart = "<!--macdown-body-start-->"
+    static let previewBodyEnd = "<!--macdown-body-end-->"
+
     /// The page shown in the preview, linking to all assets.
     public static func previewHTML(title: String?, result: ParseResult,
                                    settings: PageSettings,
                                    linkTransform: (URL) -> URL = { $0 }) -> String {
-        html(title: title, body: result.body, templateName: settings.templateName,
+        let body = "\(previewBodyStart)\n\(result.body)\n\(previewBodyEnd)"
+        return html(title: title, body: body, templateName: settings.templateName,
              styles: stylesheets(settings), styleOption: .fullLink,
              scripts: scripts(settings, languages: result.languages),
              scriptOption: .fullLink, linkTransform: linkTransform)

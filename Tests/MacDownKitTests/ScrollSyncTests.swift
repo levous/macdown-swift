@@ -27,6 +27,18 @@ import Testing
     @Test func skipsCodeCommentsAndFrontMatter() {
         #expect(kinds("```sh\n# comment\n![a](b)\n```\n# Real\n") == ["h:# Real"])
         #expect(kinds("~~~~\n```\n# no\n~~~~\n") == [])
+    }
+
+    @Test func fencesFollowHoedown() {
+        // A line that repeats the fence characters is a code span.
+        #expect(kinds("```` ``a`` ````\n\n# H\n") == ["h:# H"])
+        // Only the same width (and indent) closes a fence.
+        #expect(kinds("````\n```\n# no\n````\n# yes\n") == ["h:# yes"])
+        #expect(kinds("```\n# no\n  ```\n# no\n```\n# yes\n") == ["h:# yes"])
+        // Fences don't interrupt paragraphs.
+        #expect(kinds("text\n```\n# H\n") == ["h:# H"])
+        #expect(ScrollAnchors.scan("```\n# H\n```\n", skipsFrontMatter: false,
+                                   fencedCode: false).count == 1)
         #expect(kinds("<!--\n# hidden\n-->\n# Shown\n") == ["h:# Shown"])
         #expect(kinds("---\ntitle: x\n---\n# A\n", frontMatter: true) == ["h:# A"])
         #expect(kinds("---\ntitle: x\n---\n# A\n", frontMatter: false)
@@ -145,8 +157,8 @@ import Testing
             """
     }
 
-    func makeController() -> (DocumentController, NSWindow) {
-        let controller = DocumentController(document: MarkdownDocument(text: Self.markdown),
+    func makeController(_ text: String = Self.markdown) -> (DocumentController, NSWindow) {
+        let controller = DocumentController(document: MarkdownDocument(text: text),
                                             fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                               styleMask: [.titled, .resizable], backing: .buffered,
@@ -259,6 +271,11 @@ import Testing
             }
 
             #expect(ok5)
+            // The page reports again when the scaled images settle (the
+            // resize observer); do the same once things are quiet.
+            try await Task.sleep(for: .milliseconds(300))
+            controller.preview.pageLayoutDidChange()
+            try await Task.sleep(for: .milliseconds(300))
             let editorHeight = controller.editorScrollView.contentView.bounds.height
             let previewHeight = controller.previewMetrics.visibleHeight
             let clipView = controller.editorScrollView.contentView
@@ -310,6 +327,23 @@ import Testing
             }
             #expect(ok2)
             #expect(abs(clipView.bounds.minY - editorY) < 2)
+        }
+    }
+
+    /// The bundled help, a long document that exercises most of Markdown.
+    @Test func helpDocumentAnchorsMatch() async throws {
+        try await withSyncScrolling {
+        let url = try #require(MPPaths.resourceBundle.url(forResource: "help",
+                                                          withExtension: "md"))
+        let (controller, window) = makeController(try String(contentsOf: url, encoding: .utf8))
+        defer { controller.tearDown(); window.close() }
+        let ok = await waitUntil { controller.previewMetrics.anchors.count > 0 }
+        #expect(ok)
+        // Without sync scrolling, metrics aren't fetched; fetch them here.
+        let preview = await controller.preview.fetchMetrics().anchors.map(\.kind)
+        controller.updateEditorAnchors()
+        #expect(controller.editorAnchors.count > 30)
+        #expect(controller.editorAnchors.map(\.kind) == preview)
         }
     }
 }

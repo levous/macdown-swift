@@ -64,8 +64,9 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private(set) var editorAnchors: [ScrollAnchor] = []
     @ObservationIgnored private var editorTextEnd: CGFloat = 0
     /// What `editorAnchors` were computed for, to skip recomputing them.
+    @ObservationIgnored private var editorLayoutSyncScheduled = false
     @ObservationIgnored private var editorAnchorsKey: (text: String, width: CGFloat,
-                                                       frontMatter: Bool)?
+                                                       frontMatter: Bool, fencedCode: Bool)?
     @ObservationIgnored private(set) var previewMetrics = PreviewMetrics()
     /// The pane the user scrolled last; the other one follows it.
     @ObservationIgnored private var scrollLeader = ScrollLeader.editor
@@ -174,6 +175,17 @@ public final class DocumentController: NSObject {
         observe(NSText.didChangeNotification, editor) { [weak self] _ in
             self?.editorTextDidChange()
         }
+        // Highlighting changes fonts, and so the layout, without changing
+        // the text. Posted synchronously, while `editedMask` is valid.
+        observers.append(center.addObserver(
+            forName: NSTextStorage.didProcessEditingNotification,
+            object: editor.textStorage, queue: nil) { [weak self] note in
+            let attributesOnly = (note.object as? NSTextStorage)
+                .map { !$0.editedMask.contains(.editedCharacters) } ?? false
+            MainActor.assumeIsolated {
+                self?.editorStorageDidProcessEditing(attributesOnly: attributesOnly)
+            }
+        })
         observe(.preferencesDidChange, nil) { [weak self] key in
             self?.preferenceDidChange(key)
         }
@@ -280,6 +292,8 @@ public final class DocumentController: NSObject {
     }
 
     private func previewDidFinishLoading() {
+        // A reloaded page is back at the top, wherever it was sent before.
+        previewScrollTarget = nil
         scaleWebView()
         Task { [weak self] in
             guard let self else { return }
@@ -550,12 +564,14 @@ public final class DocumentController: NSObject {
               let container = editor.textContainer
         else { return }
         let key = (text: editor.string, width: container.size.width,
-                   frontMatter: preferences.htmlDetectFrontMatter)
+                   frontMatter: preferences.htmlDetectFrontMatter,
+                   fencedCode: preferences.extensionFencedCode)
         if let old = editorAnchorsKey, old == key { return }
         editorAnchorsKey = key
         let origin = editor.textContainerOrigin.y
         layoutManager.ensureLayout(for: container)
-        let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter)
+        let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
+                                               fencedCode: key.fencedCode)
         editorAnchors = sourceAnchors.map { anchor in
             let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
                                                       actualCharacterRange: nil)
@@ -576,6 +592,11 @@ public final class DocumentController: NSObject {
             let y = scrollMap.previewOffset(
                 forEditorOffset: editorScrollView.contentView.bounds.minY,
                 editor: editorGeometry, preview: previewMetrics.geometry)
+            // Re-syncing to the same place (e.g. after restyling) mustn't
+            // restart the window in which preview scrolling is ignored.
+            if let target = previewScrollTarget, abs(target.y - y) < 1 {
+                return
+            }
             previewScrollTarget = (y, Date())
             preview.scroll(to: y)
         case .preview:
@@ -609,6 +630,24 @@ public final class DocumentController: NSObject {
         Task { [weak self] in
             guard let self else { return }
             self.previewMetrics = await self.preview.fetchMetrics()
+            self.updateEditorAnchors()
+            self.syncScrollers()
+        }
+    }
+
+    /// The editor's text or its styles changed.
+    private func editorStorageDidProcessEditing(attributesOnly: Bool) {
+        editorAnchorsKey = nil
+        // Text edits re-render, which syncs. Restyling alone moves the
+        // editor's text, so the preview has to follow.
+        guard attributesOnly, !inLiveScroll, !editorLayoutSyncScheduled,
+              preferences.editorSyncScrolling, isSetUp
+        else { return }
+        editorLayoutSyncScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.editorLayoutSyncScheduled = false
+            guard !self.preview.isLoading else { return }
             self.updateEditorAnchors()
             self.syncScrollers()
         }

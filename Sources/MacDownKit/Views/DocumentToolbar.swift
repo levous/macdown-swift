@@ -47,6 +47,7 @@ struct DocumentToolbar: CustomizableToolbarContent {
                 button("ToolbarIconShiftRight", "Shift Right") { controller.indent() }
             }
         }
+        if #available(macOS 26, *) { ToolbarSpacer(.fixed) }
         ToolbarItem(id: "text-formatting-group") {
             group("Text Styles") {
                 button("ToolbarIconBold", "Strong") { controller.toggleStrong() }
@@ -54,6 +55,7 @@ struct DocumentToolbar: CustomizableToolbarContent {
                 button("ToolbarIconUnderlined", "Underline") { controller.toggleUnderline() }
             }
         }
+        if #available(macOS 26, *) { ToolbarSpacer(.fixed) }
         ToolbarItem(id: "heading-group") {
             group("Headings") {
                 button("ToolbarIconHeading1", "Heading 1") { controller.convertToHeader(level: 1) }
@@ -61,6 +63,7 @@ struct DocumentToolbar: CustomizableToolbarContent {
                 button("ToolbarIconHeading3", "Heading 3") { controller.convertToHeader(level: 3) }
             }
         }
+        if #available(macOS 26, *) { ToolbarSpacer(.fixed) }
         ToolbarItem(id: "list-group") {
             group("Ordered/Unordered List") {
                 button("ToolbarIconUnorderedList", "Unordered List") {
@@ -71,6 +74,7 @@ struct DocumentToolbar: CustomizableToolbarContent {
                 }
             }
         }
+        if #available(macOS 26, *) { ToolbarSpacer(.fixed) }
         ToolbarItem(id: "blockquote") {
             button("ToolbarIconBlockquote", "Blockquote") { controller.toggleBlockquote() }
         }

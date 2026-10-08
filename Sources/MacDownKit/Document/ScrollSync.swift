@@ -47,7 +47,7 @@ public enum ScrollAnchors {
     }
 
     private static let fenceRegex = try! NSRegularExpression(
-        pattern: "^ {0,3}(`{3,}|~{3,})")
+        pattern: "^( {0,3})(`{3,}|~{3,})")
     private static let setextRegex = try! NSRegularExpression(
         pattern: "^(=+|-+) *$")
     private static let hruleRegex = try! NSRegularExpression(
@@ -64,7 +64,22 @@ public enum ScrollAnchors {
             != nil
     }
 
-    public static func scan(_ markdown: String, skipsFrontMatter: Bool) -> [SourceAnchor] {
+    /// A code fence line, as hoedown's `is_codefence` sees it: up to three
+    /// spaces, then three or more backticks or tildes.
+    private static func fenceMarker(_ line: String)
+        -> (indent: Int, character: Character, width: Int, rest: Substring)? {
+        guard let match = fenceRegex.firstMatch(
+            in: line, range: NSRange(location: 0, length: line.utf16.count)),
+              let indent = Range(match.range(at: 1), in: line),
+              let marker = Range(match.range(at: 2), in: line)
+        else { return nil }
+        return (line[indent].count, line[marker].first!, line[marker].count,
+                line[marker.upperBound...])
+    }
+
+    /// - Parameter fencedCode: Whether hoedown's fenced code extension is on.
+    public static func scan(_ markdown: String, skipsFrontMatter: Bool,
+                            fencedCode: Bool = true) -> [SourceAnchor] {
         var anchors: [SourceAnchor] = []
         var location = 0
         if skipsFrontMatter {
@@ -72,7 +87,7 @@ public enum ScrollAnchors {
         }
         let text = (markdown as NSString).substring(from: location)
 
-        var fence: (character: Character, width: Int)?
+        var fence: (indent: Int, character: Character, width: Int)?
         var inComment = false
         // Lines of the current paragraph, as (location, line).
         var paragraph: [(Int, String)] = []
@@ -103,8 +118,11 @@ public enum ScrollAnchors {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
             if let open = fence {
-                let marker = trimmed.prefix(while: { $0 == open.character })
-                if marker.count >= open.width && marker.count == trimmed.count {
+                // Closed by the same fence (indent, character and width)
+                // followed by nothing but spaces (parse_fencedcode).
+                if let close = fenceMarker(line), close.indent == open.indent,
+                   close.character == open.character, close.width == open.width,
+                   close.rest.allSatisfy({ $0 == " " }) {
                     fence = nil
                 }
                 continue
@@ -113,12 +131,14 @@ public enum ScrollAnchors {
                 if line.contains("-->") { inComment = false }
                 continue
             }
-            if let match = fenceRegex.firstMatch(
-                in: line, range: NSRange(location: 0, length: length)) {
-                flushParagraph()
+            // Fences only start blocks; they don't interrupt paragraphs. A
+            // line with the fence characters again (```` ``a`` ````) is a
+            // code span, not a fence (parse_codefence).
+            if fencedCode, paragraph.isEmpty, let open = fenceMarker(line),
+               !open.rest.drop(while: { $0 == " " || $0 == "\t" })
+                   .contains(String(repeating: open.character, count: 3)) {
                 previousIsParagraphText = false
-                let marker = (line as NSString).substring(with: match.range(at: 1))
-                fence = (marker.first!, marker.count)
+                fence = (open.indent, open.character, open.width)
                 continue
             }
             if trimmed.isEmpty {

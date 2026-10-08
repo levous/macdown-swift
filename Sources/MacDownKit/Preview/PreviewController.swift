@@ -58,6 +58,9 @@ public final class PreviewController: NSObject {
     public private(set) var lastScrollTop: CGFloat = 0
 
     private var waitsForMathJax = false
+    /// The loaded page without its body; see `load(html:...)`.
+    private var loadedShell: String?
+    private var loadingShell: String?
     private let messageProxy = MessageProxy()
 
     public override init() {
@@ -85,6 +88,11 @@ public final class PreviewController: NSObject {
 
     /// Loads a complete HTML page.
     ///
+    /// When only the body differs from the page already loaded (the page
+    /// was made by `PageBuilder.previewHTML`, and its styles, scripts and
+    /// base URL are unchanged), the body is replaced in place, keeping the
+    /// scroll position and avoiding a flash of the top of the page.
+    ///
     /// - Parameters:
     ///   - baseURL: The document's file URL (or a directory for unsaved
     ///     documents). Relative links resolve against it.
@@ -92,6 +100,20 @@ public final class PreviewController: NSObject {
     ///     early as possible in the new page.
     public func load(html: String, baseURL: URL?, waitForMathJax: Bool,
                      restoresScroll: Bool) {
+        let parts = Self.splitBody(html)
+        let shell = parts?.shell
+        if let parts, isReady, !isLoading, shell == loadedShell,
+           baseURL == currentBaseURL {
+            replaceBody(parts.body, orLoad: html, baseURL: baseURL,
+                        waitForMathJax: waitForMathJax, restoresScroll: restoresScroll)
+            return
+        }
+        loadPage(html, baseURL: baseURL, waitForMathJax: waitForMathJax,
+                 restoresScroll: restoresScroll)
+    }
+
+    private func loadPage(_ html: String, baseURL: URL?, waitForMathJax: Bool,
+                          restoresScroll: Bool) {
         var html = html
         if restoresScroll, lastScrollTop > 0 {
             let restore = "<script>window.scrollTo(0, \(lastScrollTop));</script>"
@@ -104,9 +126,111 @@ public final class PreviewController: NSObject {
         isLoading = true
         waitsForMathJax = waitForMathJax
         currentBaseURL = baseURL
+        // Not known to be in place until the navigation finishes.
+        loadedShell = nil
+        loadingShell = Self.splitBody(html)?.shell
         let base = baseURL.map(PreviewURL.previewURL(for:))
         webView.loadHTMLString(html, baseURL: base)
     }
+
+    /// The page without its body, and the body, split at the markers added by
+    /// `PageBuilder.previewHTML`.
+    static func splitBody(_ html: String) -> (shell: String, body: String)? {
+        guard let start = html.range(of: PageBuilder.previewBodyStart),
+              let end = html.range(of: PageBuilder.previewBodyEnd, options: .backwards),
+              start.upperBound <= end.lowerBound
+        else { return nil }
+        return (String(html[..<start.upperBound]) + String(html[end.lowerBound...]),
+                String(html[start.upperBound..<end.lowerBound]))
+    }
+
+    private func replaceBody(_ body: String, orLoad html: String, baseURL: URL?,
+                             waitForMathJax: Bool, restoresScroll: Bool) {
+        isLoading = true
+        waitsForMathJax = false
+        webView.callAsyncJavaScript(
+            Self.replaceBodyScript,
+            arguments: ["html": body,
+                        "startMarker": Self.markerText(PageBuilder.previewBodyStart),
+                        "endMarker": Self.markerText(PageBuilder.previewBodyEnd),
+                        "mathJax": waitForMathJax],
+            in: nil, in: .page
+        ) { [weak self] result in
+            guard let self else { return }
+            if case .success(let value) = result, let y = value as? NSNumber,
+               y.doubleValue >= 0 {
+                self.lastScrollTop = CGFloat(y.doubleValue)
+                self.finishLoading()
+            } else {
+                // The page isn't what we thought it was; start over.
+                self.loadPage(html, baseURL: baseURL, waitForMathJax: waitForMathJax,
+                              restoresScroll: restoresScroll)
+            }
+        }
+    }
+
+    private static func markerText(_ comment: String) -> String {
+        String(comment.dropFirst(4).dropLast(3))    // Strip "<!--" and "-->".
+    }
+
+    /// Replaces the nodes between the body markers, then does what loading
+    /// the page would: highlights code, runs `load` handlers (Mermaid and
+    /// Graphviz), disables task list checkboxes (tasklist.js) and typesets
+    /// math. Resolves to the scroll offset once images have loaded, so
+    /// metrics are final, or to -1 if the markers are missing.
+    private static let replaceBodyScript = """
+        var start = null, end = null;
+        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT);
+        for (var node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (node.data === startMarker && !start) start = node;
+          if (node.data === endMarker) end = node;
+        }
+        if (!start || !end || start.parentNode !== end.parentNode) return -1;
+
+        // Keep the page as tall as it was while the new content settles, so
+        // the scroll position isn't clamped.
+        var y = window.scrollY;
+        var body = document.body;
+        body.style.minHeight = document.documentElement.scrollHeight + "px";
+        while (start.nextSibling && start.nextSibling !== end) {
+          start.parentNode.removeChild(start.nextSibling);
+        }
+        var range = document.createRange();
+        range.setStartAfter(start);
+        start.parentNode.insertBefore(range.createContextualFragment(html), end);
+        window.scrollTo(window.scrollX, y);
+
+        if (window.Prism) Prism.highlightAll();
+        // Only Mermaid and Graphviz need their load handlers again; other
+        // listeners (MathJax's startup) shouldn't run twice.
+        if (window.mermaid || window.Viz) window.dispatchEvent(new Event("load"));
+        Array.prototype.forEach.call(
+          document.getElementsByClassName("task-list-item"), function (item) {
+            var input = item.getElementsByTagName("input")[0];
+            if (input) input.disabled = true;
+          });
+        if (mathJax && window.MathJax && MathJax.Hub) {
+          await new Promise(function (resolve) {
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub], resolve);
+          });
+        }
+        var pending = Array.prototype.filter.call(document.images, function (image) {
+          return !image.complete;
+        });
+        await Promise.race([
+          Promise.all(pending.map(function (image) {
+            return new Promise(function (resolve) {
+              image.addEventListener("load", resolve, { once: true });
+              image.addEventListener("error", resolve, { once: true });
+            });
+          })),
+          // Don't hold up typing for slow images; the layout observer
+          // reports them when they arrive.
+          new Promise(function (resolve) { setTimeout(resolve, 150); })
+        ]);
+        body.style.minHeight = "";
+        return window.scrollY;
+        """
 
     private func finishLoading() {
         isLoading = false
@@ -322,6 +446,7 @@ public final class PreviewController: NSObject {
 
 extension PreviewController: WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        loadedShell = loadingShell
         // If MathJax is on, completion is reported by its script handler.
         if !waitsForMathJax {
             finishLoading()
