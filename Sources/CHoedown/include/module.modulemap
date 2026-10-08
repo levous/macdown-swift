@@ -1,0 +1,11 @@
+module CHoedown {
+    header "buffer.h"
+    header "document.h"
+    header "escape.h"
+    header "html.h"
+    header "autolink.h"
+    header "stack.h"
+    header "version.h"
+    header "hoedown_html_patch.h"
+    export *
+}

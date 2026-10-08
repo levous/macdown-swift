@@ -1,0 +1,583 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		306BB3F3B949ECF88522B6FA /* MacDownKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8958A1C6C520AB8FB0297180 /* MacDownKit */; };
+		5118245D0E2E884AAA211EF4 /* MarkdownDocument.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2B889C2CBEFEFE28655B8E85 /* MarkdownDocument.icns */; };
+		6575C0FC26AD097DD9366FC0 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 28139A1D34B3D78B6E3F8944 /* Credits.rtf */; };
+		85D3BB55FDA312C26DDB625B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8734BF67E526C5E11141CB1C /* Assets.xcassets */; };
+		928C73559BC44843A8683B45 /* MacDownApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F8DD8E90C6A24F6AB85121 /* MacDownApp.swift */; };
+		AF555ABCEBA04B71D05BB1B0 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8736C4192E7C67C0D0D6B8 /* main.swift */; };
+		E42C8856887C150AD5E496E7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 27306526F5300E6E806E23E2 /* Localizable.xcstrings */; };
+		EED52248A20DD3C13ACCBAA3 /* MacDownShared in Frameworks */ = {isa = PBXBuildFile; productRef = EFACD9D420F3C3E05F9F4D6D /* MacDownShared */; };
+		FD9FB2B7389569136240027E /* macdown-cmd in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 7A767A23126AB5A1EBF378FB /* macdown-cmd */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		06804DF15CC8007F0C4F6C2B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2B0DCFF121F20E429A8E3F11 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E4CE1036ABF14F6A6E27452C;
+			remoteInfo = "macdown-cmd";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6EBE3730BE2C969B63F5075F /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = bin;
+			dstSubfolderSpec = 12;
+			files = (
+				FD9FB2B7389569136240027E /* macdown-cmd in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		01E428E8518B0C4A96069169 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ar; path = ar.lproj/Credits.rtf; sourceTree = "<group>"; };
+		035A9902CF1854D6FC7E2FFC /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "pt-BR"; path = "pt-BR.lproj/Credits.rtf"; sourceTree = "<group>"; };
+		03F0FFD40A0C679D3B1D28C1 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "zh-Hans.lproj/Credits.rtf"; sourceTree = "<group>"; };
+		10F8DD8E90C6A24F6AB85121 /* MacDownApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDownApp.swift; sourceTree = "<group>"; };
+		27306526F5300E6E806E23E2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		28714634CABD1EEC6EA121B3 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = sv; path = sv.lproj/Credits.rtf; sourceTree = "<group>"; };
+		28C60EC73F46C68D46B896AF /* ko-KR */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "ko-KR"; path = "ko-KR.lproj/Credits.rtf"; sourceTree = "<group>"; };
+		2B889C2CBEFEFE28655B8E85 /* MarkdownDocument.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = MarkdownDocument.icns; sourceTree = "<group>"; };
+		3EDBE230F5D1E84BA32D9E26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ja; path = ja.lproj/Credits.rtf; sourceTree = "<group>"; };
+		41E56DEE503585EF5048A239 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = de; path = de.lproj/Credits.rtf; sourceTree = "<group>"; };
+		68E30112E8FD69CB5793791B /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/Credits.rtf; sourceTree = "<group>"; };
+		6BD98DB2B2B9467618B31C47 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = sk; path = sk.lproj/Credits.rtf; sourceTree = "<group>"; };
+		7A767A23126AB5A1EBF378FB /* macdown-cmd */ = {isa = PBXFileReference; includeInIndex = 0; path = "macdown-cmd"; sourceTree = BUILT_PRODUCTS_DIR; };
+		813F289537F6722BBD2CEAB2 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "zh-Hant.lproj/Credits.rtf"; sourceTree = "<group>"; };
+		8734BF67E526C5E11141CB1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AD8736C4192E7C67C0D0D6B8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		AD8B7482E305CD288FA44C87 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AF18448F064F112D56398338 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		CE6F54ECA1CFBB5A83A78F83 /* is */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = is; path = is.lproj/Credits.rtf; sourceTree = "<group>"; };
+		E4C2A18B69BA815D3C452733 /* it-IT */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "it-IT"; path = "it-IT.lproj/Credits.rtf"; sourceTree = "<group>"; };
+		E5C693C5FEF978C875567F91 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = es; path = es.lproj/Credits.rtf; sourceTree = "<group>"; };
+		EC80C3ECE12A690DD760394F /* MacDown.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDown.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDDD44BFBA8FCACF0AA9FFB5 /* macdown-swift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "macdown-swift"; path = .; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5262C8B750A2175E8C1043D6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EED52248A20DD3C13ACCBAA3 /* MacDownShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6213FEA65C9488F900FC0134 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				306BB3F3B949ECF88522B6FA /* MacDownKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08280AD214411318B1BB603A /* macdown-cmd */ = {
+			isa = PBXGroup;
+			children = (
+				AD8736C4192E7C67C0D0D6B8 /* main.swift */,
+			);
+			path = "macdown-cmd";
+			sourceTree = "<group>";
+		};
+		31B0EB115FEB7061DDBB9714 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				08280AD214411318B1BB603A /* macdown-cmd */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		7ED00FE61F26545008B08A7B = {
+			isa = PBXGroup;
+			children = (
+				8C528F22D773653C72D9FEB6 /* App */,
+				FD97BB247CA7C669276318A9 /* Packages */,
+				31B0EB115FEB7061DDBB9714 /* Sources */,
+				E0AF7870B88DB9B9DF986157 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8C528F22D773653C72D9FEB6 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8734BF67E526C5E11141CB1C /* Assets.xcassets */,
+				AD8B7482E305CD288FA44C87 /* Info.plist */,
+				27306526F5300E6E806E23E2 /* Localizable.xcstrings */,
+				10F8DD8E90C6A24F6AB85121 /* MacDownApp.swift */,
+				2B889C2CBEFEFE28655B8E85 /* MarkdownDocument.icns */,
+				FC62017557631EBEC3649BCC /* Localization */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E0AF7870B88DB9B9DF986157 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7A767A23126AB5A1EBF378FB /* macdown-cmd */,
+				EC80C3ECE12A690DD760394F /* MacDown.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FC62017557631EBEC3649BCC /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				28139A1D34B3D78B6E3F8944 /* Credits.rtf */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
+		FD97BB247CA7C669276318A9 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				FDDD44BFBA8FCACF0AA9FFB5 /* macdown-swift */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		36453B59B01ADAA6E631965A /* MacDown */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 776B3EF36DCF463988FCD954 /* Build configuration list for PBXNativeTarget "MacDown" */;
+			buildPhases = (
+				B86EDE00DBA49B8733A00BE5 /* Sources */,
+				AF95DCE788E5F74E64BD12B9 /* Resources */,
+				6213FEA65C9488F900FC0134 /* Frameworks */,
+				6EBE3730BE2C969B63F5075F /* Embed Dependencies */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				79BF874A77C3ABD1331C8E23 /* PBXTargetDependency */,
+			);
+			name = MacDown;
+			packageProductDependencies = (
+				8958A1C6C520AB8FB0297180 /* MacDownKit */,
+			);
+			productName = MacDown;
+			productReference = EC80C3ECE12A690DD760394F /* MacDown.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E4CE1036ABF14F6A6E27452C /* macdown-cmd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7BE47F876C3534E7038C714D /* Build configuration list for PBXNativeTarget "macdown-cmd" */;
+			buildPhases = (
+				BD97A4D7036A11F9CDF6083C /* Sources */,
+				5262C8B750A2175E8C1043D6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "macdown-cmd";
+			packageProductDependencies = (
+				EFACD9D420F3C3E05F9F4D6D /* MacDownShared */,
+			);
+			productName = "macdown-cmd";
+			productReference = 7A767A23126AB5A1EBF378FB /* macdown-cmd */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2B0DCFF121F20E429A8E3F11 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					36453B59B01ADAA6E631965A = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					E4CE1036ABF14F6A6E27452C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 628E0A1DB3AAF2BE1D71395A /* Build configuration list for PBXProject "MacDown" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				ar,
+				cs,
+				da,
+				"da-DK",
+				de,
+				en,
+				es,
+				et,
+				fi,
+				fr,
+				is,
+				"it-IT",
+				ja,
+				"ko-KR",
+				"nb-NO",
+				"nl-NL",
+				"pt-BR",
+				"ru-RU",
+				sk,
+				sv,
+				tr,
+				"zh-Hans",
+				"zh-Hant",
+			);
+			mainGroup = 7ED00FE61F26545008B08A7B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C79A6E0959EB48220793D94A /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E0AF7870B88DB9B9DF986157 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				36453B59B01ADAA6E631965A /* MacDown */,
+				E4CE1036ABF14F6A6E27452C /* macdown-cmd */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AF95DCE788E5F74E64BD12B9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				85D3BB55FDA312C26DDB625B /* Assets.xcassets in Resources */,
+				6575C0FC26AD097DD9366FC0 /* Credits.rtf in Resources */,
+				E42C8856887C150AD5E496E7 /* Localizable.xcstrings in Resources */,
+				5118245D0E2E884AAA211EF4 /* MarkdownDocument.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B86EDE00DBA49B8733A00BE5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				928C73559BC44843A8683B45 /* MacDownApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD97A4D7036A11F9CDF6083C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF555ABCEBA04B71D05BB1B0 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		79BF874A77C3ABD1331C8E23 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E4CE1036ABF14F6A6E27452C /* macdown-cmd */;
+			targetProxy = 06804DF15CC8007F0C4F6C2B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		28139A1D34B3D78B6E3F8944 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				01E428E8518B0C4A96069169 /* ar */,
+				41E56DEE503585EF5048A239 /* de */,
+				AF18448F064F112D56398338 /* en */,
+				E5C693C5FEF978C875567F91 /* es */,
+				68E30112E8FD69CB5793791B /* fr */,
+				CE6F54ECA1CFBB5A83A78F83 /* is */,
+				E4C2A18B69BA815D3C452733 /* it-IT */,
+				3EDBE230F5D1E84BA32D9E26 /* ja */,
+				28C60EC73F46C68D46B896AF /* ko-KR */,
+				035A9902CF1854D6FC7E2FFC /* pt-BR */,
+				6BD98DB2B2B9467618B31C47 /* sk */,
+				28714634CABD1EEC6EA121B3 /* sv */,
+				03F0FFD40A0C679D3B1D28C1 /* zh-Hans */,
+				813F289537F6722BBD2CEAB2 /* zh-Hant */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		3470FC61F95DF395C57EFCCC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.uranusjr.macdown-swift.cmd";
+				PRODUCT_MODULE_NAME = MacDownCommand;
+				PRODUCT_NAME = macdown;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		BD9AD99D462BAB5C5330DD8E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		CF4EBDD1117501731534F31C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.uranusjr.macdown-swift.cmd";
+				PRODUCT_MODULE_NAME = MacDownCommand;
+				PRODUCT_NAME = macdown;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D77B7184F8B22644A10EBFB0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.uranusjr.macdown-swift";
+				PRODUCT_NAME = MacDown;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D831087A9CA8DC42FA33DC0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.uranusjr.macdown-swift";
+				PRODUCT_NAME = MacDown;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		FA930D83CEE653F1C590F4D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		628E0A1DB3AAF2BE1D71395A /* Build configuration list for PBXProject "MacDown" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD9AD99D462BAB5C5330DD8E /* Debug */,
+				FA930D83CEE653F1C590F4D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		776B3EF36DCF463988FCD954 /* Build configuration list for PBXNativeTarget "MacDown" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D831087A9CA8DC42FA33DC0F /* Debug */,
+				D77B7184F8B22644A10EBFB0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7BE47F876C3534E7038C714D /* Build configuration list for PBXNativeTarget "macdown-cmd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3470FC61F95DF395C57EFCCC /* Debug */,
+				CF4EBDD1117501731534F31C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C79A6E0959EB48220793D94A /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8958A1C6C520AB8FB0297180 /* MacDownKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MacDownKit;
+		};
+		EFACD9D420F3C3E05F9F4D6D /* MacDownShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MacDownShared;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2B0DCFF121F20E429A8E3F11 /* Project object */;
+}

@@ -1,0 +1,82 @@
+# XcodeGen project specification. Generate the Xcode project with:
+#
+#     xcodegen generate
+#
+name: MacDown
+options:
+  bundleIdPrefix: com.uranusjr
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+
+packages:
+  MacDownCore:
+    path: .
+
+targets:
+  MacDown:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_NAME: MacDown
+        PRODUCT_BUNDLE_IDENTIFIER: com.uranusjr.macdown-swift
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: YES
+        # The app is not sandboxed: it reads arbitrary files linked from
+        # documents and installs the shell utility, like the original.
+        ENABLE_APP_SANDBOX: NO
+        COMBINE_HIDPI_IMAGES: YES
+    dependencies:
+      - package: MacDownCore
+        product: MacDownKit
+      - target: macdown-cmd
+        embed: true
+        codeSign: false
+        copy:
+          destination: sharedSupport
+          subpath: bin
+
+  # Target and module names must not collide with "MacDown" on
+  # case-insensitive file systems; the product is still named "macdown".
+  macdown-cmd:
+    type: tool
+    platform: macOS
+    sources:
+      - path: Sources/macdown-cmd
+    settings:
+      base:
+        PRODUCT_NAME: macdown
+        PRODUCT_MODULE_NAME: MacDownCommand
+        PRODUCT_BUNDLE_IDENTIFIER: com.uranusjr.macdown-swift.cmd
+        ENABLE_HARDENED_RUNTIME: YES
+    dependencies:
+      - package: MacDownCore
+        product: MacDownShared
+
+schemes:
+  MacDown:
+    build:
+      targets:
+        MacDown: all
+        macdown-cmd: all
+    run:
+      config: Debug
+    archive:
+      config: Release

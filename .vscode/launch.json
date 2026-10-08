@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macdown-swift}",
+            "name": "Debug macdown",
+            "target": "macdown",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug macdown"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macdown-swift}",
+            "name": "Release macdown",
+            "target": "macdown",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release macdown"
+        }
+    ]
+}
