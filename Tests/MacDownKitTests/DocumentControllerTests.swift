@@ -248,4 +248,16 @@ import Testing
         let y = await evaluate(controller, "window.scrollY") as? Double ?? 0
         #expect(abs(y - synced) < 25, "\(y) vs \(synced)")
     }
+
+    @Test func developerExtrasMakePreviewInspectable() {
+        let defaults = UserDefaults.standard
+        let key = PreviewController.developerExtrasKey
+        let saved = defaults.object(forKey: key)
+        defer { defaults.set(saved, forKey: key) }
+
+        defaults.set(false, forKey: key)
+        #expect(!PreviewController().webView.isInspectable)
+        defaults.set(true, forKey: key)
+        #expect(PreviewController().webView.isInspectable)
+    }
 }

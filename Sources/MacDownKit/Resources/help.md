@@ -329,13 +329,13 @@ I offer auto-completion and other functions to ease your editing experience. If 
 
 ## Hidden preference
 
-You can see the HTML behind a preview by enabling the OS X built-in WebKit developer tools for MacDown in a terminal window:
+You can see the HTML behind a preview by enabling the built-in WebKit developer tools for MacDown in a terminal window:
 
 ```
-defaults write com.uranusjr.macdown WebKitDeveloperExtras -bool true
+defaults write io.github.levous.macdown-swift WebKitDeveloperExtras -bool true
 ```
 
-Then select “Inspect Element” in the right-click context menu inside the preview pane.
+Then reopen your document (or relaunch MacDown) and select “Inspect Element” in the right-click context menu inside the preview pane.
 
 This is the exact same inspector you find in Safari if you turn on the developer tools.
 

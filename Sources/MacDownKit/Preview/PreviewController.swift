@@ -63,6 +63,14 @@ public final class PreviewController: NSObject {
     private var loadingShell: String?
     private let messageProxy = MessageProxy()
 
+    /// The hidden preference that adds "Inspect Element" to the preview's
+    /// context menu. WebView read it itself; WKWebView has to be told.
+    static let developerExtrasKey = "WebKitDeveloperExtras"
+
+    static var isInspectable: Bool {
+        UserDefaults.standard.bool(forKey: developerExtrasKey)
+    }
+
     public override init() {
         let configuration = WKWebViewConfiguration()
         configuration.setURLSchemeHandler(LocalFileSchemeHandler(),
@@ -81,6 +89,7 @@ public final class PreviewController: NSObject {
         super.init()
         webView.navigationDelegate = self
         webView.allowsMagnification = true
+        webView.isInspectable = Self.isInspectable
         messageProxy.owner = self
     }
 
