@@ -46,6 +46,21 @@ The `macdown` shell utility is embedded in the app at
 `MacDown.app/Contents/SharedSupport/bin/macdown`; install it from
 Settings ▸ Terminal.
 
+## Releasing
+
+`Tools/release.sh <version>` bumps the version, builds and notarizes the app,
+publishes a GitHub release and updates the `macdown-swift` cask in
+[levous/homebrew-tap](https://github.com/levous/homebrew-tap):
+
+```sh
+Tools/release.sh 1.1 --dry-run   # build and check locally, publish nothing
+Tools/release.sh 1.1
+brew install --cask levous/tap/macdown-swift
+```
+
+Releases need a "Developer ID Application" certificate and notarization
+credentials; see the top of the script.
+
 ## Layout
 
 | Path | Contents |

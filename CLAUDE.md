@@ -20,6 +20,8 @@ xcodegen generate                             # regenerate MacDown.xcodeproj fro
 xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build
 ```
 
+Releases: `Tools/release.sh <version> [--dry-run]` (see README "Releasing"). The version lives in both `project.yml` and `MacDownShared/Globals.swift`; the script keeps them in sync.
+
 There is no linter configured.
 
 ## Build structure
