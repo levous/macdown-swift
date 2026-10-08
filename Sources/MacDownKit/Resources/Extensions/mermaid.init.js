@@ -14,8 +14,8 @@
     // Report errors next to the block instead of adding an error diagram
     // to the end of the page.
     suppressErrorRendering: true,
-    // SVG text labels, which print and export reliably.
-    htmlLabels: false,
+    // Keep Mermaid's default HTML labels: with SVG text labels
+    // (htmlLabels: false), Mermaid 12 draws mindmap labels off-center.
     flowchart: { useMaxWidth: true }
   });
 

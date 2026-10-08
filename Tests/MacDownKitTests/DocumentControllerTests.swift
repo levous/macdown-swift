@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import PDFKit
 import Testing
 @testable import MacDownKit
 
@@ -264,6 +265,52 @@ extension LiveDocumentTests {
 
     // MARK: Mermaid
 
+    @Test func exportsMermaidLabelsToPDF() async throws {
+        let preferences = Preferences.shared
+        let saved = (preferences.htmlSyntaxHighlighting, preferences.htmlMermaid)
+        preferences.htmlSyntaxHighlighting = true
+        preferences.htmlMermaid = true
+        defer {
+            preferences.htmlSyntaxHighlighting = saved.0
+            preferences.htmlMermaid = saved.1
+        }
+        let (controller, window) = makeController("""
+            # Diagram
+
+            ```mermaid
+            mindmap
+            root{{Service Problem}}
+              (Surroundings)
+              (Suppliers)
+            ```
+            """)
+        defer { controller.tearDown(); window.close() }
+        #expect(await waitUntil(timeout: 20) {
+            await evaluate(controller,
+                "document.querySelectorAll('.mermaid-diagram svg').length") as? Int == 1
+        })
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macdown-test-\(UUID().uuidString).pdf")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let info = NSPrintInfo.shared.copy() as! NSPrintInfo
+        info.jobDisposition = .save
+        info.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
+        let operation = controller.preview.printOperation(with: info)
+        operation.showsPrintPanel = false
+        operation.showsProgressPanel = false
+        window.orderFront(nil)
+        operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+        #expect(await waitUntil(timeout: 20) {
+            ((try? Data(contentsOf: url))?.count ?? 0) > 1000
+        })
+
+        // HTML labels (in the SVG's foreignObjects) make it into the PDF.
+        let text = PDFDocument(url: url)?.string ?? ""
+        #expect(text.contains("Surroundings"), "\(text)")
+        #expect(text.contains("Service Problem"), "\(text)")
+    }
+
     @Test func rendersMermaidDiagrams() async throws {
         let preferences = Preferences.shared
         let saved = (preferences.htmlSyntaxHighlighting, preferences.htmlMermaid)
@@ -307,6 +354,18 @@ extension LiveDocumentTests {
             as? Bool == true)
         #expect(await evaluate(controller,
             "document.body.lastElementChild.id.indexOf('macdown-mermaid') < 0") as? Bool == true)
+
+        // Labels are centered in their nodes (Mermaid 12 offsets mindmap
+        // labels when they're SVG text).
+        let offsets = await evaluate(controller, """
+            Array.prototype.map.call(document.querySelectorAll('g.mindmap-node'), function (g) {
+              var s = g.querySelector('rect, path, polygon, circle').getBoundingClientRect();
+              var l = g.querySelector('foreignObject, text').getBoundingClientRect();
+              return Math.abs((l.left + l.width / 2) - (s.left + s.width / 2));
+            })
+            """) as? [Double] ?? []
+        #expect(offsets.count == 3)
+        #expect(offsets.allSatisfy { $0 < 2 }, "\(offsets)")
 
         // Editing redraws in place, once.
         _ = await evaluate(controller, "window.macdownMarker = 1; 0")
