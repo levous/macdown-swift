@@ -25,7 +25,35 @@ The port keeps MacDown's behavior, rendering output and preferences:
 - User defaults keys are unchanged, and styles and themes are read from the
   same `~/Library/Application Support/MacDown` folder.
 
+## Installing
+
+MacDown needs macOS 15 or later. Signed and notarized builds are published on
+the [Releases](https://github.com/levous/macdown-swift/releases) page.
+
+With [Homebrew](https://brew.sh), which also links the `macdown` shell
+utility:
+
+```sh
+brew install --cask levous/tap/macdown-swift
+```
+
+Or download `MacDown-<version>.zip` from the
+[latest release](https://github.com/levous/macdown-swift/releases/latest),
+unzip it and move `MacDown.app` to `/Applications`. To use the shell utility
+without Homebrew, link it into your `PATH`:
+
+```sh
+ln -s /Applications/MacDown.app/Contents/SharedSupport/bin/macdown /usr/local/bin/macdown
+```
+
+The app is called `MacDown.app`, like the original MacDown, so it replaces an
+installed copy of the original (the cask refuses to install alongside the
+`macdown` cask). Both apps share the styles and themes in
+`~/Library/Application Support/MacDown`.
+
 ## Requirements
+
+To build MacDown from source:
 
 - macOS 15 or later
 - Xcode 27 or later (Swift 6.4 toolchain)
