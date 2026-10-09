@@ -64,4 +64,6 @@ Debug builds write a JSON report of each preview render (Prism tokens, TOC links
 
 ## Tests
 
+The bundled help (`Resources/help.md`) has a live example of every Markdown feature and setting, and `HelpDocumentTests` renders it, checks the editor highlighting over it, and loads it in the real preview (Prism, Mermaid, Graphviz, images, task lists). When you add or change a feature, update its section in `help.md` and the matching expectations. Live examples that need a setting use text distinct from the "Inline Formatting" table, which shows results as literal HTML.
+
 The tests use Swift Testing (`@Suite`/`@Test`), not XCTest, which runs suites in parallel. Suites that drive a real `DocumentController` with a live WKWebView or change `Preferences.shared` (`DocumentControllerTests`, `ScrollSyncIntegrationTests`) are nested in the serialized `LiveDocumentTests` suite so they don't interfere; put new ones there too. WebKit doesn't run animation frames in the (off-screen) test windows, so the page's scroll and layout reports don't fire; tests call `PreviewController.pageDidScroll(to:)` / `pageLayoutDidChange()` instead. Test fixtures are in `Tests/MacDownKitTests/Resources`.
