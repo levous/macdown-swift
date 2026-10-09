@@ -82,7 +82,7 @@ what's missing (see the first task).
 ### Phase 2b: Move onto cmark-gfm (Decision 10)
 - [x] `Package.swift`: MacDownKit depends on swift-cmark's `cmark-gfm` and `cmark-gfm-extensions` (exact 0.9.0)
 - [x] `CMarkTree` (in `Document/Model`): parse with `CMARK_OPT_SOURCEPOS | CMARK_OPT_FOOTNOTES` (+ `CMARK_OPT_SMART` when on), extensions `table`, `strikethrough`, `tasklist` (+ `autolink` when on); node type, children, literal, positions (cmark end columns are inclusive); frees the tree; never leaves the parse task
-- [ ] `ProtectedSource`: code and raw HTML ranges from one cmark parse instead of swift-markdown
+- [x] `ProtectedSource`: code and raw HTML ranges from one cmark parse instead of swift-markdown
 - [ ] `MarkdownDocumentModel`: blocks from cmark nodes, in the same walk as highlighting (one walk)
 - [ ] `HighlightMapper` on cmark nodes: same spans and extents (all existing tests pass); NOTE from footnote nodes; AUTO_LINK_URL/EMAIL also for extension autolinks when Autolink is on; update the reviewed PEG diff list
 - [ ] Remove swift-markdown: dependency, imports, swift-markdown spike tests (findings stay recorded in the intent); `LineIndexTests` corpus check uses cmark positions

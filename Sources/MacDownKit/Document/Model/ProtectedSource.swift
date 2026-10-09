@@ -16,7 +16,6 @@
 //
 
 import Foundation
-import Markdown
 
 public struct ProtectedSource: Sendable {
     public struct FrontMatter: Sendable {
@@ -65,21 +64,21 @@ public struct ProtectedSource: Sendable {
     /// delimiters mean nothing, as the Markdown parser sees them.
     private static func codeAndHTML(in text: String) -> [Range<Int>] {
         let index = LineIndex(text)
+        let tree = CMarkTree(text)
         var ranges: [Range<Int>] = []
-        func walk(_ markup: Markup) {
-            if markup is InlineCode || markup is CodeBlock || markup is HTMLBlock
-                || markup is InlineHTML,
-               let range = markup.range,
-               let lower = index.utf8Offset(line: range.lowerBound.line,
-                                            column: range.lowerBound.column),
-               let upper = index.utf8Offset(line: range.upperBound.line,
-                                            column: range.upperBound.column) {
-                ranges.append(lower..<max(lower, upper))
-                return
+        func walk(_ node: CMarkNode) {
+            switch node.kind {
+            case .code, .codeBlock, .htmlBlock, .htmlInline:
+                if let range = node.range,
+                   let lower = index.utf8Offset(line: range.start.line, column: range.start.column),
+                   let upper = index.utf8Offset(line: range.end.line, column: range.end.column) {
+                    ranges.append(lower..<max(lower, upper))
+                }
+            default:
+                node.children.forEach(walk)
             }
-            markup.children.forEach(walk)
         }
-        walk(Document(parsing: text, options: .disableSmartOpts))
+        walk(tree.root)
         return ranges.sorted { $0.lowerBound < $1.lowerBound }
     }
 
