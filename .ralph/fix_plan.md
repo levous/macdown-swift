@@ -50,7 +50,7 @@ what's missing (see the first task).
 - [x] HTML diff harness (Swift Testing suite or `Tools/` script): corpus loader, whitespace/attribute-order normalizer, report format, settings matrix (always-on set plus each opt-in off and on); prove it on hoedown vs hoedown (or vs swift-markdown's built-in HTML formatter if the spike finds one). The real hoedown-vs-`HTMLRenderer` run happens at the end of Phase 3
 - [x] Highlight-span diff harness: per-element-type span comparison and report, proven on PEG vs PEG. The real PEG-vs-`HighlightMapper` run happens at the end of Phase 2
 - [x] Expected-diff list file: diffs caused by dropped features (Quote) listed once, not per document (`Tests/MacDownKitTests/Resources/expected-html-diffs.json`; Quote no longer differs since the early step removed it from hoedown, so it starts with the CommonMark intra-word underscore rules)
-- [ ] Wire both harnesses into CI (or document the `swift test --filter` invocation if no CI exists); they gain the swift-markdown side as Phases 2 and 3 land
+- [x] Wire both harnesses into CI (or document the `swift test --filter` invocation if no CI exists) (no CI; documented in README "Migration diff harnesses" and CLAUDE.md); they gain the swift-markdown side as Phases 2 and 3 land
 
 ### Phase 1: Shared model (FR-1 to FR-6, TR-2, TR-3)
 - [ ] `LineIndex` (value type, `Sendable`): UTF-8 line/column (swift-markdown `SourceLocation`) to UTF-16 offset and `NSRange`; handles emoji, surrogate pairs, CRLF

@@ -72,6 +72,26 @@ open MacDown.xcodeproj        # or:
 xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Release build
 ```
 
+### Migration diff harnesses
+
+The move from hoedown to swift-markdown
+([docs/intents/swift-markdown-migration.md](docs/intents/swift-markdown-migration.md))
+is checked by two harnesses that run with every `swift test` over the
+corpus in `Tests/MacDownKitTests/Resources/Corpus` (generated test documents,
+plus `help.md` and a generated 10k-line document):
+
+```sh
+swift test --filter HTMLDiffHarnessTests        # preview HTML, 9 settings
+swift test --filter HighlightDiffHarnessTests   # editor highlight spans
+
+# Write html-diff.md and highlight-diff.md for review:
+MACDOWN_DIFF_REPORT=/tmp/diff swift test --filter "DiffHarnessTests"
+```
+
+Intended differences (CommonMark behavior, dropped syntax) are listed once in
+`Tests/MacDownKitTests/Resources/expected-html-diffs.json`, not per document.
+There is no CI; run them before merging migration work.
+
 The `macdown` shell utility is embedded in the app at
 `MacDown.app/Contents/SharedSupport/bin/macdown`; install it from
 Settings ▸ Terminal.
