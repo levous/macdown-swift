@@ -317,6 +317,10 @@ public final class Preferences {
         editorVerticalInset = 30.0
         editorLineSpacing = 3.0
         editorSyncScrolling = true
+        // Common Markdown editing conventions.
+        editorUnorderedListMarkerType = UnorderedListMarkerType.minusSign.rawValue
+        editorEnsuresNewlineAtEndOfFile = true
+        editorConvertTabs = true
         htmlStyleName = "GitHub2"
         htmlSyntaxHighlighting = true
         htmlMermaid = true

@@ -280,6 +280,29 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
     }
 
+    /// New installs follow common Markdown editing conventions.
+    @Test func freshInstallEditingDefaults() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = Preferences(defaults: defaults)
+        #expect(preferences.editorUnorderedListMarkerType == UnorderedListMarkerType.minusSign.rawValue)
+        #expect(preferences.editorEnsuresNewlineAtEndOfFile)
+        #expect(preferences.editorConvertTabs)
+    }
+
+    @Test func existingInstallKeepsEditingSettings() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("1", forKey: "firstVersionInstalled")
+        defaults.set(UnorderedListMarkerType.asterisk.rawValue, forKey: "editorUnorderedListMarkerType")
+        let preferences = Preferences(defaults: defaults)
+        #expect(preferences.editorUnorderedListMarkerType == UnorderedListMarkerType.asterisk.rawValue)
+        #expect(!preferences.editorEnsuresNewlineAtEndOfFile)
+        #expect(!preferences.editorConvertTabs)
+    }
+
     /// Settings that became standard are no longer read, but their saved
     /// values stay in user defaults (FR-36), so a downgrade still finds them.
     @Test func removedSettingsKeepTheirSavedValues() throws {
