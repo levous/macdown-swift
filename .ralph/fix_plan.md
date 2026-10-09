@@ -74,7 +74,7 @@ what's missing (see the first task).
 - [x] New highlight types: math (FR-23), highlight `==…==` and superscript `^` (only with their settings on); themes without a style leave them uncolored
 - [x] `DocumentController`: hand the latest model (or its spans) from `Renderer.parse` to `MarkdownHighlighter` when engine is `swiftMarkdown`; Phase 4 reuses this path for scroll sync (FR-1)
 - [x] `MarkdownHighlighter`: take spans from the model when engine is `swiftMarkdown`; keep debounce and visible-range styling (FR-26); stop its own parse
-- [ ] Port `HighlighterTests` (`EditorTests.swift`) and `HelpDocumentHighlightingTests` to run on the new engine
+- [x] Port `HighlighterTests` (`EditorTests.swift`) and `HelpDocumentHighlightingTests` to run on the new engine
 - [ ] Benchmark: re-highlight time on a 10k-line document vs PEG baseline on the same machine; record numbers (NFR-1)
 - [ ] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain
   - Expected improvement: PEG reports a header inside a block quote (`> ## x`) as an inverted span the editor skips, so it's uncolored today; `HighlightMapper` should color it (corpus `03-blockquotes.md`)

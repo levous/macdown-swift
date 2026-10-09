@@ -103,10 +103,10 @@ enum HelpDocument {
 }
 
 @Suite struct HelpDocumentHighlightingTests {
-    @Test func editorHighlightsEveryElementType() throws {
-        let elements = HighlightElements.parse(try HelpDocument.text(),
-                                               extensions: Int32(pmh_EXT_NOTES.rawValue))
-        let types: [(String, pmh_element_type)] = [
+    @Test(arguments: MarkdownEngine.allCases)
+    func editorHighlightsEveryElementType(_ engine: MarkdownEngine) throws {
+        let elements = highlightElements(try HelpDocument.text(), engine: engine)
+        var types: [(String, pmh_element_type)] = [
             ("H1", pmh_H1), ("H2", pmh_H2), ("H3", pmh_H3), ("H4", pmh_H4),
             ("H5", pmh_H5), ("H6", pmh_H6), ("EMPH", pmh_EMPH), ("STRONG", pmh_STRONG),
             ("CODE", pmh_CODE), ("VERBATIM", pmh_VERBATIM), ("LINK", pmh_LINK),
@@ -115,11 +115,22 @@ enum HelpDocument {
             ("LIST_BULLET", pmh_LIST_BULLET), ("LIST_ENUMERATOR", pmh_LIST_ENUMERATOR),
             ("HRULE", pmh_HRULE), ("HTML", pmh_HTML), ("HTML_ENTITY", pmh_HTML_ENTITY),
             ("COMMENT", pmh_COMMENT),
-            // No NOTE: PEG Markdown Highlight defines the type but never emits
-            // it, so footnotes aren't colored in the editor today.
         ]
+        // PEG Markdown Highlight defines NOTE but never emits it; the new
+        // engine colors footnotes.
+        if engine == .swiftMarkdown { types.append(("NOTE", pmh_NOTE)) }
         for (name, type) in types {
             #expect(!elements.spans[Int(type.rawValue)].isEmpty, "no \(name) spans")
+        }
+    }
+
+    /// The opt-in types appear with their settings on (new engine only).
+    @Test func optInTypesWithTheirSettings() throws {
+        let model = MarkdownDocumentModel(try HelpDocument.text(), options: .init(
+            math: true, inlineDollar: true, highlight: true, superscript: true))
+        for name in ["MATH", "HIGHLIGHT", "SUPERSCRIPT"] {
+            let type = try #require(ThemeStyle.elementNames.firstIndex(of: name))
+            #expect(!model.highlights.spans[type].isEmpty, "no \(name) spans")
         }
     }
 }

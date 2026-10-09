@@ -8,35 +8,50 @@ import CPegMarkdown
 import Testing
 @testable import MacDownKit
 
+/// Highlight spans from either engine: PEG, or the swift-markdown model.
+func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
+    switch engine {
+    case .hoedown: HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue))
+    case .swiftMarkdown: MarkdownDocumentModel(text, options: .init()).highlights
+    }
+}
+
 @Suite struct HighlighterTests {
-    @Test func parsesElements() {
-        let elements = HighlightElements.parse("# Title\n\n*em* and **strong**\n",
-                                               extensions: 0)
+    @Test(arguments: MarkdownEngine.allCases)
+    func parsesElements(_ engine: MarkdownEngine) {
+        let elements = highlightElements("# Title\n\n*em* and **strong**\n", engine: engine)
         #expect(elements.spans[Int(pmh_H1.rawValue)].count == 1)
         #expect(elements.spans[Int(pmh_EMPH.rawValue)].count == 1)
         #expect(elements.spans[Int(pmh_STRONG.rawValue)].count == 1)
     }
 
-    @Test func convertsSurrogatePairOffsets() {
-        let elements = HighlightElements.parse("😀 *em*\n", extensions: 0)
+    @Test(arguments: MarkdownEngine.allCases)
+    func convertsSurrogatePairOffsets(_ engine: MarkdownEngine) {
+        let elements = highlightElements("😀 *em*\n", engine: engine)
         let span = elements.spans[Int(pmh_EMPH.rawValue)].first
         // "😀" is two UTF-16 units; "*em*" starts at UTF-16 offset 3.
         #expect(span?.pos == 3)
         #expect(span?.end == 7)
     }
 
-    @MainActor @Test func appliesStylesToTextView() async throws {
+    @MainActor @Test(arguments: MarkdownEngine.allCases)
+    func appliesStylesToTextView(_ engine: MarkdownEngine) async throws {
         let (_, textView) = EditorTextView.makeScrollableEditor()
         textView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         textView.string = "# Title\n\n*em*\n"
         let highlighter = MarkdownHighlighter(textView: textView)
         let errors = highlighter.applyStyles(fromStylesheet: "H1\nforeground: ff0000\n")
         #expect(errors.isEmpty)
+        highlighter.usesExternalElements = engine == .swiftMarkdown
         highlighter.activate()
         try await Task.sleep(for: .milliseconds(500))
+        if engine == .swiftMarkdown {
+            // As after a parse: spans arrive once the text is laid out.
+            highlighter.update(highlightElements(textView.string, engine: engine))
+        }
         let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
                                                     effectiveRange: nil) as? NSColor
-        #expect(color?.redComponent == 1.0)
+        #expect(color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0)
     }
 }
 
