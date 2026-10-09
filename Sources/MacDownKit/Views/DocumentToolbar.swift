@@ -41,6 +41,24 @@ struct DocumentToolbar: CustomizableToolbarContent {
     }
 
     var body: some CustomizableToolbarContent {
+        // Only without autosaving; then it's enabled when there's something
+        // to save.
+        if !Preferences.shared.autosavesDocuments {
+            ToolbarItem(id: "save") {
+                Button { controller.save() } label: {
+                    Label {
+                        Text("Save")
+                    } icon: {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.system(size: 16, weight: .regular))
+                            .frame(width: 19, height: 19)
+                    }
+                }
+                .help(Text("Save"))
+                .disabled(!controller.hasUnsavedChanges)
+            }
+            if #available(macOS 26, *) { ToolbarSpacer(.fixed) }
+        }
         ToolbarItem(id: "indent-group") {
             group("Shift Left/Right") {
                 button("ToolbarIconShiftLeft", "Shift Left") { controller.unindent() }

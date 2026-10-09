@@ -150,6 +150,11 @@ document's location exactly as before.
   never translated in the original, such as the link error alerts) fall back
   to English. Re-run the script after adding UI strings:
   `python3 Tools/import_localizations.py /path/to/original/macdown`.
+- **Saving** is explicit by default: edits mark the window edited, ⌘S
+  or the toolbar's Save button (enabled when there are unsaved changes)
+  saves, and closing a window or quitting with unsaved changes asks "You have
+  unsaved changes." (Save or Save and Quit / Discard / Cancel). Turn on Settings ▸ General ▸ "Save
+  changes automatically" for macOS's usual save-in-place behavior.
 - **Mermaid** is version 12 (the original bundled 8.4), so newer diagram
   types such as mindmaps, timelines and C4 work. Diagrams use Mermaid's
   `forest` theme, and syntax errors are shown under the diagram's source.

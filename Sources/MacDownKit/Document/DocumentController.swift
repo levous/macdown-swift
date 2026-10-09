@@ -41,6 +41,10 @@ public final class DocumentController: NSObject {
     public var isTextCountReady = false
     public var editorOnRight: Bool
     public var showsWordCount: Bool
+    /// Whether the editor's draft differs from the saved document. Only
+    /// with "Save changes automatically" off; otherwise every edit goes to
+    /// the document, which AppKit autosaves.
+    public private(set) var hasUnsavedChanges = false
 
     public var editorVisible: Bool { editorFraction > 0.001 }
     public var previewVisible: Bool { editorFraction < 0.999 }
@@ -54,7 +58,10 @@ public final class DocumentController: NSObject {
     @ObservationIgnored let highlighter = MarkdownHighlighter()
     @ObservationIgnored let renderer = Renderer()
     @ObservationIgnored var preferences: Preferences { .shared }
-    @ObservationIgnored public weak var undoManager: UndoManager?
+    /// The editor's undo manager. It's the controller's own rather than the
+    /// window's (SwiftUI's), so typing doesn't mark the document changed;
+    /// see "Draft".
+    @ObservationIgnored public let undoManager = UndoManager()
 
     // MARK: Private state
 
@@ -109,6 +116,7 @@ public final class DocumentController: NSObject {
     public init(document: MarkdownDocument, fileURL: URL?) {
         self.document = document
         self.fileURL = fileURL
+        savedText = document.text
         (editorScrollView, editor) = EditorTextView.makeScrollableEditor()
         editorOnRight = Preferences.shared.editorOnRight
         showsWordCount = Preferences.shared.editorShowWordCount
@@ -129,11 +137,13 @@ public final class DocumentController: NSObject {
         preview.onLayoutChange = { [weak self] in self?.previewLayoutDidChange() }
 
         setUpObservers()
+        Self.register(self)
     }
 
     /// Finishes setup once the views are installed in a window, so the editor
     /// has its final dimensions for width limiting.
     public func viewDidAppear() {
+        attachToWindow()
         guard !isSetUp else { return }
         isSetUp = true
         setupEditor(nil)
@@ -142,14 +152,19 @@ public final class DocumentController: NSObject {
     }
 
     /// Replaces the model, e.g. after "Revert to Saved".
+    /// Replaces the model, e.g. when the file changed on disk. A draft with
+    /// unsaved changes is kept (now unsaved relative to the new text).
     public func replaceDocument(_ newDocument: MarkdownDocument) {
         guard newDocument !== document else { return }
         document = newDocument
-        if editor.string != newDocument.text {
+        let keepsDraft = hasUnsavedChanges
+        savedText = newDocument.text
+        if !keepsDraft && editor.string != newDocument.text {
             editor.string = newDocument.text
             highlighter.parseAndHighlightNow()
             parseAndRenderNow()
         }
+        updateUnsavedState()
     }
 
     public func tearDown() {
@@ -162,6 +177,11 @@ public final class DocumentController: NSObject {
         preview.onOpenURL = nil
         preview.onScroll = nil
         preview.onLayoutChange = nil
+        closeGuard?.uninstall(from: attachedWindow)
+        closeGuard = nil
+        responder?.uninstall()
+        responder = nil
+        Self.unregister(self)
     }
 
     private func setUpObservers() {
@@ -227,14 +247,24 @@ public final class DocumentController: NSObject {
     }
 
     @ObservationIgnored private var keyObservers: [KeyValueObserver] = []
+    /// The document's text as last saved (or loaded); see "Draft".
+    @ObservationIgnored private(set) var savedText: String
+    @ObservationIgnored private weak var attachedWindow: NSWindow?
+    @ObservationIgnored private(set) var closeGuard: WindowCloseGuard?
+    @ObservationIgnored private(set) var responder: DocumentResponder?
+    /// Saves the document after the draft was copied into it, and reports
+    /// whether it was saved. Replaceable for tests; the app saves through the
+    /// window's NSDocument.
+    @ObservationIgnored var saveDocument: ((DocumentController, @escaping (Bool) -> Void) -> Void)?
 
     // MARK: - Accessors
 
+    /// The editor's text (the draft). Setting it is an edit.
     public var markdown: String {
         get { editor.string }
         set {
             editor.string = newValue
-            document.text = newValue
+            draftDidChange()
             highlighter.parseAndHighlightNow()
             parseAndRender()
         }
@@ -257,6 +287,131 @@ public final class DocumentController: NSObject {
     }
 
     var window: NSWindow? { editor.window ?? preview.webView.window }
+
+    // MARK: - Draft
+    //
+    // The editor edits a draft: its text. With "Save changes automatically"
+    // on, every edit is copied into the document and the document is marked
+    // changed, so AppKit autosaves it. Off, the document keeps the saved text
+    // until the draft is saved, so neither AppKit nor SwiftUI sees changes to
+    // save; the editor records undo on the controller's own undo manager for
+    // the same reason. Unsaved changes are the draft differing from
+    // `savedText`, which the window's edited dot, the Save button, closing
+    // (WindowCloseGuard) and quitting (DocumentSaving) follow.
+
+    private var autosaves: Bool { preferences.autosavesDocuments }
+
+    /// The window's NSDocument (SwiftUI's), through public AppKit API.
+    private var platformDocument: NSDocument? {
+        window.flatMap { NSDocumentController.shared.document(for: $0) }
+    }
+
+    /// The name shown when asking about unsaved changes.
+    var displayName: String {
+        platformDocument?.displayName ?? fileURL?.lastPathComponent
+            ?? String(localized: "Untitled")
+    }
+
+    /// Called after every change to the editor's text.
+    private func draftDidChange() {
+        if autosaves {
+            commitDraft()
+            platformDocument?.updateChangeCount(.changeDone)
+        }
+        updateUnsavedState()
+    }
+
+    /// Copies the draft into the document.
+    private func commitDraft() {
+        document.text = editor.string
+        savedText = editor.string
+    }
+
+    private func updateUnsavedState() {
+        let unsaved = !autosaves && editor.string != savedText
+        if unsaved != hasUnsavedChanges { hasUnsavedChanges = unsaved }
+        if !autosaves, let window, window.isDocumentEdited != unsaved {
+            window.isDocumentEdited = unsaved
+        }
+    }
+
+    /// Saves the draft, like File ▸ Save (a save panel if it's untitled),
+    /// and reports whether it was saved.
+    public func save(completion: ((Bool) -> Void)? = nil) {
+        let text = editor.string
+        document.text = text
+        let finish: (Bool) -> Void = { [weak self] saved in
+            if saved, let self {
+                self.savedText = text
+                self.updateUnsavedState()
+            }
+            completion?(saved)
+        }
+        if let saveDocument {
+            saveDocument(self, finish)
+        } else if let platformDocument {
+            // Tell AppKit the document changed so it writes the new text.
+            platformDocument.updateChangeCount(.changeDone)
+            DocumentSaveCallback.save(platformDocument, completion: finish)
+        } else {
+            finish(false)
+        }
+    }
+
+    /// Drops the draft's unsaved changes (when closing or quitting).
+    func discardDraft() {
+        savedText = editor.string
+        updateUnsavedState()
+    }
+
+    /// Connects to the window once the views are in it: the close guard, the
+    /// responder that handles File ▸ Save, and the edited dot.
+    func attachToWindow() {
+        guard let window, window !== attachedWindow else { return }
+        closeGuard?.uninstall(from: attachedWindow)
+        responder?.uninstall()
+        attachedWindow = window
+        let responder = DocumentResponder(controller: self)
+        responder.install(in: window)
+        self.responder = responder
+        // With nothing focused, ⌘S would start at the window and reach the
+        // document before the responder.
+        if window.firstResponder === window, editorVisible {
+            window.makeFirstResponder(editor)
+        }
+        let closeGuard = WindowCloseGuard(shouldClose: { _ in true })
+        closeGuard.shouldClose = { [weak self, unowned closeGuard] window in
+            guard let self else { return true }
+            return DocumentSaving.windowShouldClose(window, controller: self,
+                                                    closeGuard: closeGuard)
+        }
+        closeGuard.install(on: window)
+        self.closeGuard = closeGuard
+        updateUnsavedState()
+    }
+
+    // MARK: - Open controllers
+
+    private static var openControllers: [WeakController] = []
+
+    /// Document windows that are open, for asking about unsaved changes when
+    /// quitting.
+    static var allOpen: [DocumentController] {
+        openControllers.compactMap(\.controller)
+    }
+
+    private static func register(_ controller: DocumentController) {
+        openControllers.removeAll { $0.controller == nil }
+        openControllers.append(WeakController(controller: controller))
+    }
+
+    private static func unregister(_ controller: DocumentController) {
+        openControllers.removeAll { $0.controller == nil || $0.controller === controller }
+    }
+
+    private struct WeakController {
+        weak var controller: DocumentController?
+    }
 
     // MARK: - Rendering
 
@@ -297,6 +452,7 @@ public final class DocumentController: NSObject {
     }
 
     private func previewDidFinishLoading() {
+        attachToWindow()
         // A reloaded page is back at the top, wherever it was sent before.
         previewScrollTarget = nil
         scaleWebView()
@@ -354,12 +510,20 @@ public final class DocumentController: NSObject {
     // MARK: - Notification handlers
 
     private func editorTextDidChange() {
-        document.text = editor.string
+        draftDidChange()
         scrollLeader = .editor
         if needsHtml { parseAndRender() }
     }
 
     private func preferenceDidChange(_ key: String?) {
+        if key == Preferences.autosavesDocumentsKey || key == nil {
+            // Turning autosaving on saves the draft from then on.
+            if autosaves && editor.string != savedText {
+                commitDraft()
+                platformDocument?.updateChangeCount(.changeDone)
+            }
+            updateUnsavedState()
+        }
         if let key, Self.editorPreferencesToObserve.contains(key) {
             if highlighter.isActive { setupEditor(key) }
             redrawDivider()

@@ -52,7 +52,7 @@ extension LiveDocumentTests {
 
         controller.markdown = "# Second\n"
         #expect(await waitUntil { await previewHeading(controller) == "Second" })
-        #expect(controller.document.text == "# Second\n")
+        #expect(controller.markdown == "# Second\n")
         #expect(controller.html.contains("<h1 id=\"toc_0\">Second</h1>"))
     }
 

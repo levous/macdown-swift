@@ -82,14 +82,15 @@ enum DebugReport {
            let window = controller.window {
             let editor = controller.editor
             let before = editor.string
-            report["undoManagerIsWindows"] = controller.undoManager === window.undoManager
+            report["undoManagerIsEditors"] = editor.undoManager === controller.undoManager
             window.makeKeyAndOrderFront(nil)
             window.makeFirstResponder(editor)
             editor.setSelectedRange(NSRange(location: 0, length: 0))
             // The typing path; then close the undo group as AppKit does at
             // the end of each event (groupsByEvent).
             editor.insertText("x", replacementRange: editor.selectedRange())
-            if let um = window.undoManager, um.groupingLevel > 0 {
+            if controller.undoManager.groupingLevel > 0 {
+                let um = controller.undoManager
                 um.endUndoGrouping()
             }
             try? await Task.sleep(for: .seconds(1))
@@ -99,11 +100,12 @@ enum DebugReport {
             report["beforePrefix"] = String(before.prefix(8))
             report["afterPrefix"] = String(afterTyping.prefix(8))
             report["documentFollowsEditor"] = controller.document.text == afterTyping
-            report["canUndo"] = window.undoManager?.canUndo ?? false
+            report["canUndo"] = controller.undoManager.canUndo
+            report["hasUnsavedChanges"] = controller.hasUnsavedChanges
             if let doc = NSDocumentController.shared.document(for: window) {
                 report["documentEdited"] = doc.isDocumentEdited
             }
-            window.undoManager?.undo()
+            controller.undoManager.undo()
             try? await Task.sleep(for: .milliseconds(500))
             report["restoredAfterUndo"] = editor.string == before
             report["documentRestored"] = controller.document.text == before

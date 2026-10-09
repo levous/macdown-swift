@@ -53,6 +53,7 @@ struct GeneralSettingsView: View {
                    isOn: negated($preferences.supressesUntitledDocumentOnLaunch))
             Toggle("Automatically create files for link targets",
                    isOn: $preferences.createFileForLinkTarget)
+            Toggle("Save changes automatically", isOn: $preferences.autosavesDocuments)
         }
         .padding(20)
     }

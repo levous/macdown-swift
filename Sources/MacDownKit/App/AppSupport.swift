@@ -147,6 +147,15 @@ public final class MacDownAppDelegate: NSObject, NSApplicationDelegate {
         _ = PlugInController.shared
     }
 
+    /// Asks about unsaved drafts (with "Save changes automatically" off;
+    /// AppKit sees no unsaved documents then, so it doesn't ask itself).
+    public func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let asked = DocumentSaving.reviewBeforeQuitting(DocumentController.allOpen) { quit in
+            sender.reply(toApplicationShouldTerminate: quit)
+        }
+        return asked ? .terminateLater : .terminateNow
+    }
+
     @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor,
                                          withReplyEvent reply: NSAppleEventDescriptor) {
         guard let string = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue

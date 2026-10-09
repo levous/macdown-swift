@@ -76,6 +76,11 @@ public final class Preferences {
     public var latestVersionInstalled: String? { didSet { save(latestVersionInstalled, "latestVersionInstalled") } }
     public var supressesUntitledDocumentOnLaunch = false { didSet { save(supressesUntitledDocumentOnLaunch, "supressesUntitledDocumentOnLaunch") } }
     public var createFileForLinkTarget = false { didSet { save(createFileForLinkTarget, "createFileForLinkTarget") } }
+    /// Whether edits are saved to the document's file automatically (the
+    /// macOS default for document apps). Off, documents are saved explicitly
+    /// and quitting asks about unsaved changes. New in the Swift port.
+    public var autosavesDocuments = false { didSet { save(autosavesDocuments, Self.autosavesDocumentsKey) } }
+    public static let autosavesDocumentsKey = "autosavesDocuments"
 
     // MARK: Markdown extensions
 
@@ -246,6 +251,7 @@ public final class Preferences {
         latestVersionInstalled = d.string(forKey: "latestVersionInstalled")
         supressesUntitledDocumentOnLaunch = d.bool(forKey: "supressesUntitledDocumentOnLaunch")
         createFileForLinkTarget = d.bool(forKey: "createFileForLinkTarget")
+        autosavesDocuments = d.bool(forKey: Self.autosavesDocumentsKey)
 
         extensionIntraEmphasis = d.bool(forKey: "extensionIntraEmphasis")
         extensionTables = d.bool(forKey: "extensionTables")

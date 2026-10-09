@@ -13,13 +13,10 @@ struct EditorRepresentable: NSViewRepresentable {
     let controller: DocumentController
 
     func makeNSView(context: Context) -> NSScrollView {
-        controller.undoManager = context.environment.undoManager
-        return controller.editorScrollView
+        controller.editorScrollView
     }
 
-    func updateNSView(_ view: NSScrollView, context: Context) {
-        controller.undoManager = context.environment.undoManager
-    }
+    func updateNSView(_ view: NSScrollView, context: Context) {}
 }
 
 struct PreviewRepresentable: NSViewRepresentable {
