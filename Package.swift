@@ -25,7 +25,8 @@ let package = Package(
         // (docs/intents/swift-markdown-migration.md). Pinned exactly: its
         // output is compared against the HTML diff harness.
         .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0"),
-        // swift-markdown's cmark-gfm, used directly by the footnote spike.
+        // The Markdown parser (docs/intents/swift-markdown-migration.md,
+        // Decision 10), pinned exactly: the diff harnesses compare its output.
         .package(url: "https://github.com/swiftlang/swift-cmark.git", exact: "0.9.0"),
     ],
     targets: [
@@ -61,6 +62,8 @@ let package = Package(
                 "MacDownShared",
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "cmark-gfm", package: "swift-cmark"),
+                .product(name: "cmark-gfm-extensions", package: "swift-cmark"),
             ],
             path: "Sources/MacDownKit",
             resources: [
