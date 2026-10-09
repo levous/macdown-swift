@@ -38,7 +38,7 @@ what's missing (see the first task).
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
 - [x] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)` (0.9.0; swift-cmark resolves to 0.9.0); add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
-- [ ] Spike: confirm swift-markdown exposes cmark-gfm footnotes (AST nodes or parse option). If not, decide between a source-scan footnote renderer or keeping hoedown for footnotes (PRD Open Question 1; blocks FR-34)
+- [x] Spike: confirm swift-markdown exposes cmark-gfm footnotes. **Answer (F1): not exposed**; the syntax stays literal text, and cmark-gfm parses footnotes directly with `CMARK_OPT_FOOTNOTES`. The fallback choice is PRD Open Question 1, still open (now three options, including cmark-gfm directly)
 - [ ] Spike: can GFM autolinks (bare URLs/emails) be disabled at parse time? Record answer
 - [ ] Spike: native support for smart punctuation, `==highlight==`, `^superscript`? Record each answer (native vs our own pass)
 - [ ] Spike: does swift-markdown/cmark apply smart punctuation BY DEFAULT (look for a `disableSmartOpts`-style `ParseOptions` flag)? If so, FR-17 requires passing the disable option whenever the setting is off
@@ -82,7 +82,7 @@ what's missing (see the first task).
 - [ ] Code blocks: `<div><pre class="line-numbers" data-information><code class="language-…">`, line-numbers class only when setting on; port `hoedown_html_patch.c` code-block info (FR-9)
 - [ ] Prism language list with `languageAddition` alias mapping moved out of `MarkdownParser.swift` (FR-10)
 - [ ] Task lists with MacDown's current markup/classes, always on (FR-11)
-- [ ] Footnotes always on (FR-16), per Phase 0 decision
+- [ ] Footnotes always on (FR-16), per Phase 0 decision (BLOCKED: awaiting PRD Open Question 1)
 - [ ] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
 - [ ] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
 - [ ] Hard wrap: soft breaks as `<br>` when on (FR-13)
@@ -129,7 +129,7 @@ what's missing (see the first task).
 ## Notes
 - Principle: standard Markdown (CommonMark + GFM + footnotes + front matter) always on; extended features (highlight, superscript, autolink, smart punctuation, math, `[TOC]`, hard wrap, Graphviz) opt-in, off by default, keeping existing defaults keys.
 - Byte-identical output with the original MacDown is intentionally dropped (overrides CLAUDE.md's current rule once this project lands); differences go in the README.
-- Open Question 1 (footnote fallback) gates Phase 5 removal of hoedown.
+- Open Question 1 (footnote fallback: source scan, keep hoedown, or cmark-gfm directly) gates Phase 3 footnotes and Phase 5 removal of hoedown.
 - Corpus: generated fixtures plus `help.md` only; never real user documents or other docs (decided 2026-10-09).
 - `pmh_parser.c` is generated; never hand-edit it while it still exists.
 - Release notes must call out: strikethrough/task lists/front matter now always on, Quote dropped, new editing defaults for new installs.

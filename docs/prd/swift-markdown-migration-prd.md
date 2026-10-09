@@ -347,4 +347,4 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 ### Open Questions
 
-1. **Footnote fallback.** If swift-markdown doesn't expose cmark-gfm footnotes, is a source-scan renderer good enough, or does hoedown stay for footnotes (blocking FR-34)?
+1. **Footnote fallback.** swift-markdown 0.9.0 doesn't parse footnotes (Phase 0 finding F1), so how should they render: (a) a source scan that finds `[^label]` references and definitions in swift-markdown's text, (b) keep hoedown for footnotes until it's solved (blocks FR-34, removing hoedown), or (c) call cmark-gfm directly with footnotes on, for footnotes only or as the parser behind everything? Blocks Phase 3 "Footnotes always on" (FR-16).

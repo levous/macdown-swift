@@ -229,7 +229,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 | Always-on standard features change documents for users who had them off: `~~text~~` strikes through, `- [ ]` renders checkboxes, a leading YAML block renders as a table | Intended (Principle). Release notes call it out; code spans and blocks are never affected; `\` escapes a marker; invalid YAML at the top stays ordinary Markdown |
 | swift-markdown doesn't support smart punctuation, highlight or superscript natively | Our own pass over text nodes (never in code), behind each setting |
 | GFM autolinks can't be turned off at parse time | The renderer un-links autolink-extension links when Autolink is off; `<url>` links (CommonMark) still work |
-| swift-markdown doesn't expose footnotes | Decide in Phase 0: render footnotes from definitions found by a source scan; if that isn't workable, keep footnotes on hoedown until it's solved and don't remove hoedown |
+| swift-markdown doesn't expose footnotes (confirmed, F1) | Open question 1: a source scan, keeping hoedown for footnotes (and not removing it), or using cmark-gfm directly |
 | Users relied on `"quote"` → `<q>` | Listed in the README and release notes; the text still shows; Smart punctuation gives curly quotes |
 | Our highlight/superscript scan differs from hoedown's | Plain text only (not around other formatting, like `==*a* b==`); listed in the README; corpus diff shows real use |
 | Math protection mishandles edge cases (escaped `\$`, `$` in code, currency) | Dedicated tests from MathJax's own delimiter rules; math and inline `$` stay opt-in |
@@ -259,6 +259,12 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 8. **Editing defaults follow conventions for new installs:** list marker `-`, newline at end of file on, spaces instead of tabs. Existing users keep their settings.
 9. **Footnotes have no setting.** The "backwards" footnote-highlighting flag in `DocumentController` turned out to be harmless: PEG Markdown Highlight defines a `NOTE` type but never emits it, so footnotes aren't colored in the editor with either flag value (checked 2026-10-09). The new highlighter colors footnotes (a `NOTE` span type).
 
+### Phase 0 findings
+
+Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift` (swift-markdown 0.9.0, swift-cmark 0.9.0):
+
+- **F1. Footnotes are not exposed** (checked 2026-10-09). swift-markdown never sets `CMARK_OPT_FOOTNOTES` and has no footnote node types; `a[^1]` and `[^1]: note` stay literal `Text` in ordinary paragraphs (the definition isn't swallowed as a link reference definition). cmark-gfm itself, which swift-markdown depends on, parses `footnote_reference` and `footnote_definition` nodes with source positions when given `CMARK_OPT_FOOTNOTES`. How to render them is open question 1.
+
 ## Open questions
 
-None currently. Phase 0 answers the technical unknowns listed there.
+1. **Footnote fallback.** swift-markdown 0.9.0 doesn't parse footnotes (Phase 0 finding F1), so how should they render: (a) a source scan that finds `[^label]` references and definitions in swift-markdown's text, (b) keep hoedown for footnotes until it's solved (blocks FR-34, removing hoedown), or (c) call cmark-gfm directly with footnotes on, for footnotes only or as the parser behind everything? Blocks Phase 3 "Footnotes always on" (FR-16).

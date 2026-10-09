@@ -25,6 +25,8 @@ let package = Package(
         // (docs/intents/swift-markdown-migration.md). Pinned exactly: its
         // output is compared against the HTML diff harness.
         .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0"),
+        // swift-markdown's cmark-gfm, used directly by the footnote spike.
+        .package(url: "https://github.com/swiftlang/swift-cmark.git", exact: "0.9.0"),
     ],
     targets: [
         // Hoedown 3.0.7 plus MacDown's renderer patches (task lists, code block
@@ -84,6 +86,7 @@ let package = Package(
             dependencies: [
                 "MacDownKit",
                 .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "cmark-gfm", package: "swift-cmark"),
             ],
             path: "Tests/MacDownKitTests",
             resources: [.copy("Resources")]
