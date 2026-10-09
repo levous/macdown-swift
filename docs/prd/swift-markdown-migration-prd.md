@@ -45,7 +45,7 @@ Parse each document once with swift-markdown (cmark-gfm), and use that single pa
 - Align scroll sync by real source positions instead of heuristics.
 - Remove both vendored C parser targets and the generated `pmh_parser.c`, adding no new C to the repo.
 - Keep all 15 bundled `.style` themes and users' own themes working unchanged.
-- Ship with no user-visible regressions in `help.md`, the test fixtures or a real-document corpus, apart from documented CommonMark differences.
+- Ship with no user-visible regressions in `help.md` and the generated test corpus, apart from documented CommonMark differences and removed syntax.
 
 ### Non-goals
 
@@ -239,7 +239,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 - TR-8: Phase 0 builds two diff tools (tests or `Tools/` scripts), both runnable in CI on both engines until Phase 5:
   - an HTML diff, hoedown vs swift-markdown, normalized for whitespace and attribute order;
   - a highlight-span diff, PEG vs swift-markdown, per element type.
-- TR-9: The corpus includes `help.md`, `contribute.md`, the files in `Tests/MacDownKitTests/Resources`, every Markdown string in `Tests/MacDownKitTests`, and real user documents shared with permission.
+- TR-9: The corpus is generated test fixtures in `Tests/MacDownKitTests/Resources/Corpus/` (purpose-written Markdown, one file per feature area plus edge cases and a programmatically generated 10k-line document), plus the bundled `help.md`. Real user documents and other docs are never used as fixtures.
 
 ---
 
@@ -341,9 +341,10 @@ An optional early step can apply the settings and defaults on hoedown before the
 - **Settings ▸ Rendering:** task lists and front matter always on; math stays opt-in (MathJax needs a network connection); `[TOC]`, hard wrap and Graphviz opt-in; code highlighting and Mermaid on by default (FR-35).
 - **Editing defaults:** conventions for new installs (FR-35a).
 - **Smart punctuation:** kept as a setting, natively or with our own pass (FR-17).
+- **Corpus:** generated fixtures plus `help.md`; never real user documents or other docs (TR-9).
+- **Verification:** every phase is verified in the running app as well as by tests (launch a throwaway build, capture its window, check exports).
 - **Inverted footnote highlighting:** harmless; PEG never emits `NOTE`, so footnotes aren't colored today either way. The new highlighter colors them (FR-27).
 
 ### Open Questions
 
 1. **Footnote fallback.** If swift-markdown doesn't expose cmark-gfm footnotes, is a source-scan renderer good enough, or does hoedown stay for footnotes (blocking FR-34)?
-2. **Corpus permission.** Which real user documents can go into the corpus, and can they be stored in the repo or only run locally?

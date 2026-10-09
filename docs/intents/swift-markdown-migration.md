@@ -27,7 +27,7 @@
 2. Rendering follows CommonMark and GFM, always on; extended features are opt-in settings, off by default (see "Principle").
 3. Editing defaults follow Markdown conventions for new installs.
 4. Scroll sync aligns by source position, not heuristics.
-5. No user-visible regressions in the bundled `help.md`, the test fixtures or a corpus of real documents, other than intended CommonMark differences and removed syntax, which are documented.
+5. No user-visible regressions in the bundled `help.md` or the generated test corpus, other than intended CommonMark differences and removed syntax, which are documented.
 
 ## Non-goals
 
@@ -184,7 +184,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 ### Phase 0: Spike and parity harness
 - Add swift-markdown to `Package.swift`, pinned to an exact version.
 - Answer the remaining unknowns: footnotes; smart punctuation, highlight and superscript (each decides between native and our own pass); whether GFM autolinks can be turned off at parse time (otherwise the renderer un-links them); whether source positions are available on every block node; and Swift 6 strict-concurrency compatibility. Record the answers in "Decisions".
-- Build a **corpus**: `help.md` first (it has a live example of every feature and setting, and `HelpDocumentTests` already checks rendering, editor highlighting and the real preview against it), then `contribute.md`, the test fixtures, every `Tests/MacDownKitTests` Markdown string, and a few real user documents (with permission).
+- Build a **corpus**: `help.md` first (it has a live example of every feature and setting, and `HelpDocumentTests` already checks rendering, editor highlighting and the real preview against it), then **generated** fixtures in `Tests/MacDownKitTests/Resources/Corpus/`: purpose-written Markdown per feature area with edge cases, an image-heavy document, and a 10k-line document generated in the test. Never real user documents or other docs.
 - Write two diff tools (as tests or a script under `Tools/`):
   - HTML diff, hoedown vs swift-markdown with the same formatting (the always-on set, and each opt-in feature off and on), after normalizing whitespace and attribute order;
   - highlight-span diff, PEG vs swift-markdown, per element type.
@@ -245,7 +245,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 - **Golden corpus diffs** (HTML and highlight spans) run in CI on both engines until Phase 5.
 - **Unit tests:** `LineIndex`, the protection pass, math pass-through, TOC, code-block markup, task lists, front matter (valid and invalid YAML), footnotes; that standard formatting renders with default (empty) user defaults; each opt-in feature off (plain text) and on; that `"quote"` renders as typed; new editing defaults on a fresh install and unchanged for an existing one.
 - **Integration tests** in the serialized `LiveDocumentTests` group: the preview renders with the new engine; Mermaid, MathJax and Prism still run; scroll sync with source-line anchors.
-- **Manual pass** on the help document and a few real documents in the running app, including print and export to HTML and PDF.
+- **In-app verification** for every phase: launch a throwaway build with `help.md` and corpus documents, capture its window (`Tools/capture-window.swift`) and check the screenshots; check print and HTML/PDF export output.
 
 ## Decisions
 
