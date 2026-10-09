@@ -156,7 +156,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 1. FR-1: The app parses a document once per edit, in a background task, into a `MarkdownDocumentModel`. The highlighter, preview, export and scroll sync all read from that model.
 2. FR-2: A parse result whose generation is older than the latest edit is discarded, as `Renderer.parse` does today.
 3. FR-3: `LineIndex` converts any swift-markdown `SourceLocation` (UTF-8 column) into the correct UTF-16 offset, including for emoji, surrogate pairs and CRLF line endings.
-4. FR-4: The protection pass finds `$$…$$`, `\[…\]`, `\(…\)`, and (only when inline dollars are on) `$…$`, and skips code spans and fenced code blocks.
+4. FR-4: The protection pass finds `$$…$$`, `\\[…\\]`, `\\(…\\)` (MacDown's double-backslash syntax, finding F7), and (only when inline dollars are on) `$…$`, and skips code spans, code blocks and raw HTML.
 5. FR-5: The protection pass replaces each protected span with filler of the same UTF-8 length that has no Markdown meaning, so every source position after it is unchanged.
 6. FR-6: A valid YAML front matter block at the very top is blanked with same-length filler rather than cut, so line numbers in the parse match the editor.
 

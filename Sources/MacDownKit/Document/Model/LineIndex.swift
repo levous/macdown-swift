@@ -33,6 +33,15 @@ public struct LineIndex: Sendable {
 
     public var lineCount: Int { lineStarts.count }
 
+    /// The UTF-8 offset of a 1-based line and UTF-8 column, with the same
+    /// bounds as `utf16Offset(line:column:)`.
+    public func utf8Offset(line: Int, column: Int) -> Int? {
+        guard line >= 1, line <= lineStarts.count, column >= 1 else { return nil }
+        let lineEnd = line < lineStarts.count ? lineStarts[line].utf8 : utf8.count
+        let byte = lineStarts[line - 1].utf8 + column - 1
+        return byte <= lineEnd ? byte : nil
+    }
+
     /// The UTF-16 offset of a 1-based line and UTF-8 column. The column may
     /// be one past the line's last byte (exclusive range ends). Nil when the
     /// position isn't in the text.

@@ -55,9 +55,9 @@ what's missing (see the first task).
 ### Phase 1: Shared model (FR-1 to FR-6, TR-2, TR-3)
 - [x] `LineIndex` (value type, `Sendable`): UTF-8 line/column (swift-markdown `SourceLocation`) to UTF-16 offset and `NSRange`; handles emoji, surrogate pairs, CRLF
 - [x] Tests: `LineIndex` for ASCII, emoji, surrogate pairs, CRLF
-- [ ] Protection pass: find `$$…$$`, `\[…\]`, `\(…\)`, and `$…$` only when inline dollars are on; skip code spans and fenced code blocks; replace with same-UTF-8-length filler with no Markdown meaning
-- [ ] Front matter: valid leading YAML block blanked with same-length filler (not cut); invalid YAML left untouched
-- [ ] Tests: byte offsets unchanged after protection; math with `_`, `*`, `\` survives emphasis-heavy content; escaped `\$`, `$` in code and currency amounts are not math
+- [x] Protection pass: find `$$…$$`, `\[…\]`, `\(…\)`, and `$…$` only when inline dollars are on; skip code spans and fenced code blocks; replace with same-UTF-8-length filler with no Markdown meaning
+- [x] Front matter: valid leading YAML block blanked with same-length filler (not cut); invalid YAML left untouched
+- [x] Tests: byte offsets unchanged after protection; math with `_`, `*`, `\` survives emphasis-heavy content; escaped `\$`, `$` in code and currency amounts are not math
 - [ ] `MarkdownDocumentModel` (`Sendable`): source, `LineIndex`, protected source, protected math/front-matter ranges, `Markdown.Document`; only this file area imports `Markdown` (TR-2)
   - Shape depends on the Phase 0 Sendable spike: if `Markdown.Document` is not `Sendable`, run all three visitors inside the detached task and have the model hold their `Sendable` outputs (body HTML, `[HighlightSpan]`, source-line anchors), not the tree
 - [ ] `Renderer.parse`: when `markdownEngine == swiftMarkdown`, build the model in the existing detached task and keep the generation counter that discards stale results (FR-2, NFR-2)

@@ -6,9 +6,9 @@ $$
 \int_0^1 x^2 \, dx = \frac{1}{3}
 $$
 
-Display math with brackets: \[ a_1 + a_2 = b_{12} \]
+Display math with brackets: \\[ a_1 + a_2 = b_{12} \\]
 
-Inline with parentheses: \( e^{i\pi} + 1 = 0 \)
+Inline with parentheses: \\( e^{i\pi} + 1 = 0 \\)
 
 Inline with dollars (needs its setting): $A^T_S = B$ and $x_1 * y_2$.
 

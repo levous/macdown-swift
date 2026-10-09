@@ -29,6 +29,8 @@ import Testing
         #expect(index.utf16Offset(line: 1, column: 9) == 5)       // *
         #expect(index.utf16Offset(line: 2, column: 1) == 9)
         #expect(index.utf16Offset(line: 2, column: 5) == 11)      // y
+        #expect(index.utf8Offset(line: 2, column: 5) == 16)       // y, in bytes
+        #expect(index.utf8Offset(line: 2, column: 7) == nil)
         let range = index.range(from: (1, 9), to: (1, 12))
         #expect(range.map { (text as NSString).substring(with: $0) } == "*x*")
     }
