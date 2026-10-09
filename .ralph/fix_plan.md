@@ -53,8 +53,8 @@ what's missing (see the first task).
 - [x] Wire both harnesses into CI (or document the `swift test --filter` invocation if no CI exists) (no CI; documented in README "Migration diff harnesses" and CLAUDE.md); they gain the swift-markdown side as Phases 2 and 3 land
 
 ### Phase 1: Shared model (FR-1 to FR-6, TR-2, TR-3)
-- [ ] `LineIndex` (value type, `Sendable`): UTF-8 line/column (swift-markdown `SourceLocation`) to UTF-16 offset and `NSRange`; handles emoji, surrogate pairs, CRLF
-- [ ] Tests: `LineIndex` for ASCII, emoji, surrogate pairs, CRLF
+- [x] `LineIndex` (value type, `Sendable`): UTF-8 line/column (swift-markdown `SourceLocation`) to UTF-16 offset and `NSRange`; handles emoji, surrogate pairs, CRLF
+- [x] Tests: `LineIndex` for ASCII, emoji, surrogate pairs, CRLF
 - [ ] Protection pass: find `$$…$$`, `\[…\]`, `\(…\)`, and `$…$` only when inline dollars are on; skip code spans and fenced code blocks; replace with same-UTF-8-length filler with no Markdown meaning
 - [ ] Front matter: valid leading YAML block blanked with same-length filler (not cut); invalid YAML left untouched
 - [ ] Tests: byte offsets unchanged after protection; math with `_`, `*`, `\` survives emphasis-heavy content; escaped `\$`, `$` in code and currency amounts are not math
