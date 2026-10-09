@@ -366,6 +366,44 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(c < cpp)
     }
 
+    /// Standard Markdown renders with nothing in user defaults, on a fresh
+    /// install and on an existing one with no saved settings.
+    @MainActor @Test(arguments: [false, true])
+    func standardFormattingWithEmptyDefaults(existingInstall: Bool) throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        if existingInstall { defaults.set("1", forKey: "firstVersionInstalled") }
+        let settings = Preferences(defaults: defaults).renderSettings.parse
+        let text = """
+            ---
+            title: Standard
+            ---
+
+            | a | b |
+            |---|---|
+            | 1 | 2 |
+
+            ```swift
+            let x = 1
+            ```
+
+            ~~gone~~ and a note[^n] and "as typed".
+
+            - [x] done
+
+            [^n]: The note.
+            """
+        let html = MarkdownParser.parse(text, settings: settings).body
+        for element in ["<td>Standard</td>", "<table>", "<th>a</th>", "<td>1</td>",
+                        #"<code class="language-swift">"#, "<del>gone</del>",
+                        #"<div class="footnotes">"#, #"type="checkbox""#,
+                        "&quot;as typed&quot;"] {
+            #expect(html.contains(element), "missing \(element)")
+        }
+        #expect(!html.contains("<q>"))
+    }
+
     @Test func noLanguage() {
         let result = parse("```\nplain\n```\n")
         #expect(result.body.contains("<code class=\"language-none\">plain</code>"))

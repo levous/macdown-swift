@@ -32,7 +32,7 @@ what's missing (see the first task).
 - [x] Add new/changed UI strings via `String(localized:)` to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available (NFR-6)
 - [x] `Preferences.loadDefaultPreferences` (fresh install only): `editorUnorderedListMarkerType = .minusSign`, `editorEnsuresNewlineAtEndOfFile = true`, `editorConvertTabs = true`; remove now-dead `extensionFootnotes = true` default
 - [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
-- [ ] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
+- [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
 - [ ] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
 - [ ] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
 
