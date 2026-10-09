@@ -127,8 +127,8 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [ ] After that release: remove `Sources/CHoedown`, `Sources/CPegMarkdown`, their `Package.swift` targets/dependencies, the hidden setting, and `ScrollAnchors.scan`
 - [ ] Apply early-step settings/defaults here if the early step didn't ship
 - [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses
-- [ ] README: "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript), layout/class table; remove "Regenerating the highlighter parser"
-- [ ] CLAUDE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
+- [ ] README "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
+- [ ] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
 - [ ] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation
 - [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass
 

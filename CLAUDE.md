@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Swift 6 / SwiftUI port of MacDown (the Objective-C Markdown editor for macOS). The port aims to keep the original's behavior, HTML output, and user defaults keys unchanged. When changing behavior, check whether it diverges from the original MacDown; intentional differences are listed in README.md ("Differences from the original"). Many files say which Objective-C file they were ported from (e.g. `Ported from MPRenderer.m`), and README.md has a table mapping the original classes onto the port.
+A Swift 6 / SwiftUI port of MacDown (the Objective-C Markdown editor for macOS). The port aims to keep the original's behavior, HTML output, and user defaults keys unchanged. When changing behavior, check whether it diverges from the original MacDown; intentional differences are listed in README.md ("Differences from the original"). Many files say which Objective-C file they were ported from (e.g. `Ported from MPRenderer.m`), and docs/ARCHITECTURE.md has a table mapping the original classes onto the port.
+
+README.md is for users: the app, installing, differences from the original. Technical detail goes in docs/ARCHITECTURE.md (layout, pipelines, development workflow), and architecture decisions are logged, dated, in its "Decisions" section.
 
 ## Commands
 
@@ -20,7 +22,7 @@ xcodegen generate                             # regenerate MacDown.xcodeproj fro
 xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build
 ```
 
-Releases: `Tools/release.sh <version> [--dry-run]` (see README "Releasing"). The version lives in both `project.yml` and `MacDownShared/Globals.swift`; the script keeps them in sync.
+Releases: `Tools/release.sh <version> [--dry-run]` (see docs/ARCHITECTURE.md, "Releasing"). The version lives in both `project.yml` and `MacDownShared/Globals.swift`; the script keeps them in sync.
 
 There is no linter configured.
 
@@ -47,7 +49,7 @@ The editor edits a draft (its text); `MarkdownDocument.text` is the persisted st
 
 ## Editor
 
-`EditorTextView` (an `NSTextView` subclass) is hosted in SwiftUI through `Representables`. The editing helpers (list/blockquote continuation, auto-pairing, toggling markup, indenting) are in `NSTextView+Autocomplete.swift` and are called from `DocumentController`'s `NSTextViewDelegate` methods. Syntax highlighting is `MarkdownHighlighter`, which drives the PEG Markdown Highlight C parser with the original `.style` themes. `pmh_parser.c` is generated code (see README "Regenerating the highlighter parser"). Don't hand-edit it.
+`EditorTextView` (an `NSTextView` subclass) is hosted in SwiftUI through `Representables`. The editing helpers (list/blockquote continuation, auto-pairing, toggling markup, indenting) are in `NSTextView+Autocomplete.swift` and are called from `DocumentController`'s `NSTextViewDelegate` methods. Syntax highlighting is `MarkdownHighlighter`, which drives the PEG Markdown Highlight C parser with the original `.style` themes. `pmh_parser.c` is generated code (see docs/ARCHITECTURE.md, "Regenerating the highlighter parser"). Don't hand-edit it.
 
 ## App ↔ shell utility
 
@@ -66,4 +68,4 @@ Debug builds write a JSON report of each preview render (Prism tokens, TOC links
 
 The bundled help (`Resources/help.md`) has a live example of every Markdown feature and setting, and `HelpDocumentTests` renders it, checks the editor highlighting over it, and loads it in the real preview (Prism, Mermaid, Graphviz, images, task lists). When you add or change a feature, update its section in `help.md` and the matching expectations. Live examples that need a setting use text distinct from the "Inline Formatting" table, which shows results as literal HTML.
 
-The tests use Swift Testing (`@Suite`/`@Test`), not XCTest, which runs suites in parallel. Suites that drive a real `DocumentController` with a live WKWebView or change `Preferences.shared` (`DocumentControllerTests`, `ScrollSyncIntegrationTests`) are nested in the serialized `LiveDocumentTests` suite so they don't interfere; put new ones there too. WebKit doesn't run animation frames in the (off-screen) test windows, so the page's scroll and layout reports don't fire; tests call `PreviewController.pageDidScroll(to:)` / `pageLayoutDidChange()` instead. Test fixtures are in `Tests/MacDownKitTests/Resources`. The migration corpus (`Resources/Corpus`) is generated test Markdown; never add real user documents or other docs to it. `HTMLDiffHarnessTests` and `HighlightDiffHarnessTests` compare engines over it (`MACDOWN_DIFF_REPORT=<dir>` writes reports; see README "Migration diff harnesses"), with intended differences in `Resources/expected-html-diffs.json`.
+The tests use Swift Testing (`@Suite`/`@Test`), not XCTest, which runs suites in parallel. Suites that drive a real `DocumentController` with a live WKWebView or change `Preferences.shared` (`DocumentControllerTests`, `ScrollSyncIntegrationTests`) are nested in the serialized `LiveDocumentTests` suite so they don't interfere; put new ones there too. WebKit doesn't run animation frames in the (off-screen) test windows, so the page's scroll and layout reports don't fire; tests call `PreviewController.pageDidScroll(to:)` / `pageLayoutDidChange()` instead. Test fixtures are in `Tests/MacDownKitTests/Resources`. The migration corpus (`Resources/Corpus`) is generated test Markdown; never add real user documents or other docs to it. `HTMLDiffHarnessTests` and `HighlightDiffHarnessTests` compare engines over it (`MACDOWN_DIFF_REPORT=<dir>` writes reports; see docs/ARCHITECTURE.md, "Tests"), with intended differences in `Resources/expected-html-diffs.json`.
