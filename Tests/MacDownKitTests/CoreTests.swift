@@ -280,6 +280,21 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
     }
 
+    /// The hidden engine switch for the swift-markdown migration (FR-32).
+    @Test func markdownEngine() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
+        defaults.set("swiftMarkdown", forKey: "markdownEngine")
+        #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
+        defaults.set("bogus", forKey: "markdownEngine")
+        #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
+        let preferences = Preferences(defaults: defaults)
+        preferences.markdownEngine = .swiftMarkdown
+        #expect(defaults.string(forKey: "markdownEngine") == "swiftMarkdown")
+    }
+
     /// New installs follow common Markdown editing conventions.
     @Test func freshInstallEditingDefaults() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
