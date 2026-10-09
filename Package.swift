@@ -21,6 +21,10 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
+        // Replaces hoedown and PEG Markdown Highlight
+        // (docs/intents/swift-markdown-migration.md). Pinned exactly: its
+        // output is compared against the HTML diff harness.
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0"),
     ],
     targets: [
         // Hoedown 3.0.7 plus MacDown's renderer patches (task lists, code block
@@ -54,6 +58,7 @@ let package = Package(
                 "CPegMarkdown",
                 "MacDownShared",
                 .product(name: "Yams", package: "Yams"),
+                .product(name: "Markdown", package: "swift-markdown"),
             ],
             path: "Sources/MacDownKit",
             resources: [
@@ -76,7 +81,10 @@ let package = Package(
         ),
         .testTarget(
             name: "MacDownKitTests",
-            dependencies: ["MacDownKit"],
+            dependencies: [
+                "MacDownKit",
+                .product(name: "Markdown", package: "swift-markdown"),
+            ],
             path: "Tests/MacDownKitTests",
             resources: [.copy("Resources")]
         ),

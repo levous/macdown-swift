@@ -37,7 +37,7 @@ what's missing (see the first task).
 - [x] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
-- [ ] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)`; add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
+- [x] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)` (0.9.0; swift-cmark resolves to 0.9.0); add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
 - [ ] Spike: confirm swift-markdown exposes cmark-gfm footnotes (AST nodes or parse option). If not, decide between a source-scan footnote renderer or keeping hoedown for footnotes (PRD Open Question 1; blocks FR-34)
 - [ ] Spike: can GFM autolinks (bare URLs/emails) be disabled at parse time? Record answer
 - [ ] Spike: native support for smart punctuation, `==highlight==`, `^superscript`? Record each answer (native vs our own pass)
