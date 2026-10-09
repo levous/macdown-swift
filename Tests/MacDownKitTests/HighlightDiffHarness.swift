@@ -108,7 +108,7 @@ enum HighlightDiff {
         let differences = HighlightDiff.compare(corpus, left: HighlightDiff.peg,
                                                 right: HighlightDiff.peg)
         let report = HighlightDiff.report(differences, documents: corpus,
-                                          left: "PEG", right: "PEG")
+                                          left: "PEG", right: "PEG", writes: false)
         #expect(differences.isEmpty, "\(report)")
 
         let files = try Corpus.files()
@@ -127,5 +127,58 @@ enum HighlightDiff {
                                         right: "altered", writes: false)
         #expect(text.contains("## 01-inline.md: EMPH"))
         #expect(text.contains("`*single asterisks*`"))
+    }
+
+    /// PEG against HighlightMapper over the corpus, reviewed 2026-10-09:
+    /// every remaining difference is one of these, each an intended change.
+    /// A difference outside the list fails; the report shows the spans.
+    static let reviewed: [String: String] = [
+        "01-inline.md EMPH": "CommonMark nesting of ***x*** and ___x___; PEG mis-nested them and took an unclosed *",
+        "01-inline.md STRONG": "same: PEG's ***/___ spans ran across lines",
+        "02-blocks.md H1": "#Not a header (no space) isn't a header in CommonMark",
+        "02-blocks.md H6": "seven hashes is a paragraph in CommonMark",
+        "02-blocks.md LIST_BULLET": "a list can interrupt a paragraph in CommonMark",
+        "02-blocks.md LIST_ENUMERATOR": "CommonMark's 1) lists",
+        "02-blocks.md VERBATIM": "indented code inside a list item",
+        "03-blockquotes.md CODE": "a fence in a quote is one CODE span, markers included; PEG split it",
+        "05-links-images.md AUTO_LINK_URL": "<…with spaces> is a link destination, not an autolink",
+        "05-links-images.md LINK": "shortcut and case-insensitive reference links",
+        "05-links-images.md REFERENCE": "a definition with an angle-bracket destination with spaces",
+        "07-html.md HTML": "<details>…</summary> is an HTML block in CommonMark",
+        "07-html.md HTMLBLOCK": "same",
+        "08-footnotes.md LINK": "footnote content until open question 1 decides footnotes",
+        "08-footnotes.md NOTE": "footnotes are colored (FR-27); PEG never emitted NOTE",
+        "08-footnotes.md STRONG": "footnote content until open question 1",
+        "08-footnotes.md VERBATIM": "an indented footnote continuation is code without footnote parsing (open question 1)",
+        "10-front-matter-invalid.md H2": "invalid front matter is Markdown: text over --- is a setext header",
+        "10-front-matter-invalid.md HRULE": "same: the opening ---",
+        "14-math.md CODE": "PEG colored math (and $5 and $) as CODE whatever the settings; math is its own type now",
+        "14-math.md EMPH": "with math off, * inside $$…$$ is emphasis",
+        "help.md AUTO_LINK_URL": "an autolink in a table cell PEG missed",
+        "help.md CODE": "PEG's math rule ran from $1600 to the end of the document",
+        "help.md EMPH": "same",
+        "help.md H2": "same",
+        "help.md H3": "same",
+        "help.md H4": "same",
+        "help.md HTML": "same",
+        "help.md HTMLBLOCK": "same",
+        "help.md LINK": "same",
+        "help.md LIST_BULLET": "same",
+        "help.md LIST_ENUMERATOR": "same",
+        "help.md NOTE": "footnotes are colored (FR-27)",
+        "help.md STRONG": "same as CODE",
+        "generated-10k.md NOTE": "footnotes are colored (FR-27)",
+    ]
+
+    @Test func pegAgainstMapperReviewed() throws {
+        let corpus = try Corpus.all()
+        let differences = HighlightDiff.compare(corpus, left: HighlightDiff.peg,
+                                                right: HighlightDiff.mapper)
+        _ = HighlightDiff.report(differences, documents: corpus, left: "PEG", right: "mapper")
+        let found = Set(differences.map { "\($0.document) \($0.type)" })
+        let unexpected = differences.filter { Self.reviewed["\($0.document) \($0.type)"] == nil }
+        #expect(unexpected.isEmpty, "\(HighlightDiff.report(unexpected, documents: corpus, left: "PEG", right: "mapper", writes: false))")
+        // Entries that no longer differ should come off the list.
+        #expect(Set(Self.reviewed.keys).subtracting(found).isEmpty)
     }
 }

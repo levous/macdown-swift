@@ -76,8 +76,8 @@ what's missing (see the first task).
 - [x] `MarkdownHighlighter`: take spans from the model when engine is `swiftMarkdown`; keep debounce and visible-range styling (FR-26); stop its own parse
 - [x] Port `HighlighterTests` (`EditorTests.swift`) and `HelpDocumentHighlightingTests` to run on the new engine
 - [x] Benchmark: re-highlight time on a 10k-line document vs PEG baseline on the same machine; record numbers (NFR-1). **Recorded (F8): PEG 20.1 ms, model 73.3 ms (124.7 with math and opt-ins), cmark-gfm direct 4.5 ms. NFR-1 not met; PRD Open Question 2 (relax NFR-1, or cmark-gfm directly) must be decided before Phase 3**
-- [ ] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain
-  - Expected improvement: PEG reports a header inside a block quote (`> ## x`) as an inverted span the editor skips, so it's uncolored today; `HighlightMapper` should color it (corpus `03-blockquotes.md`)
+- [x] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain (reviewed list in `HighlightDiffHarnessTests.reviewed`; a new difference fails the test)
+  - Done: a header inside a block quote is colored (`HighlightMapperTests.headerInBlockQuote`)
 
 ### Phase 3: Renderer (FR-7 to FR-20, TR-4, TR-5)
 
