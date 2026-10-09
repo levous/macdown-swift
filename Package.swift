@@ -87,6 +87,7 @@ let package = Package(
                 "MacDownKit",
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "cmark-gfm", package: "swift-cmark"),
+                .product(name: "cmark-gfm-extensions", package: "swift-cmark"),
             ],
             path: "Tests/MacDownKitTests",
             resources: [.copy("Resources")]

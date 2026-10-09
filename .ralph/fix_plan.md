@@ -75,11 +75,13 @@ what's missing (see the first task).
 - [x] `DocumentController`: hand the latest model (or its spans) from `Renderer.parse` to `MarkdownHighlighter` when engine is `swiftMarkdown`; Phase 4 reuses this path for scroll sync (FR-1)
 - [x] `MarkdownHighlighter`: take spans from the model when engine is `swiftMarkdown`; keep debounce and visible-range styling (FR-26); stop its own parse
 - [x] Port `HighlighterTests` (`EditorTests.swift`) and `HelpDocumentHighlightingTests` to run on the new engine
-- [ ] Benchmark: re-highlight time on a 10k-line document vs PEG baseline on the same machine; record numbers (NFR-1)
+- [x] Benchmark: re-highlight time on a 10k-line document vs PEG baseline on the same machine; record numbers (NFR-1). **Recorded (F8): PEG 20.1 ms, model 73.3 ms (124.7 with math and opt-ins), cmark-gfm direct 4.5 ms. NFR-1 not met; PRD Open Question 2 (relax NFR-1, or cmark-gfm directly) must be decided before Phase 3**
 - [ ] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain
   - Expected improvement: PEG reports a header inside a block quote (`> ## x`) as an inverted span the editor skips, so it's uncolored today; `HighlightMapper` should color it (corpus `03-blockquotes.md`)
 
 ### Phase 3: Renderer (FR-7 to FR-20, TR-4, TR-5)
+
+Blocked on PRD Open Question 2 (parser speed, F8): `HTMLRenderer` is a `MarkupVisitor` only if swift-markdown stays.
 - [ ] `HTMLRenderer` (`MarkupVisitor`, pure): CommonMark core blocks and inlines
 - [ ] GFM tables, strikethrough, fenced code always on
 - [ ] Code blocks: `<div><pre class="line-numbers" data-information><code class="language-…">`, line-numbers class only when setting on; port `hoedown_html_patch.c` code-block info (FR-9)
@@ -133,6 +135,7 @@ what's missing (see the first task).
 - Principle: standard Markdown (CommonMark + GFM + footnotes + front matter) always on; extended features (highlight, superscript, autolink, smart punctuation, math, `[TOC]`, hard wrap, Graphviz) opt-in, off by default, keeping existing defaults keys.
 - Byte-identical output with the original MacDown is intentionally dropped (overrides CLAUDE.md's current rule once this project lands); differences go in the README.
 - Open Question 1 (footnote fallback: source scan, keep hoedown, or cmark-gfm directly) gates Phase 3 footnotes and Phase 5 removal of hoedown.
+- Open Question 2 (parser speed: relax NFR-1 or use cmark-gfm directly; F8) gates Phase 3.
 - Corpus: generated fixtures plus `help.md` only; never real user documents or other docs (decided 2026-10-09).
 - `pmh_parser.c` is generated; never hand-edit it while it still exists.
 - Release notes must call out: strikethrough/task lists/front matter now always on, Quote dropped, new editing defaults for new installs.
