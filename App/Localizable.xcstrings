@@ -114,6 +114,137 @@
         }
       }
     },
+    "“%@” was changed by another application." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dokument „%@“ byl změněn jinou aplikací."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” er blevet ændret af et andet program."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” er blevet ændret af et andet program."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "„%@“ wurde von einem anderen Programm geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” ha sido modificado por otra aplicación."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teine rakendus muutis faili „%@“."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Toinen ohjelma muutti tiedostoa ”%@”."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "« %@ » a été modifié par une autre application."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annað forrit breytti „%@“."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” è stato modificato da un'altra applicazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@”はほかのアプリケーションによって変更されました。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "‘%@’이(가) 다른 응용 프로그램에 의해 변경되었습니다."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "«%@» ble endret av et annet program."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "‘%@’ is gewijzigd door een ander programma."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” foi modificado por outro aplicativo."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Файл «%@» был изменён другим приложением."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dokument „%@“ bol zmenený inou aplikáciou."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "”%@” har ändrats av ett annat program."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” başka bir uygulama tarafından değiştirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@”已被其他应用程序更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「%@」已被其他應用程式更改。"
+          }
+        }
+      }
+    },
     "(Default)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -631,136 +762,6 @@
         }
       }
     },
-    "“%@” was changed by another application." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dokument „%@“ byl změněn jinou aplikací."
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” er blevet ændret af et andet program."
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” er blevet ændret af et andet program."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "„%@“ wurde von einem anderen Programm geändert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” ha sido modificado por otra aplicación."
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Teine rakendus muutis faili „%@“."
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Toinen ohjelma muutti tiedostoa ”%@”."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "« %@ » a été modifié par une autre application."
-          }
-        },
-        "is" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annað forrit breytti „%@“."
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” è stato modificato da un'altra applicazione."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@”はほかのアプリケーションによって変更されました。"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "‘%@’이(가) 다른 응용 프로그램에 의해 변경되었습니다."
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "«%@» ble endret av et annet program."
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "‘%@’ is gewijzigd door een ander programma."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” foi modificado por outro aplicativo."
-          }
-        },
-        "ru-RU" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Файл «%@» был изменён другим приложением."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dokument „%@“ bol zmenený inou aplikáciou."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "”%@” har ändrats av ett annat program."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@” başka bir uygulama tarafından değiştirildi."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "“%@”已被其他应用程序更改。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "「%@」已被其他應用程式更改。"
-          }
-        }
-      }
-    },
     "⌘← jumps to first non-whitespace character in line" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1023,6 +1024,7 @@
       }
     },
     "An error occurred while creating the file:\n%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1935,137 +1937,8 @@
         }
       }
     },
-    "Cancel" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zrušit"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annuller"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annuller"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Abbrechen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cancelar"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tühista"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Kumoa"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annuler"
-          }
-        },
-        "is" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hætta við"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annulla"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "キャンセル"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "취소"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avbryt"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Annuleer"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cancelar"
-          }
-        },
-        "ru-RU" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Отменить"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zrušiť"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avbryt"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Vazgeç"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "取消"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "取消"
-          }
-        }
-      }
-    },
     "Can’t create file:\n%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -2191,6 +2064,137 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "無法建立檔案：\n%@"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zrušit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuller"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuller"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cancelar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tühista"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kumoa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuler"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hætta við"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annulla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "キャンセル"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "취소"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avbryt"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuleer"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cancelar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Отменить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zrušiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avbryt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vazgeç"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "取消"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "取消"
           }
         }
       }
@@ -2529,6 +2533,7 @@
       }
     },
     "Choose…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -3075,6 +3080,7 @@
       }
     },
     "Count" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -3781,6 +3787,7 @@
       }
     },
     "Discard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -3911,6 +3918,7 @@
       }
     },
     "Do you want to keep your changes, or discard them and load the file from disk?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -4653,6 +4661,7 @@
       }
     },
     "File not found at path:\n%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -6898,6 +6907,7 @@
       }
     },
     "Keep My Changes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -7563,6 +7573,7 @@
       }
     },
     "Limit editor width" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -8222,6 +8233,7 @@
       }
     },
     "MacDown can’t create a file for the clicked link because the current file is not saved anywhere yet. Save the current file somewhere to enable this feature." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -8839,6 +8851,7 @@
       }
     },
     "No Plug-ins Installed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -9623,6 +9636,7 @@
       }
     },
     "Please check the path of your link is correct. Turn on “Automatically create link targets” If you want MacDown to create nonexistent link targets for you." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -10211,6 +10225,7 @@
       }
     },
     "Reload" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -10804,6 +10819,7 @@
       }
     },
     "Reveal" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -10934,6 +10950,7 @@
       }
     },
     "Revert" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -11064,6 +11081,7 @@
       }
     },
     "Save" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -11194,6 +11212,7 @@
       }
     },
     "Save and Quit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -11324,6 +11343,7 @@
       }
     },
     "Save changes automatically" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -13401,6 +13421,7 @@
       }
     },
     "The shell utility is missing from the application bundle." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -14518,6 +14539,7 @@
       }
     },
     "You have unsaved changes." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
