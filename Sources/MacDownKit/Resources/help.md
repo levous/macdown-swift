@@ -49,6 +49,7 @@ will break
 
 **Strong**: `**Strong**` or `__Strong__` (Command-B)  
 *Emphasize*: `*Emphasize*` or `_Emphasize_` (Command-I)  
+~~Strikethrough~~: `~~struck through~~` gives ~~struck through~~ (Command-Hyphen)  
 ***Both***: `***Both***`  
 <u>Underline</u>: `<u>Underline</u>` (Command-U; Markdown has no underline syntax, so I use HTML)
 
@@ -308,8 +309,6 @@ These are off by default unless noted. Each line shows the markup, then a live e
 Setting             | Markup             | Result when on        |
 --------------------|--------------------|-----------------------|
 Intra-word emphasis | So A\*maz\*ing     | So A<em>maz</em>ing   |
-Strikethrough       | \~~Much wow\~~     | <del>Much wow</del>   |
-Quote [^quote]      | \"Such editor\"    | <q>Such editor</q>    |
 Highlight           | \==So good\==      | <mark>So good</mark>  |
 Superscript         | x\^2, hoge\^(fuga) | x<sup>2</sup>, hoge<sup>fuga</sup> |
 Autolink            | https://example.com | <https://example.com> |
@@ -318,14 +317,12 @@ Smartypants         | \"Quotes\" -- and ... | “Quotes” – and …   |
 Live examples:
 
 * **Intra-word emphasis** (on by default): So A*maz*ing. It applies to underscores too, so snake_case_name shows *case* emphasized; turn the setting off, or escape the underscores (`snake\_case\_name`), to keep them.
-* **Strikethrough** (Command-Hyphen): ~~struck through~~
-* **Quote**: "a quotation"
 * **Highlight** (Command-Equals): ==highlighted==
 * **Superscript**: y^3 and 10^(-6)
 * **Autolink**: https://example.org and hello@example.org
 * **Smartypants**: "Curly quotes," 'single quotes,' en -- dash, em --- dash, and an ellipsis...
 
-**Smartypants** turns straight quotes, `--`, `---` and `...` into typographer’s quotes, dashes and ellipses, but never inside code. **Quote** and **Smartypants** both act on `"`; if both are on, **Quote** takes precedence.
+**Smartypants** turns straight quotes, `--`, `---` and `...` into typographer’s quotes, dashes and ellipses, but never inside code.
 
 ## <a name="rendering-pane"></a>The Rendering Settings
 
@@ -559,6 +556,5 @@ That’s about it. Thanks for listening. MacDown is open source; see **Help ▸ 
 
 Happy writing!
 
-[^quote]: **Quote** replaces literal `"` characters with HTML `<q>` tags. **Quote** and **Smartypants** are syntactically incompatible. If both are enabled, **Quote** takes precedence. Note that **Quote** is different from *blockquote*, which is part of standard Markdown.
 
 [^math]: MathJax is loaded from the internet, so math needs an internet connection.

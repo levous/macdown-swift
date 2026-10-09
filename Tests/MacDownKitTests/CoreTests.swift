@@ -8,6 +8,7 @@
 import AppKit
 import Foundation
 import Testing
+import CHoedown
 @testable import MacDownKit
 
 private func fixture(_ name: String, _ ext: String) -> URL {
@@ -256,6 +257,28 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         preferences.editorBaseFont = font
         let reloaded = Preferences(defaults: defaults)
         #expect(reloaded.editorBaseFont == font)
+    }
+
+    @Test func standardMarkdownIsAlwaysOn() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        // An existing install whose saved values predate these becoming
+        // standard: the values are ignored.
+        defaults.set("1", forKey: "firstVersionInstalled")
+        for key in ["extensionTables", "extensionFencedCode", "extensionFootnotes",
+                    "extensionStrikethough", "extensionIntraEmphasis"] {
+            defaults.set(false, forKey: key)
+        }
+        defaults.set(true, forKey: "extensionQuote")
+        let flags = Preferences(defaults: defaults).extensionFlags
+        for flag in [HOEDOWN_EXT_TABLES, HOEDOWN_EXT_FENCED_CODE, HOEDOWN_EXT_FOOTNOTES,
+                     HOEDOWN_EXT_STRIKETHROUGH] {
+            #expect(flags & flag.rawValue != 0, "\(flag) is off")
+        }
+        // Intra-word emphasis on (no NO_INTRA_EMPHASIS); Quote is dropped.
+        #expect(flags & HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue == 0)
+        #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
     }
 }
 

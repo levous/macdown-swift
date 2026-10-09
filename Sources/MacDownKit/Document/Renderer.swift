@@ -38,17 +38,15 @@ public struct RenderSettings: Sendable, Equatable {
 
 @MainActor
 extension Preferences {
+    /// Standard Markdown (tables, fenced code, footnotes, strikethrough and
+    /// intra-word emphasis) is always on; extended syntax is opt-in. Quote
+    /// (`"…"` as `<q>`) is dropped in favor of smart punctuation.
     public var extensionFlags: UInt32 {
-        var flags: UInt32 = 0
+        var flags: UInt32 = HOEDOWN_EXT_TABLES.rawValue | HOEDOWN_EXT_FENCED_CODE.rawValue
+            | HOEDOWN_EXT_FOOTNOTES.rawValue | HOEDOWN_EXT_STRIKETHROUGH.rawValue
         if extensionAutolink { flags |= HOEDOWN_EXT_AUTOLINK.rawValue }
-        if extensionFencedCode { flags |= HOEDOWN_EXT_FENCED_CODE.rawValue }
-        if extensionFootnotes { flags |= HOEDOWN_EXT_FOOTNOTES.rawValue }
         if extensionHighlight { flags |= HOEDOWN_EXT_HIGHLIGHT.rawValue }
-        if !extensionIntraEmphasis { flags |= HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue }
-        if extensionQuote { flags |= HOEDOWN_EXT_QUOTE.rawValue }
-        if extensionStrikethough { flags |= HOEDOWN_EXT_STRIKETHROUGH.rawValue }
         if extensionSuperscript { flags |= HOEDOWN_EXT_SUPERSCRIPT.rawValue }
-        if extensionTables { flags |= HOEDOWN_EXT_TABLES.rawValue }
         if htmlMathJax { flags |= HOEDOWN_EXT_MATH.rawValue }
         if htmlMathJaxInlineDollar { flags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
         return flags

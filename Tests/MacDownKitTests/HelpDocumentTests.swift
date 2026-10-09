@@ -40,6 +40,7 @@ enum HelpDocument {
                         "<u>Underline</u>", "<code>Inline code</code>", "<pre>",
                         "<blockquote>", "<ol>", "<ul>", "<hr>", "<table>",
                         "<kbd>Command</kbd>", "H<sub>2</sub>O", "&copy;",
+                        "<del>struck through</del>",
                         "<!-- This is an HTML comment."] {
             #expect(html.contains(element), "missing \(element)")
         }
@@ -64,13 +65,12 @@ enum HelpDocument {
 
     @Test func extendedSyntaxStaysPlainUntilTurnedOn() throws {
         let html = try render()
-        for element in ["<mark>highlighted</mark>", "<del>struck through</del>",
-                        "<q>a quotation</q>", "y<sup>3</sup>", "task-list-item", "&hellip;",
-                        #"<a href="https://example.org">"#] {
+        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "task-list-item",
+                        "&hellip;", #"<a href="https://example.org">"#, "<q>"] {
             #expect(!html.contains(element), "\(element) without its setting")
         }
-        for text in ["==highlighted==", "~~struck through~~", "y^3", "https://example.org",
-                     "<p>[TOC]</p>"] {
+        for text in ["==highlighted==", "y^3", "https://example.org", "<p>[TOC]</p>",
+                     "&quot;Curly quotes,&quot;"] {
             #expect(html.contains(text), "\(text) should show as typed")
         }
     }
@@ -78,8 +78,6 @@ enum HelpDocument {
     @Test func everyOptionRendersItsExample() throws {
         let html = try render { p in
             p.extensionHighlight = true
-            p.extensionStrikethough = true
-            p.extensionQuote = true
             p.extensionSuperscript = true
             p.extensionAutolink = true
             p.extensionSmartyPants = true
@@ -88,8 +86,8 @@ enum HelpDocument {
             p.htmlMathJax = true
             p.htmlMathJaxInlineDollar = true
         }
-        for element in ["<mark>highlighted</mark>", "<del>struck through</del>",
-                        "<q>a quotation</q>", "y<sup>3</sup>", "10<sup>-6</sup>",
+        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "10<sup>-6</sup>",
+                        "&ldquo;Curly quotes,&rdquo;",
                         #"<a href="https://example.org">https://example.org</a>"#,
                         #"<a href="mailto:hello@example.org">"#,
                         "&ndash;", "&mdash;", "&hellip;", "task-list-item"] {
