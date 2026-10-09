@@ -187,6 +187,9 @@ public final class MarkdownHighlighter {
     public var resetTypingAttributes = true
     public var makeLinksClickable = false
     public private(set) var isActive = false
+    /// Spans come from elsewhere (the swift-markdown document model, via
+    /// `update(_:)`) instead of the highlighter's own PEG parse.
+    public var usesExternalElements = false
 
     var styles: [HighlightingStyle] = HighlightingStyle.defaultStyles() {
         didSet { applyStyleDependencies() }
@@ -209,7 +212,7 @@ public final class MarkdownHighlighter {
     // MARK: - Parsing
 
     func requestParsing() {
-        guard let textView else { return }
+        guard let textView, !usesExternalElements else { return }
         parseGeneration += 1
         let generation = parseGeneration
         let markdown = textView.string
@@ -227,6 +230,13 @@ public final class MarkdownHighlighter {
 
     public func parseAndHighlightNow() {
         requestParsing()
+    }
+
+    /// Highlights with spans parsed elsewhere, for the current text.
+    func update(_ elements: HighlightElements) {
+        parseGeneration += 1    // Any PEG parse in flight is stale.
+        cachedElements = elements
+        if isActive { applyVisibleRangeHighlighting() }
     }
 
     public func highlightNow() {

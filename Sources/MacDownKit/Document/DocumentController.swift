@@ -104,7 +104,7 @@ public final class DocumentController: NSObject {
     ]
 
     private static let editorPreferencesToObserve: Set<String> = [
-        "editorBaseFontInfo", "editorHorizontalInset",
+        "editorBaseFontInfo", "editorHorizontalInset", "markdownEngine",
         "editorVerticalInset", "editorWidthLimited", "editorMaximumWidth",
         "editorLineSpacing", "editorOnRight", "editorStyleName",
         "editorShowWordCount", "editorScrollsPastEnd",
@@ -619,13 +619,32 @@ public final class DocumentController: NSObject {
     private func parseAndRender() {
         renderer.parse(editor.string, settings: preferences.renderSettings.parse) {
             [weak self] in
+            self?.highlightFromModel()
             self?.render()
         }
     }
 
     private func parseAndRenderNow() {
         renderer.parseNow(editor.string, settings: preferences.renderSettings.parse)
+        highlightFromModel()
         render()
+    }
+
+    /// With the swift-markdown engine, the editor is highlighted from the
+    /// renderer's model of the same text (one parse for both, FR-1).
+    private func highlightFromModel() {
+        guard highlighter.usesExternalElements, let model = renderer.model,
+              model.source == editor.string
+        else { return }
+        highlighter.update(model.highlights)
+    }
+
+    /// A parse only for highlighting, when the preview isn't updating.
+    private func parseForHighlighting() {
+        renderer.parse(editor.string, settings: preferences.renderSettings.parse) {
+            [weak self] in
+            self?.highlightFromModel()
+        }
     }
 
     /// Renders the latest parse result into the preview.
@@ -713,7 +732,11 @@ public final class DocumentController: NSObject {
     private func editorTextDidChange() {
         draftDidChange()
         scrollLeader = .editor
-        if needsHtml { parseAndRender() }
+        if needsHtml {
+            parseAndRender()
+        } else if highlighter.usesExternalElements {
+            parseForHighlighting()
+        }
     }
 
     private func preferenceDidChange(_ key: String?) {
@@ -740,6 +763,8 @@ public final class DocumentController: NSObject {
             || settings.parse != renderer.lastParseSettings {
             if needsHtml || renderer.lastParseSettings != nil {
                 parseAndRender()
+            } else if highlighter.usesExternalElements {
+                parseForHighlighting()
             }
         } else if settings.page != renderer.lastPageSettings {
             render()
@@ -762,6 +787,7 @@ public final class DocumentController: NSObject {
         highlighter.deactivate()
 
         highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
+        highlighter.usesExternalElements = preferences.markdownEngine == .swiftMarkdown
 
         if changedKey == nil || ["editorHorizontalInset", "editorVerticalInset",
                                  "editorWidthLimited", "editorMaximumWidth"]
@@ -837,6 +863,7 @@ public final class DocumentController: NSObject {
         }
 
         highlighter.activate()
+        highlightFromModel()    // Reactivating cleared the spans.
         editor.isAutomaticLinkDetectionEnabled = false
     }
 
