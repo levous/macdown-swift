@@ -70,7 +70,7 @@ what's missing (see the first task).
 - [x] `MarkdownHighlighter.applyStyles(fromStylesheet:)` uses `ThemeStyleParser` instead of `pmh_parse_styles` (needed before Phase 5 removes CPegMarkdown; same error strings)
 - [x] `HighlightMapper` (`MarkupWalker`, pure): spans for `H1`…`H6`, `EMPH`, `STRONG`, `HRULE`, `LINK`, `AUTO_LINK_URL`, `AUTO_LINK_EMAIL`, `IMAGE`, `CODE`, `VERBATIM`, `BLOCKQUOTE`, `HTMLBLOCK`, and the rest of the PEG set used by themes
 - [x] Source scans for gaps: `REFERENCE` definitions, `HTML_ENTITY`, `LIST_BULLET`/`LIST_ENUMERATOR` markers, `<!-- -->` `COMMENT`
-- [ ] `NOTE` spans for footnote references and definitions (FR-27)
+- [x] `NOTE` spans for footnote references and definitions (FR-27)
 - [ ] New highlight types: math (FR-23), highlight `==…==` and superscript `^` (only with their settings on); themes without a style leave them uncolored
 - [ ] `DocumentController`: hand the latest model (or its spans) from `Renderer.parse` to `MarkdownHighlighter` when engine is `swiftMarkdown`; Phase 4 reuses this path for scroll sync (FR-1)
 - [ ] `MarkdownHighlighter`: take spans from the model when engine is `swiftMarkdown`; keep debounce and visible-range styling (FR-26); stop its own parse

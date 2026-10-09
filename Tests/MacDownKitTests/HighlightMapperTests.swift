@@ -113,4 +113,10 @@ import Testing
         #expect(s["COMMENT"] == ["<!-- block -->", "<!-- note -->"])
         #expect(s["HTMLBLOCK"] == ["<!-- block -->"])
     }
+
+    /// Footnotes (FR-27): PEG defined NOTE but never produced it.
+    @Test func footnotes() {
+        let s = spans("A note[^1] and[^long-label].\n\n[^1]: The note.\n\n`[^code]` and [link](x) and [^ spaced].\n")
+        #expect(s["NOTE"] == ["[^1]", "[^long-label]", "[^1]:"])
+    }
 }

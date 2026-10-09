@@ -10,7 +10,8 @@
 //  VERBATIM, and a block quote colors only its `>` markers.
 //
 //  What the tree doesn't keep comes from the source: reference definitions
-//  (cmark consumes them) and entities (cmark decodes them).
+//  (cmark consumes them), entities (cmark decodes them) and footnotes
+//  (swift-markdown leaves them as text; finding F1).
 //
 
 import Foundation
@@ -47,6 +48,7 @@ struct HighlightMapper: MarkupWalker {
         mapper.visit(document)
         mapper.scanReferences()
         mapper.scanEntities()
+        mapper.scanFootnotes()
         return HighlightElements(spans: mapper.spans.map { $0.sorted { $0.pos < $1.pos } })
     }
 
@@ -299,6 +301,25 @@ struct HighlightMapper: MarkupWalker {
             for match in Self.entity.matches(in: text, range: container)
             where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
                 add("HTML_ENTITY", match.range)
+            }
+        }
+    }
+
+    private static let footnote = try! NSRegularExpression(
+        pattern: #"\[\^[^\]\s]+\](?::)?"#)
+
+    /// Footnote references, `[^label]`, and the `[^label]:` that starts a
+    /// definition line (NOTE, FR-27).
+    private mutating func scanFootnotes() {
+        for container in inlineContainers {
+            for match in Self.footnote.matches(in: text, range: container)
+            where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
+                var range = match.range
+                let isDefinition = range.location == 0 || source[range.location - 1] == 0x0A
+                if source[NSMaxRange(range) - 1] == 0x3A, !isDefinition {    // ":" after a reference
+                    range.length -= 1
+                }
+                add("NOTE", range)
             }
         }
     }
