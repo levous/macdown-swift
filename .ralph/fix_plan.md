@@ -35,6 +35,7 @@ what's missing (see the first task).
 - [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
 - [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
 - [x] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
+- [x] Front matter detection: require the closing `---`/`...` on its own line and a YAML mapping, so a document that opens with a thematic break isn't swallowed now that detection is always on (found by the corpus, 2026-10-09)
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
 - [x] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)` (0.9.0; swift-cmark resolves to 0.9.0); add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)

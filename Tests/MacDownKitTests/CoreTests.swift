@@ -103,6 +103,27 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(none.object == nil)
         #expect(none.offset == 0)
     }
+
+    /// A document that opens with a thematic break isn't front matter, now
+    /// that front matter is always detected: the closing delimiter must be a
+    /// line of its own, and the YAML must be a mapping.
+    @Test func leadingRuleIsNotFrontMatter() {
+        for text in [
+            "---\n\n# Title\n\nText with `---` in code.\n",
+            "---\n\n# Title\n\nA paragraph.\n\n---\n\nMore.\n",
+            "---\nJust a sentence.\n---\n",
+            "---\n- a list\n---\n",
+        ] {
+            let result = text.frontMatter()
+            #expect(result.object == nil, "\(text.debugDescription)")
+            #expect(result.offset == 0)
+        }
+        // A closing delimiter with trailing spaces, CRLF, or the "..." form.
+        for text in ["---\ntitle: A\n---  \nBody", "---\r\ntitle: A\r\n---\r\nBody",
+                     "---\ntitle: A\n...\nBody"] {
+            #expect(text.frontMatter().object?["title"] == .string("A"), "\(text.debugDescription)")
+        }
+    }
 }
 
 @Suite struct AssetTests {
