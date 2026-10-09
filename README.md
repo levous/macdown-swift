@@ -164,6 +164,16 @@ document's location exactly as before.
 - **Underline** is HTML: the Underline button and ⌘U insert `<u>…</u>`, and
   underscores follow standard Markdown (`_text_` italic, `__text__` bold).
   The original's Underline setting, which made `_text_` underline, is gone.
+- **Standard Markdown is always on:** tables, fenced code blocks, footnotes,
+  strikethrough, intra-word emphasis, task lists and Jekyll front matter
+  render without a setting, and their settings are gone (saved values are
+  left in user defaults). Settings ▸ Markdown keeps only the non-standard
+  syntax, off by default: Highlight, Superscript, Autolink and Smart
+  punctuation (the original's Smartypants, same key). The Quote setting
+  (`"…"` as `<q>`) is dropped; use Smart punctuation for curly quotes.
+- **Editing defaults** for new installs follow common Markdown conventions:
+  `-` list marker, newline at end of file, and spaces instead of tabs.
+  Existing installs keep their settings.
 - **Mermaid** is version 12 (the original bundled 8.4), so newer diagram
   types such as mindmaps, timelines and C4 work. Diagrams use Mermaid's
   `forest` theme, and syntax errors are shown under the diagram's source.

@@ -34,7 +34,7 @@ what's missing (see the first task).
 - [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
 - [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
 - [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
-- [ ] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
+- [x] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
 - [ ] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)`; add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
