@@ -155,6 +155,16 @@ final class DocumentSaveCallback: NSObject {
                       contextInfo: nil)
     }
 
+    /// Saves `document` to a new file chosen in a save panel, like
+    /// File ▸ Save As…; the document then refers to the new file.
+    static func saveAs(_ document: NSDocument, completion: @escaping (Bool) -> Void) {
+        let callback = DocumentSaveCallback(completion)
+        callback.keepAlive = callback
+        document.runModalSavePanel(for: .saveAsOperation, delegate: callback,
+                                   didSave: #selector(document(_:didSave:contextInfo:)),
+                                   contextInfo: nil)
+    }
+
     @objc private func document(_ document: NSDocument, didSave: Bool,
                                 contextInfo: UnsafeMutableRawPointer?) {
         keepAlive = nil

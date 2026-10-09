@@ -22,6 +22,8 @@ public final class DocumentController: NSObject {
         didSet {
             guard oldValue != fileURL else { return }
             if needsHtml { parseAndRender() }
+            // Saving an untitled document gives it a file.
+            updateUnsavedState()
         }
     }
 
@@ -41,7 +43,8 @@ public final class DocumentController: NSObject {
     public var isTextCountReady = false
     public var editorOnRight: Bool
     public var showsWordCount: Bool
-    /// Whether the editor's draft differs from the saved document. Only
+    /// Whether the editor's draft differs from the saved document, or the
+    /// document is untitled and not empty. Only
     /// with "Save changes automatically" off; otherwise every edit goes to
     /// the document, which AppKit autosaves.
     public private(set) var hasUnsavedChanges = false
@@ -256,6 +259,13 @@ public final class DocumentController: NSObject {
     /// whether it was saved. Replaceable for tests; the app saves through the
     /// window's NSDocument.
     @ObservationIgnored var saveDocument: ((DocumentController, @escaping (Bool) -> Void) -> Void)?
+    /// Saves the document to a new file (after the draft was copied into it)
+    /// and reports whether it was saved. Replaceable for tests; the app runs
+    /// NSDocument's Save As panel.
+    @ObservationIgnored var saveDocumentAs: ((DocumentController, @escaping (Bool) -> Void) -> Void)?
+    /// Makes a copy of the document (with the draft copied into it).
+    /// Replaceable for tests; the app uses NSDocument's duplicate().
+    @ObservationIgnored var duplicateDocument: ((DocumentController) throws -> Void)?
 
     // MARK: - Accessors
 
@@ -328,7 +338,10 @@ public final class DocumentController: NSObject {
     }
 
     private func updateUnsavedState() {
-        let unsaved = !autosaves && editor.string != savedText
+        // An untitled document with any text (typed, duplicated or piped in)
+        // has never been saved anywhere.
+        let untitledWithText = fileURL == nil && !editor.string.isEmpty
+        let unsaved = !autosaves && (editor.string != savedText || untitledWithText)
         if unsaved != hasUnsavedChanges { hasUnsavedChanges = unsaved }
         if !autosaves, let window, window.isDocumentEdited != unsaved {
             window.isDocumentEdited = unsaved
@@ -355,6 +368,50 @@ public final class DocumentController: NSObject {
             DocumentSaveCallback.save(platformDocument, completion: finish)
         } else {
             finish(false)
+        }
+    }
+
+    /// Saves the draft to a new file, like File ▸ Save As…, and reports
+    /// whether it was saved. The window then edits the new file; the original
+    /// file is left as it was last saved.
+    public func saveAs(completion: ((Bool) -> Void)? = nil) {
+        let text = editor.string
+        // Into the document for writing, but without marking it changed:
+        // AppKit would autosave the draft into the original file.
+        document.text = text
+        let finish: (Bool) -> Void = { [weak self] saved in
+            guard let self else { return }
+            if saved {
+                self.savedText = text
+            } else {
+                // Cancelled: the document keeps holding what's on disk.
+                self.document.text = self.savedText
+            }
+            self.updateUnsavedState()
+            completion?(saved)
+        }
+        if let saveDocumentAs {
+            saveDocumentAs(self, finish)
+        } else if let platformDocument {
+            DocumentSaveCallback.saveAs(platformDocument, completion: finish)
+        } else {
+            finish(false)
+        }
+    }
+
+    /// Opens a copy of the document with the draft in it, like
+    /// File ▸ Duplicate. This window keeps its draft and file as they were.
+    public func duplicate() {
+        document.text = editor.string
+        defer { document.text = savedText }
+        do {
+            if let duplicateDocument {
+                try duplicateDocument(self)
+            } else if let platformDocument {
+                _ = try platformDocument.duplicate()
+            }
+        } catch {
+            if let window { NSAlert(error: error).beginSheetModal(for: window) }
         }
     }
 

@@ -34,11 +34,12 @@ extension LiveDocumentTests {
 
     /// A controller in a closable window, saving through `saves` (whether
     /// each save succeeds) instead of an NSDocument.
-    func makeController(_ text: String = "saved",
+    func makeController(_ text: String = "saved", untitled: Bool = false,
                         saves: @escaping () -> Bool = { true })
         -> (DocumentController, NSWindow) {
+        let fileURL = untitled ? nil : URL(fileURLWithPath: "/tmp/macdown-test.md")
         let controller = DocumentController(document: MarkdownDocument(text: text),
-                                            fileURL: nil)
+                                            fileURL: fileURL)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
                               styleMask: [.titled, .closable, .resizable],
                               backing: .buffered, defer: false)
@@ -87,6 +88,26 @@ extension LiveDocumentTests {
             controller.undoManager.undo()
             #expect(controller.markdown == "saved")
             #expect(!controller.hasUnsavedChanges && !window.isDocumentEdited)
+        }
+    }
+
+    @Test func untitledDocumentsWithTextAreUnsaved() {
+        withAutosave(false) {
+            // An empty new window has nothing to lose.
+            let (empty, emptyWindow) = makeController("", untitled: true)
+            defer { empty.tearDown(); emptyWindow.close() }
+            #expect(!empty.hasUnsavedChanges)
+            type("new", in: empty)
+            #expect(empty.hasUnsavedChanges)
+
+            // A duplicate or piped-in text is untitled with content.
+            let (copy, copyWindow) = makeController("copied", untitled: true)
+            defer { copy.tearDown(); copyWindow.close() }
+            #expect(copy.hasUnsavedChanges && copyWindow.isDocumentEdited)
+            // Once saved somewhere, it isn't.
+            copy.save()
+            copy.fileURL = URL(fileURLWithPath: "/tmp/macdown-copy.md")
+            #expect(!copy.hasUnsavedChanges && !copyWindow.isDocumentEdited)
         }
     }
 
@@ -201,6 +222,59 @@ extension LiveDocumentTests {
 
             controller.tearDown()
             #expect(viewController.nextResponder === other)
+        }
+    }
+
+    @Test func saveAsWritesTheDraftToTheNewFile() {
+        withAutosave(false) {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            var written: String?
+            var chooses = false    // Whether the save panel is confirmed.
+            controller.saveDocumentAs = { controller, completion in
+                written = controller.document.text
+                completion(chooses)
+            }
+            type(" more", in: controller)
+
+            // Cancelled: nothing written; the document still holds what's on
+            // disk and the draft is still unsaved.
+            var result: Bool?
+            controller.saveAs { result = $0 }
+            #expect(result == false && written == "saved more")
+            #expect(controller.document.text == "saved")
+            #expect(controller.hasUnsavedChanges && controller.markdown == "saved more")
+
+            // Saved: the new file gets the draft, and it's no longer unsaved.
+            chooses = true
+            controller.saveAs { result = $0 }
+            #expect(result == true && written == "saved more")
+            #expect(controller.document.text == "saved more" && !controller.hasUnsavedChanges)
+        }
+    }
+
+    @Test func duplicateCopiesTheDraft() {
+        withAutosave(false) {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            var copied: String?
+            controller.duplicateDocument = { copied = $0.document.text }
+            type(" more", in: controller)
+
+            controller.duplicate()
+            #expect(copied == "saved more")
+            // This window keeps its draft, still unsaved, and its file.
+            #expect(controller.document.text == "saved")
+            #expect(controller.hasUnsavedChanges && controller.markdown == "saved more")
+        }
+    }
+
+    @Test func saveAsAndDuplicateReachTheResponder() throws {
+        let (controller, window) = makeController()
+        defer { controller.tearDown(); window.close() }
+        let responder = try #require(controller.responder)
+        for action in ["saveDocumentAs:", "duplicateDocument:"] {
+            #expect(target(for: NSSelectorFromString(action), from: controller.editor) === responder)
         }
     }
 

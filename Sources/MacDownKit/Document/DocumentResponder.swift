@@ -2,10 +2,11 @@
 //  DocumentResponder.swift
 //  MacDown
 //
-//  File ▸ Save (⌘S) is AppKit's saveDocument: action, sent up the responder
-//  chain to the window's NSDocument. The document only holds the saved text
-//  (the editor edits a draft; see DocumentController), so this responder
-//  handles the action first and saves the draft. SwiftUI's window hands the
+//  File ▸ Save (⌘S), Save As… and Duplicate are AppKit actions
+//  (saveDocument:, saveDocumentAs:, duplicateDocument:) sent up the
+//  responder chain to the window's NSDocument. The document only holds the
+//  saved text (the editor edits a draft; see DocumentController), so this
+//  responder handles them first, with the draft. SwiftUI's window hands the
 //  action to the document (as its supplemental target), so the responder
 //  has to come before the window: it goes right after the last responder
 //  ahead of it, which every focused view's chain passes. In SwiftUI windows
@@ -63,9 +64,22 @@ final class DocumentResponder: NSResponder {
         controller?.save()
     }
 
+    @objc func saveDocumentAs(_ sender: Any?) {
+        controller?.saveAs()
+    }
+
+    @objc func duplicateDocument(_ sender: Any?) {
+        controller?.duplicate()
+    }
+
+    private static let actions: Set<Selector> = [
+        #selector(saveDocument(_:)), #selector(saveDocumentAs(_:)),
+        #selector(duplicateDocument(_:)),
+    ]
+
     override func responds(to selector: Selector!) -> Bool {
-        // Without a controller, let the action reach the document.
-        if selector == #selector(saveDocument(_:)) { return controller != nil }
+        // Without a controller, let the actions reach the document.
+        if Self.actions.contains(selector) { return controller != nil }
         return super.responds(to: selector)
     }
 }
