@@ -259,6 +259,8 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 8. **Editing defaults follow conventions for new installs:** list marker `-`, newline at end of file on, spaces instead of tabs. Existing users keep their settings.
 9. **Footnotes have no setting.** The "backwards" footnote-highlighting flag in `DocumentController` turned out to be harmless: PEG Markdown Highlight defines a `NOTE` type but never emits it, so footnotes aren't colored in the editor with either flag value (checked 2026-10-09). The new highlighter colors footnotes (a `NOTE` span type).
 
+10. **The parser is cmark-gfm, used directly** (decided 2026-10-09, after finding F8). swift-cmark's `cmark-gfm` and `cmark-gfm-extensions` products, pinned exactly, parse once per edit with source positions, footnotes (`CMARK_OPT_FOOTNOTES`), the `table`, `strikethrough` and `tasklist` extensions always, `autolink` only with the Autolink setting on, and `CMARK_OPT_SMART` only with Smart punctuation on. Our model, highlighter and renderer walk cmark's C tree inside the parse task; swift-markdown's Swift tree is no longer used and the dependency goes. This resolves open questions 1 (footnotes are native) and 2 (cmark-gfm parses and walks 10,000 lines in 4.5 ms, against PEG's 20). Documents keep the "swift-markdown migration" name.
+
 ### Phase 0 findings
 
 Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift` (swift-markdown 0.9.0, swift-cmark 0.9.0):
@@ -274,5 +276,4 @@ Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift`
 
 ## Open questions
 
-1. **Footnote fallback.** swift-markdown 0.9.0 doesn't parse footnotes (Phase 0 finding F1), so how should they render: (a) a source scan that finds `[^label]` references and definitions in swift-markdown's text, (b) keep hoedown for footnotes until it's solved (blocks FR-34, removing hoedown), or (c) call cmark-gfm directly with footnotes on, for footnotes only or as the parser behind everything? Blocks Phase 3 "Footnotes always on" (FR-16).
-2. **Parser speed (NFR-1).** Highlighting from swift-markdown takes about 3.5× PEG's time on 10,000 lines (73 ms against 20 ms; finding F8), because swift-markdown's own parse is slower than PEG's whole run. Either (a) relax NFR-1 to a budget (say, highlighting within 100 ms of an edit on 10,000 lines) and keep swift-markdown, with the cheap wins (one tree walk, finding code without a second parse), or (b) build on cmark-gfm directly (4.5 ms for the same work), which is also open question 1's option (c) and gives footnotes and autolinks natively. Must be decided before Phase 3: `HTMLRenderer` would be built on the same tree.
+None open. Resolved: 1. footnote fallback and 2. parser speed, both by Decision 10 (cmark-gfm directly).

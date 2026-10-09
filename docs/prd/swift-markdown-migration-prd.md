@@ -164,7 +164,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 7. FR-7: Core blocks and inlines render as CommonMark HTML.
 8. FR-8: Tables, fenced code, strikethrough and task lists always render as GFM; there is no setting to turn them off.
-8a. FR-8a: With the Autolink setting on (off by default), bare URLs and email addresses render as links; off, they render as plain text. swift-markdown never parses bare URLs as links, so the renderer links them in its own pass when the setting is on. `<url>` autolinks (CommonMark) always render as links.
+8a. FR-8a: With the Autolink setting on (off by default), bare URLs and email addresses render as links through cmark-gfm's `autolink` extension, attached only then; off, they render as plain text. `<url>` autolinks (CommonMark) always render as links.
 9. FR-9: Fenced code blocks render as `<div><pre class="line-numbers" data-information><code class="language-…">`, the same markup as today, with the line-numbers class only when that setting is on.
 10. FR-10: Each code-block language is added to the parse result's Prism language list, with today's alias mapping from `languageAddition`.
 11. FR-11: Task list items always render with MacDown's current task-list markup and classes; there is no setting.
@@ -229,10 +229,10 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 ### Technical Requirements
 
-- TR-1: swift-markdown is added to `Package.swift` as a SwiftPM dependency pinned to an **exact** version. It brings swift-cmark, and no new C goes into the repo.
-- TR-2: Only `MarkdownDocumentModel` (and the visitors in the same module area) import swift-markdown's API directly, so a pre-1.0 API change touches one place.
+- TR-1: swift-cmark (`cmark-gfm`, `cmark-gfm-extensions`) is a SwiftPM dependency pinned to an **exact** version; no new C goes into the repo. (swift-markdown was used for the Phase 0 spikes and is dropped: intent Decision 10.)
+- TR-2: Only the model folder (`Document/Model`) calls the cmark-gfm C API, so the parser is contained in one place.
 - TR-3: `MarkdownDocumentModel` and everything it contains are value types that conform to `Sendable`.
-- TR-4: `HTMLRenderer` is a `MarkupVisitor` and `HighlightMapper` is a `MarkupWalker`, both pure (no app state, no main-actor isolation).
+- TR-4: `HTMLRenderer` and `HighlightMapper` walk cmark-gfm's node tree inside the parse task; both are pure (no app state, no main-actor isolation), and only their `Sendable` results leave it.
 - TR-5: Renderer-specific markup that used to live in `hoedown_html_patch.c` (task lists, code-block info, Prism code blocks, TOC classes) moves into `HTMLRenderer`.
 - TR-6: Resource directories added for the corpus or new themes are listed in `Package.swift`'s `resources:`.
 - TR-7: Tests use Swift Testing (`@Suite`/`@Test`). Live-preview tests run in the serialized `LiveDocumentTests` group.
@@ -347,5 +347,4 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 ### Open Questions
 
-1. **Footnote fallback.** swift-markdown 0.9.0 doesn't parse footnotes (Phase 0 finding F1), so how should they render: (a) a source scan that finds `[^label]` references and definitions in swift-markdown's text, (b) keep hoedown for footnotes until it's solved (blocks FR-34, removing hoedown), or (c) call cmark-gfm directly with footnotes on, for footnotes only or as the parser behind everything? Blocks Phase 3 "Footnotes always on" (FR-16).
-2. **Parser speed (NFR-1).** Highlighting from swift-markdown takes about 3.5× PEG's time on 10,000 lines (73 ms against 20 ms; intent finding F8), because swift-markdown's own parse is slower than PEG's whole run. Either (a) relax NFR-1 to a budget (say, highlighting within 100 ms of an edit on 10,000 lines) and keep swift-markdown, with the cheap wins (one tree walk, finding code without a second parse), or (b) build on cmark-gfm directly (4.5 ms for the same work), which is also open question 1's option (c) and gives footnotes and autolinks natively. Must be decided before Phase 3: `HTMLRenderer` would be built on the same tree.
+None open. Footnote fallback (1) and parser speed (2) were resolved on 2026-10-09 by building on cmark-gfm directly (intent Decision 10).

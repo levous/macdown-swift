@@ -79,21 +79,30 @@ what's missing (see the first task).
 - [x] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain (reviewed list in `HighlightDiffHarnessTests.reviewed`; a new difference fails the test)
   - Done: a header inside a block quote is colored (`HighlightMapperTests.headerInBlockQuote`)
 
+### Phase 2b: Move onto cmark-gfm (Decision 10)
+- [ ] `Package.swift`: MacDownKit depends on swift-cmark's `cmark-gfm` and `cmark-gfm-extensions` (exact 0.9.0)
+- [ ] `CMarkTree` (in `Document/Model`): parse with `CMARK_OPT_SOURCEPOS | CMARK_OPT_FOOTNOTES` (+ `CMARK_OPT_SMART` when on), extensions `table`, `strikethrough`, `tasklist` (+ `autolink` when on); node type, children, literal, positions (cmark end columns are inclusive); frees the tree; never leaves the parse task
+- [ ] `ProtectedSource`: code and raw HTML ranges from one cmark parse instead of swift-markdown
+- [ ] `MarkdownDocumentModel`: blocks from cmark nodes, in the same walk as highlighting (one walk)
+- [ ] `HighlightMapper` on cmark nodes: same spans and extents (all existing tests pass); NOTE from footnote nodes; AUTO_LINK_URL/EMAIL also for extension autolinks when Autolink is on; update the reviewed PEG diff list
+- [ ] Remove swift-markdown: dependency, imports, swift-markdown spike tests (findings stay recorded in the intent); `LineIndexTests` corpus check uses cmark positions
+- [ ] Benchmark: NFR-1 met on 10k lines (remove the known issue); record numbers in F8
+
 ### Phase 3: Renderer (FR-7 to FR-20, TR-4, TR-5)
 
-Blocked on PRD Open Question 2 (parser speed, F8): `HTMLRenderer` is a `MarkupVisitor` only if swift-markdown stays.
-- [ ] `HTMLRenderer` (`MarkupVisitor`, pure): CommonMark core blocks and inlines
+Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
+- [ ] `HTMLRenderer` (pure, walks cmark-gfm nodes inside the parse task): CommonMark core blocks and inlines
 - [ ] GFM tables, strikethrough, fenced code always on
 - [ ] Code blocks: `<div><pre class="line-numbers" data-information><code class="language-…">`, line-numbers class only when setting on; port `hoedown_html_patch.c` code-block info (FR-9)
 - [ ] Prism language list with `languageAddition` alias mapping moved out of `MarkdownParser.swift` (FR-10)
 - [ ] Task lists with MacDown's current markup/classes, always on (FR-11)
-- [ ] Footnotes always on (FR-16), per Phase 0 decision (BLOCKED: awaiting PRD Open Question 1)
+- [ ] Footnotes always on (FR-16), from cmark-gfm footnote nodes (`CMARK_OPT_FOOTNOTES`), with today's footnote markup
 - [ ] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
 - [ ] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
 - [ ] Hard wrap: soft breaks as `<br>` when on (FR-13)
 - [ ] Math pass-through: emit original source text by range, unescaped, when MathJax on (FR-14)
-- [ ] Autolink: bare URLs/emails linked only when setting on; `<url>` always linked (FR-8a)
-- [ ] Smart punctuation when on, never inside code (FR-17)
+- [ ] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)
+- [ ] Smart punctuation when on, never inside code (FR-17), via `CMARK_OPT_SMART`
 - [ ] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
 - [ ] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
 - [ ] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
@@ -134,8 +143,7 @@ Blocked on PRD Open Question 2 (parser speed, F8): `HTMLRenderer` is a `MarkupVi
 ## Notes
 - Principle: standard Markdown (CommonMark + GFM + footnotes + front matter) always on; extended features (highlight, superscript, autolink, smart punctuation, math, `[TOC]`, hard wrap, Graphviz) opt-in, off by default, keeping existing defaults keys.
 - Byte-identical output with the original MacDown is intentionally dropped (overrides CLAUDE.md's current rule once this project lands); differences go in the README.
-- Open Question 1 (footnote fallback: source scan, keep hoedown, or cmark-gfm directly) gates Phase 3 footnotes and Phase 5 removal of hoedown.
-- Open Question 2 (parser speed: relax NFR-1 or use cmark-gfm directly; F8) gates Phase 3.
+- Parser: cmark-gfm used directly (Decision 10, 2026-10-09); resolves Open Questions 1 and 2.
 - Corpus: generated fixtures plus `help.md` only; never real user documents or other docs (decided 2026-10-09).
 - `pmh_parser.c` is generated; never hand-edit it while it still exists.
 - Release notes must call out: strikethrough/task lists/front matter now always on, Quote dropped, new editing defaults for new installs.
