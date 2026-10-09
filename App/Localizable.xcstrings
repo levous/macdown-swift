@@ -1676,95 +1676,6 @@
         }
       }
     },
-    "Block formatting:" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blokové formátování:"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blokformattering:"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Block-Formatierung:"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formato de bloque:"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formattage en bloc:"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formattazione del blocco:"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ブロックフォーマット:"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blokkformatering:"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blokopmaak:"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formatação de bloco:"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formátovanie bloku:"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Block-formattering:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "代码块格式:"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "程式碼區塊格式:"
-          }
-        }
-      }
-    },
     "Blockquote" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3638,83 +3549,6 @@
         }
       }
     },
-    "Detect Jekyll front-matter" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detekovat Jekyll prostředí"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opdag Jekyll front-matter"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jekyll Front Matter erkennen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detectar cabeceras de Jekyll"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tuvasta Jekyll front-matter"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Détecter le front-matter de Jekyll"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jekyll のフロントマッタを検出"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gjenkjenn front-matter for Jekyll"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detecteer Jekyll front-matter"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detectar o cabeçalho Jekyll"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检测 Jekyll 头部参数"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "偵測 Jekyll 開頭參數"
-          }
-        }
-      }
-    },
     "Detect table of contents token" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4577,89 +4411,6 @@
         }
       }
     },
-    "Fenced code block" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zamknutý blok kódu"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afgrænset kodeblok"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abgetrennte (fenced) Code-Blöcke"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bloque de código cercado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bloc de code"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blocco di codice fenced"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "別行立てコードブロック"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "코드 펜스"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inngjerda kodeblokk"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afgesloten codeblok"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blocos de código-fonte delimitados"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "围栏式代码块"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "圍欄式程式碼區"
-          }
-        }
-      }
-    },
     "File not found at path:\n%@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4787,107 +4538,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "在以下路徑找不到檔案：\n%@"
-          }
-        }
-      }
-    },
-    "Footnote" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zápatí"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fodnote"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fußnote"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nota al pie"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allmärkus"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Note de bas de page"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Note a piè pagina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "脚注"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fotnote"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voetnoot"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nota de rodapé"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Poznámka pod čiarou"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fotnot"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dipnot"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "脚注"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "註腳"
           }
         }
       }
@@ -6819,89 +6469,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安裝"
-          }
-        }
-      }
-    },
-    "Intra-word emphasis" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zvýraznění uprostřed slova"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Intra-ord fremhævelse"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hervorhebung innerhalb von Wörtern"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Énfasis intra-palabra"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sõnasisene rõhk"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Italique au sein d’un mot"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enfasi tra le parole"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "単語内強調"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utheva tekst inne i ord"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benadruk woorden"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Itálico dentro de palavras"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelime içi vurgu"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单词内强调"
           }
         }
       }
@@ -10111,119 +9678,6 @@
         }
       }
     },
-    "Quote" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citovat"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citat"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zitat"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cita"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tsitaat"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citation"
-          }
-        },
-        "is" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tilvitnun"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "引用"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인용"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitat"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citaat"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citação"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citát"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Citat"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alıntı"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "引用"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "引言"
-          }
-        }
-      }
-    },
     "Reload" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12292,79 +11746,132 @@
         }
       }
     },
-    "Smartypants" : {
-      "extractionState" : "stale",
+    "Smart punctuation" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Chytrá interpunkce"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Smart tegnsætning"
           }
         },
         "da-DK" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Smart tegnsætning"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Intelligente Anführungszeichen"
+            "state" : "needs_review",
+            "value" : "Intelligente Interpunktion"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Puntuación inteligente"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nutikas kirjavahemärgistus"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Älykäs välimerkitys"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Ponctuation intelligente"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Snjöll greinarmerkjasetning"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Punteggiatura intelligente"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "スマート句読点"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "스마트 문장 부호"
           }
         },
         "nb-NO" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Smart tegnsetting"
           }
         },
         "nl-NL" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Slimmerik"
+            "state" : "needs_review",
+            "value" : "Slimme interpunctie"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Pontuação Inteligente"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Умная пунктуация"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inteligentná interpunkcia"
           }
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "Smart interpunktion"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Akıllı Noktalama"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "智能标点"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smartypants"
+            "state" : "needs_review",
+            "value" : "智慧型標點"
           }
         }
       }
@@ -12864,202 +12371,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "程式碼區塊語法高亮"
-          }
-        }
-      }
-    },
-    "Table" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabulka"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabel"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabellen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabla"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabel"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tableau"
-          }
-        },
-        "is" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tafla"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabella"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "表組み"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테이블"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabell"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabel"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabela"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabuľka"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabell"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tablo"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "表格"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "表格"
-          }
-        }
-      }
-    },
-    "Task list syntax" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seznam úkolů"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syntaks for opgaveliste"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufgabenlisten-Syntax"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sintaxis de lista de tareas"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ülesannete nimekirja süntaks"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syntaxe de liste de tâches"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sintassi lista di azioni"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "チェックリストシンタックス"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syntaks for oppgaveliste"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Taaklijstsyntax"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Habilitar sintaxe da lista de tarefas"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checklist-syntax"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "任务清单语法"
           }
         }
       }

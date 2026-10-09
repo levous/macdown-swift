@@ -29,7 +29,7 @@ what's missing (see the first task).
 - [x] `Preferences.swift`: remove properties `extensionTables`, `extensionFencedCode`, `extensionFootnotes`, `extensionStrikethough`, `extensionIntraEmphasis`, `extensionQuote`, `htmlTaskList`, `htmlDetectFrontMatter`; do NOT delete their keys from user defaults (FR-36), and drop them from any `keysToRemove`-style cleanup if listed there
 - [x] `DocumentController.swift` (~line 764): highlighter footnote extension always on; drop the `extensionFootnotes` observation and its entry in the observed-keys list (~line 107)
 - [x] `SettingsView.swift`: `MarkdownSettingsView` shows only Highlight, Superscript, Autolink, and "Smart punctuation" (relabeled Smartypants, key `extensionSmartyPants`); Rendering pane drops Task list syntax and Detect Jekyll front-matter
-- [ ] Add new/changed UI strings via `String(localized:)` to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available (NFR-6)
+- [x] Add new/changed UI strings via `String(localized:)` to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available (NFR-6)
 - [ ] `Preferences.loadDefaultPreferences` (fresh install only): `editorUnorderedListMarkerType = .minusSign`, `editorEnsuresNewlineAtEndOfFile = true`, `editorConvertTabs = true`; remove now-dead `extensionFootnotes = true` default
 - [ ] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
 - [ ] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)

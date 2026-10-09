@@ -504,5 +504,28 @@
     "tr": "Kaydedilmemiş değişiklikleriniz var.",
     "zh-Hans": "你有未存储的更改。",
     "zh-Hant": "你有未儲存的變更。"
+  },
+  "Smart punctuation": {
+    "cs": "Chytrá interpunkce",
+    "da": "Smart tegnsætning",
+    "da-DK": "Smart tegnsætning",
+    "de": "Intelligente Interpunktion",
+    "es": "Puntuación inteligente",
+    "et": "Nutikas kirjavahemärgistus",
+    "fi": "Älykäs välimerkitys",
+    "fr": "Ponctuation intelligente",
+    "is": "Snjöll greinarmerkjasetning",
+    "it-IT": "Punteggiatura intelligente",
+    "ja": "スマート句読点",
+    "ko-KR": "스마트 문장 부호",
+    "nb-NO": "Smart tegnsetting",
+    "nl-NL": "Slimme interpunctie",
+    "pt-BR": "Pontuação Inteligente",
+    "ru-RU": "Умная пунктуация",
+    "sk": "Inteligentná interpunkcia",
+    "sv": "Smart interpunktion",
+    "tr": "Akıllı Noktalama",
+    "zh-Hans": "智能标点",
+    "zh-Hant": "智慧型標點"
   }
 }
