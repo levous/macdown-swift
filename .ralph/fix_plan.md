@@ -39,7 +39,7 @@ what's missing (see the first task).
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
 - [x] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)` (0.9.0; swift-cmark resolves to 0.9.0); add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
 - [x] Spike: confirm swift-markdown exposes cmark-gfm footnotes. **Answer (F1): not exposed**; the syntax stays literal text, and cmark-gfm parses footnotes directly with `CMARK_OPT_FOOTNOTES`. The fallback choice is PRD Open Question 1, still open (now three options, including cmark-gfm directly)
-- [ ] Spike: can GFM autolinks (bare URLs/emails) be disabled at parse time? Record answer
+- [x] Spike: can GFM autolinks (bare URLs/emails) be disabled at parse time? **Answer (F2): they are never parsed**, so nothing to disable; the Autolink setting needs our own text-run pass (or cmark-gfm's `autolink` extension)
 - [ ] Spike: native support for smart punctuation, `==highlight==`, `^superscript`? Record each answer (native vs our own pass)
 - [ ] Spike: does swift-markdown/cmark apply smart punctuation BY DEFAULT (look for a `disableSmartOpts`-style `ParseOptions` flag)? If so, FR-17 requires passing the disable option whenever the setting is off
 - [ ] Spike: does every block node carry a `SourceRange`? Is `Markdown.Document` `Sendable` / usable from a detached task under Swift 6? (`Markup` is a struct over a class-backed tree; verify specifically, it decides the Phase 1 model shape)

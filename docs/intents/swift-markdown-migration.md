@@ -264,6 +264,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift` (swift-markdown 0.9.0, swift-cmark 0.9.0):
 
 - **F1. Footnotes are not exposed** (checked 2026-10-09). swift-markdown never sets `CMARK_OPT_FOOTNOTES` and has no footnote node types; `a[^1]` and `[^1]: note` stay literal `Text` in ordinary paragraphs (the definition isn't swallowed as a link reference definition). cmark-gfm itself, which swift-markdown depends on, parses `footnote_reference` and `footnote_definition` nodes with source positions when given `CMARK_OPT_FOOTNOTES`. How to render them is open question 1.
+- **F2. Bare-URL autolinks are never parsed** (checked 2026-10-09). swift-markdown attaches only the `table`, `strikethrough` and `tasklist` extensions, not GFM's `autolink`, so `https://…`, `www.…` and emails stay text, and there's nothing to turn off. CommonMark `<https://…>` and `<a@b.c>` are always links. The Autolink setting (FR-8a) needs our own pass over text runs when it's on (or cmark-gfm's `autolink` extension, if cmark-gfm is used directly).
 
 ## Open questions
 

@@ -66,3 +66,25 @@ import cmark_gfm
         #expect(footnotes.map(\.line) == [1, 3])
     }
 }
+
+// MARK: Autolinks
+
+extension SwiftMarkdownSpikeTests {
+    /// swift-markdown attaches only the table, strikethrough and tasklist
+    /// extensions, not GFM's autolink extension, so bare URLs and emails stay
+    /// text. CommonMark `<…>` autolinks are always links.
+    @Test func bareURLsAreNotLinked() {
+        func links(_ source: String) -> [String] {
+            var found: [String] = []
+            func walk(_ markup: Markup) {
+                if let link = markup as? Link { found.append(link.destination ?? "") }
+                markup.children.forEach(walk)
+            }
+            walk(Document(parsing: source))
+            return found
+        }
+        #expect(links("See https://example.org and www.example.org or hello@example.org.\n") == [])
+        #expect(links("See <https://example.org> or <hello@example.org>.\n")
+                == ["https://example.org", "mailto:hello@example.org"])
+    }
+}
