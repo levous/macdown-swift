@@ -73,4 +73,44 @@ import Testing
     @Test func headerInBlockQuote() {
         #expect(spans("> ## Quoted\n")["H2"] == ["## Quoted\n"])
     }
+
+    @Test func listMarkers() {
+        let s = spans("- a\n- b\n\n* c\n\n1. d\n2) e\n\n10. f\n\n> + quoted\n")
+        #expect(s["LIST_BULLET"] == ["-", "-", "*", "+"])
+        #expect(s["LIST_ENUMERATOR"] == ["1.", "2)", "10."])
+    }
+
+    @Test func referenceDefinitions() {
+        let text = """
+            [a]: https://a.org "Title"
+            [b]: <https://b.org/with space>
+            Text right after definitions.
+
+            Text first,
+            [c]: https://c.org is text here.
+
+            - [d]: https://d.org
+
+            > [e]: https://e.org
+
+            [^1]: A footnote isn't a reference.
+
+                [f]: https://f.org in code
+            """
+        #expect(spans(text)["REFERENCE"] == [
+            #"[a]: https://a.org "Title""#, "[b]: <https://b.org/with space>",
+            "[d]: https://d.org", "[e]: https://e.org",
+        ])
+    }
+
+    @Test func entitiesOutsideCodeAndHTML() {
+        let s = spans("&copy; &#169; &#x2603; &nope; `&amp;` <span title=\"&amp;\">x</span>\n\n# A &amp; B\n\n| &lt; |\n|---|\n")
+        #expect(s["HTML_ENTITY"] == ["&copy;", "&#169;", "&#x2603;", "&nope;", "&amp;", "&lt;"])
+    }
+
+    @Test func comments() {
+        let s = spans("<!-- block -->\n\nInline <!-- note --> text.\n")
+        #expect(s["COMMENT"] == ["<!-- block -->", "<!-- note -->"])
+        #expect(s["HTMLBLOCK"] == ["<!-- block -->"])
+    }
 }

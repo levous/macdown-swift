@@ -89,7 +89,8 @@ public struct MarkdownDocumentModel: Sendable {
         }
         walk(document)
         self.blocks = blocks
-        highlights = HighlightMapper.spans(of: document, source: source, lineIndex: lineIndex)
+        highlights = HighlightMapper.spans(of: document, source: source, lineIndex: lineIndex,
+                                             math: math)
     }
 
     private static func kind(of markup: Markup) -> Block.Kind? {
