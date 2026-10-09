@@ -280,6 +280,24 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(flags & HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue == 0)
         #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
     }
+
+    @Test func taskListsAndFrontMatterAreAlwaysOn() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("1", forKey: "firstVersionInstalled")
+        defaults.set(false, forKey: "htmlTaskList")
+        defaults.set(false, forKey: "htmlDetectFrontMatter")
+        let settings = Preferences(defaults: defaults).renderSettings
+        #expect(settings.parse.rendererFlags & UInt32(HOEDOWN_HTML_USE_TASK_LIST) != 0)
+        #expect(settings.page.taskList)    // The checkbox script.
+        #expect(settings.parse.detectsFrontMatter)
+
+        let html = MarkdownParser.parse("---\ntitle: Notes\n---\n\n- [x] done\n",
+                                        settings: settings.parse).body
+        #expect(html.contains("<table>") && html.contains("Notes"))
+        #expect(html.contains(#"type="checkbox""#))
+    }
 }
 
 @Suite struct RendererTests {

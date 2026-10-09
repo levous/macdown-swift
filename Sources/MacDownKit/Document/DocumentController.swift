@@ -941,7 +941,7 @@ public final class DocumentController: NSObject {
               let container = editor.textContainer
         else { return }
         let key = (text: editor.string, width: container.size.width,
-                   frontMatter: preferences.htmlDetectFrontMatter,
+                   frontMatter: true,
                    fencedCode: preferences.extensionFencedCode)
         if let old = editorAnchorsKey, old == key { return }
         editorAnchorsKey = key
@@ -1134,8 +1134,7 @@ public final class DocumentController: NSObject {
             return fileURL.deletingPathExtension().lastPathComponent
         }
         let string = editor.string
-        if preferences.htmlDetectFrontMatter,
-           let title = string.frontMatter().object?["title"]?.stringValue {
+        if let title = string.frontMatter().object?["title"]?.stringValue {
             return title
         }
         guard let title = string.titleString else {

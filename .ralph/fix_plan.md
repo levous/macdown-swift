@@ -25,7 +25,7 @@ what's missing (see the first task).
 
 ### Early step: settings and defaults on hoedown (FR-35, FR-35a, FR-36; optional but recommended first)
 - [x] `Renderer.swift` (`Preferences.renderSettings` / hoedown flag mapping): always set tables, fenced code, footnotes, strikethrough, intra-word emphasis; never set quote
-- [ ] `Renderer.swift` / `MarkdownParser.swift`: always render task lists and always detect Jekyll front matter (no longer read `htmlTaskList`, `htmlDetectFrontMatter`)
+- [x] `Renderer.swift` / `MarkdownParser.swift`: always render task lists and always detect Jekyll front matter (no longer read `htmlTaskList`, `htmlDetectFrontMatter`)
 - [ ] `Preferences.swift`: remove properties `extensionTables`, `extensionFencedCode`, `extensionFootnotes`, `extensionStrikethough`, `extensionIntraEmphasis`, `extensionQuote`, `htmlTaskList`, `htmlDetectFrontMatter`; do NOT delete their keys from user defaults (FR-36), and drop them from any `keysToRemove`-style cleanup if listed there
 - [ ] `DocumentController.swift` (~line 764): highlighter footnote extension always on; drop the `extensionFootnotes` observation and its entry in the observed-keys list (~line 107)
 - [ ] `SettingsView.swift`: `MarkdownSettingsView` shows only Highlight, Superscript, Autolink, and "Smart punctuation" (relabeled Smartypants, key `extensionSmartyPants`); Rendering pane drops Task list syntax and Detect Jekyll front-matter

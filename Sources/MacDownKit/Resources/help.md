@@ -418,7 +418,7 @@ With *Use dollar sign ($) as inline delimiter* on too, $e^{i\pi} + 1 = 0$ works 
 
 ### Task List Syntax
 
-*Task list syntax* (off by default) turns `[ ]` and `[x]` at the start of a list item into checkboxes:
+Task lists are standard and always on: `[ ]` and `[x]` at the start of a list item become checkboxes:
 
 1. [x] I can render checkbox list syntax
 	* [x] I support nesting
@@ -434,7 +434,7 @@ With *Use dollar sign ($) as inline delimiter* on too, $e^{i\pi} + 1 = 0$ works 
 
 ### Jekyll Front-matter
 
-*Detect Jekyll front-matter* (off by default) displays front-matter as a table. Put the front-matter at the very beginning of the file, fenced with `---`:
+Front-matter is always detected and displayed as a table. Put it at the very beginning of the file, fenced with `---`:
 
 ```
 ---

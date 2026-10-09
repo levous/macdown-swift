@@ -52,9 +52,9 @@ extension Preferences {
         return flags
     }
 
+    /// Task lists are standard (GFM) and always on.
     public var rendererFlags: UInt32 {
-        var flags: UInt32 = 0
-        if htmlTaskList { flags |= UInt32(HOEDOWN_HTML_USE_TASK_LIST) }
+        var flags = UInt32(HOEDOWN_HTML_USE_TASK_LIST)
         if htmlLineNumbers { flags |= UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) }
         if htmlHardWrap { flags |= HOEDOWN_HTML_HARD_WRAP.rawValue }
         if codeBlockAccessory == .custom {
@@ -70,7 +70,7 @@ extension Preferences {
         page.highlightingThemeName = htmlHighlightingThemeName
         page.lineNumbers = htmlLineNumbers
         page.codeBlockAccessory = codeBlockAccessory
-        page.taskList = htmlTaskList
+        page.taskList = true
         page.mermaid = htmlMermaid
         page.graphviz = htmlGraphviz
         page.mathJax = htmlMathJax
@@ -80,7 +80,7 @@ extension Preferences {
                                  rendererFlags: rendererFlags,
                                  smartyPants: extensionSmartyPants,
                                  rendersTOC: htmlRendersTOC,
-                                 detectsFrontMatter: htmlDetectFrontMatter),
+                                 detectsFrontMatter: true),
             page: page)
     }
 }

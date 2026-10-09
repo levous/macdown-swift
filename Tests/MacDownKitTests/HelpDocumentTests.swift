@@ -40,10 +40,12 @@ enum HelpDocument {
                         "<u>Underline</u>", "<code>Inline code</code>", "<pre>",
                         "<blockquote>", "<ol>", "<ul>", "<hr>", "<table>",
                         "<kbd>Command</kbd>", "H<sub>2</sub>O", "&copy;",
-                        "<del>struck through</del>",
+                        "<del>struck through</del>", "task-list-item",
                         "<!-- This is an HTML comment."] {
             #expect(html.contains(element), "missing \(element)")
         }
+        // Task lists are standard: all four example items are checkboxes.
+        #expect(html.components(separatedBy: #"type="checkbox""#).count - 1 == 4)
         // Nested block quotes, inline and reference links and images.
         #expect(html.components(separatedBy: "<blockquote>").count - 1 >= 3)
         #expect(html.contains(#"<a href="https://commonmark.org" title="The CommonMark site">"#))
@@ -65,8 +67,7 @@ enum HelpDocument {
 
     @Test func extendedSyntaxStaysPlainUntilTurnedOn() throws {
         let html = try render()
-        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "task-list-item",
-                        "&hellip;", #"<a href="https://example.org">"#, "<q>"] {
+        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "&hellip;", #"<a href="https://example.org">"#, "<q>"] {
             #expect(!html.contains(element), "\(element) without its setting")
         }
         for text in ["==highlighted==", "y^3", "https://example.org", "<p>[TOC]</p>",
@@ -81,7 +82,6 @@ enum HelpDocument {
             p.extensionSuperscript = true
             p.extensionAutolink = true
             p.extensionSmartyPants = true
-            p.htmlTaskList = true
             p.htmlRendersTOC = true
             p.htmlMathJax = true
             p.htmlMathJaxInlineDollar = true
@@ -90,10 +90,9 @@ enum HelpDocument {
                         "&ldquo;Curly quotes,&rdquo;",
                         #"<a href="https://example.org">https://example.org</a>"#,
                         #"<a href="mailto:hello@example.org">"#,
-                        "&ndash;", "&mdash;", "&hellip;", "task-list-item"] {
+                        "&ndash;", "&mdash;", "&hellip;"] {
             #expect(html.contains(element), "missing \(element)")
         }
-        #expect(html.components(separatedBy: #"type="checkbox""#).count - 1 == 4)
         // [TOC] became a table of contents.
         #expect(!html.contains("<p>[TOC]</p>"))
         // Math is left for MathJax, untouched by superscript or emphasis.
@@ -137,14 +136,11 @@ extension LiveDocumentTests {
 
     @Test func previewRunsEveryExample() async throws {
         let p = Preferences.shared
-        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.htmlTaskList)
+        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz)
         p.htmlSyntaxHighlighting = true
         p.htmlMermaid = true
         p.htmlGraphviz = true
-        p.htmlTaskList = true
-        defer {
-            (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.htmlTaskList) = saved
-        }
+        defer { (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz) = saved }
         let controller = DocumentController(
             document: MarkdownDocument(text: try HelpDocument.text()), fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
