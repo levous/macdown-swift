@@ -631,6 +631,136 @@
         }
       }
     },
+    "“%@” was changed by another application." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dokument „%@“ byl změněn jinou aplikací."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” er blevet ændret af et andet program."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” er blevet ændret af et andet program."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "„%@“ wurde von einem anderen Programm geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” ha sido modificado por otra aplicación."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teine rakendus muutis faili „%@“."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Toinen ohjelma muutti tiedostoa ”%@”."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "« %@ » a été modifié par une autre application."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annað forrit breytti „%@“."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” è stato modificato da un'altra applicazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@”はほかのアプリケーションによって変更されました。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "‘%@’이(가) 다른 응용 프로그램에 의해 변경되었습니다."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "«%@» ble endret av et annet program."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "‘%@’ is gewijzigd door een ander programma."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” foi modificado por outro aplicativo."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Файл «%@» был изменён другим приложением."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dokument „%@“ bol zmenený inou aplikáciou."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "”%@” har ändrats av ett annat program."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” başka bir uygulama tarafından değiştirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@”已被其他应用程序更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「%@」已被其他應用程式更改。"
+          }
+        }
+      }
+    },
     "⌘← jumps to first non-whitespace character in line" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -888,6 +1018,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "附加："
+          }
+        }
+      }
+    },
+    "An error occurred while creating the file:\n%@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Při vytváření souboru došlo k chybě:\n%@"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der opstod en fejl under oprettelse af filen:\n%@"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der opstod en fejl under oprettelse af filen:\n%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Beim Erstellen der Datei ist ein Fehler aufgetreten:\n%@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se produjo un error al crear el archivo:\n%@"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Faili loomisel tekkis viga:\n%@"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tiedostoa luotaessa tapahtui virhe:\n%@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une erreur s’est produite lors de la création du fichier :\n%@"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Villa kom upp við að búa til skrána:\n%@"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Si è verificato un errore durante la creazione del file:\n%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルの作成中にエラーが起きました:\n%@"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "파일을 생성하는 중 오류가 발생했습니다:\n%@"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Det oppstod en feil under oppretting av filen:\n%@"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Er is een fout opgetreden bij het aanmaken van het bestand:\n%@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ocorreu um erro ao criar o arquivo:\n%@"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "При создании файла произошла ошибка:\n%@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pri vytváraní súboru sa vyskytla chyba:\n%@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ett fel uppstod när filen skulle skapas:\n%@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dosya oluşturulurken bir hata oluştu:\n%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "创建文件时出错：\n%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "建立檔案時發生錯誤：\n%@"
           }
         }
       }
@@ -1675,6 +1935,266 @@
         }
       }
     },
+    "Cancel" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zrušit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuller"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuller"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cancelar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tühista"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kumoa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuler"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hætta við"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annulla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "キャンセル"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "취소"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avbryt"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Annuleer"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cancelar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Отменить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zrušiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avbryt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vazgeç"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "取消"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Can’t create file:\n%@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Soubor nelze vytvořit:\n%@"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Filen kan ikke oprettes:\n%@"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Filen kan ikke oprettes:\n%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Datei kann nicht erstellt werden:\n%@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No se puede crear el archivo:\n%@"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Faili ei saa luua:\n%@"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tiedostoa ei voi luoda:\n%@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Impossible de créer le fichier :\n%@"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ekki er hægt að búa til skrána:\n%@"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Impossibile creare il file:\n%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルを作成できません:\n%@"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "파일을 생성할 수 없습니다:\n%@"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kan ikke opprette filen:\n%@"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kan bestand niet aanmaken:\n%@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não é possível criar o arquivo:\n%@"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Не удаётся создать файл:\n%@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Súbor nie je možné vytvoriť:\n%@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Det går inte att skapa filen:\n%@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dosya oluşturulamıyor:\n%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "无法创建文件：\n%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法建立檔案：\n%@"
+          }
+        }
+      }
+    },
     "Change…" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2004,6 +2524,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 個字元;%@ 個字元"
+          }
+        }
+      }
+    },
+    "Choose…" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vybrat…"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vælg…"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vælg…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auswählen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Seleccionar…"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vali…"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Valitse…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisir…"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Velja…"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Scegli…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選択…"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "선택…"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Velg…"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kies…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolher…"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Выбрать…"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vybrať…"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Välj…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Seç…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "选取…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選擇…"
           }
         }
       }
@@ -2420,6 +3070,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製 HTML"
+          }
+        }
+      }
+    },
+    "Count" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Počítat"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tæl"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tæl"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Contar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Loe"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Laske"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Compter"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Telja"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conteggio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カウント"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "세기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tell"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tellen"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Contar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Считать"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Počítať"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Räkna"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Say"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "计数"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "計數"
           }
         }
       }
@@ -2996,6 +3776,266 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "检测目录标记"
+          }
+        }
+      }
+    },
+    "Discard" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahodit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kassér"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kassér"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verwerfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Descartar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hülga"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hylkää"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abandonner"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Henda"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Scarta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "破棄"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "폐기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Forkast"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gooi weg"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Descartar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Не сохранять"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahodiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Släng"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "At"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "放弃"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "放棄"
+          }
+        }
+      }
+    },
+    "Do you want to keep your changes, or discard them and load the file from disk?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chcete zachovat své změny, nebo je zahodit a načíst soubor z disku?"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vil du beholde dine ændringer eller kassere dem og indlæse filen fra disken?"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vil du beholde dine ændringer eller kassere dem og indlæse filen fra disken?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Möchtest du deine Änderungen behalten oder sie verwerfen und die Datei von der Festplatte laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "¿Quieres conservar tus cambios o descartarlos y cargar el archivo desde el disco?"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kas soovite oma muudatused alles jätta või need hüljata ja laadida faili kettalt?"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Haluatko säilyttää muutoksesi vai hylätä ne ja ladata tiedoston levyltä?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Voulez-vous conserver vos modifications, ou les abandonner et charger le fichier depuis le disque ?"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Viltu halda breytingunum þínum, eða henda þeim og hlaða skránni af diski?"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vuoi mantenere le modifiche o scartarle e caricare il file dal disco?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "変更内容を保持しますか？それとも変更内容を破棄してディスクからファイルを読み込みますか？"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "변경 사항을 유지하시겠습니까, 아니면 폐기하고 디스크에서 파일을 불러오시겠습니까?"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vil du beholde endringene dine, eller forkaste dem og laste inn filen fra disken?"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wil je je wijzigingen behouden, of ze weggooien en het bestand van schijf laden?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Deseja manter suas alterações ou descartá-las e carregar o arquivo do disco?"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Сохранить ваши изменения или отменить их и загрузить файл с диска?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chcete ponechať svoje zmeny, alebo ich zahodiť a načítať súbor z disku?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vill du behålla dina ändringar, eller slänga dem och läsa in filen från disken?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Değişikliklerinizi korumak mı, yoksa bunları atıp dosyayı diskten yüklemek mi istiyorsunuz?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "您要保留您的更改，还是放弃更改并从磁盘载入文件？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "您要保留您的更動，還是放棄更動並從磁碟載入檔案？"
           }
         }
       }
@@ -3608,6 +4648,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圍欄式程式碼區"
+          }
+        }
+      }
+    },
+    "File not found at path:\n%@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Soubor nebyl nalezen v cestě:\n%@"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Filen blev ikke fundet på stien:\n%@"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Filen blev ikke fundet på stien:\n%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Datei nicht gefunden unter dem Pfad:\n%@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No se encontró el archivo en la ruta:\n%@"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Faili ei leitud asukohast:\n%@"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tiedostoa ei löytynyt polusta:\n%@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Fichier introuvable à l’emplacement :\n%@"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Skrá fannst ekki á slóðinni:\n%@"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "File non trovato nel percorso:\n%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次のパスにファイルが見つかりません:\n%@"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "다음 경로에서 파일을 찾을 수 없습니다:\n%@"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Fant ikke filen på stien:\n%@"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bestand niet gevonden op pad:\n%@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arquivo não encontrado no caminho:\n%@"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Файл не найден по пути:\n%@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Súbor sa nenašiel v ceste:\n%@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Filen hittades inte på sökvägen:\n%@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dosya şu yolda bulunamadı:\n%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在以下路径找不到文件：\n%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在以下路徑找不到檔案：\n%@"
           }
         }
       }
@@ -5727,6 +6897,136 @@
         }
       }
     },
+    "Keep My Changes" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zachovat mé změny"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Behold mine ændringer"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Behold mine ændringer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Meine Änderungen behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conservar mis cambios"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Jäta minu muudatused alles"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Säilytä muutokseni"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conserver mes modifications"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Halda mínum breytingum"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mantieni le mie modifiche"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "変更内容を保持"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "변경 사항 유지"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Behold endringene mine"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mijn wijzigingen behouden"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Manter Minhas Alterações"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Сохранить мои изменения"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ponechať moje zmeny"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Behåll mina ändringar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Değişikliklerimi Koru"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保留我的更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保留我的更動"
+          }
+        }
+      }
+    },
     "Language name" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6262,6 +7562,136 @@
         }
       }
     },
+    "Limit editor width" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Omezit šířku editoru"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Begræns linjebredde"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Begræns linjebredde"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Breite des Editors beschränken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Limitar el ancho del editor"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Piira redaktori laiust"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rajoita editorin leveyttä"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Limiter la largeur de l’éditeur"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Takmarka vídd ritils"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Limita larghezza editor"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エディタの最大幅を設定"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "편집기 너비 제한"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Begrens redigeringsvinduets bredde"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Beperk breedte van bewerker"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Limitar a largura do editor"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ограничить ширину редактора"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Obmedziť šírku editora"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Begränsa redigeringsvyns bredd"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editör genişliğini sınırla"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "限制编辑窗口最大宽度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "限制編輯器寬度"
+          }
+        }
+      }
+    },
     "Limit editor width to" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6791,6 +8221,136 @@
         }
       }
     },
+    "MacDown can’t create a file for the clicked link because the current file is not saved anywhere yet. Save the current file somewhere to enable this feature." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown nemůže vytvořit soubor pro odkaz, na který jste klikli, protože aktuální soubor ještě nikde není uložen. Chcete-li tuto funkci použít, aktuální soubor uložte."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kan ikke oprette en fil til det klikkede link, fordi den aktuelle fil ikke er gemt endnu. Gem den aktuelle fil for at bruge denne funktion."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kan ikke oprette en fil til det klikkede link, fordi den aktuelle fil ikke er gemt endnu. Gem den aktuelle fil for at bruge denne funktion."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kann keine Datei für den angeklickten Link erstellen, da die aktuelle Datei noch nicht gespeichert wurde. Speichere die aktuelle Datei, um diese Funktion zu nutzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown no puede crear un archivo para el enlace pulsado porque el archivo actual aún no se ha guardado. Guarda el archivo actual para usar esta función."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown ei saa klõpsatud lingi jaoks faili luua, kuna praegust faili pole veel kuhugi salvestatud. Selle funktsiooni kasutamiseks salvestage praegune fail."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown ei voi luoda tiedostoa napsautetulle linkille, koska nykyistä tiedostoa ei ole vielä tallennettu. Tallenna nykyinen tiedosto käyttääksesi tätä toimintoa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown ne peut pas créer de fichier pour le lien cliqué, car le fichier actuel n’a pas encore été enregistré. Enregistrez le fichier actuel pour activer cette fonction."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown getur ekki búið til skrá fyrir tengilinn sem smellt var á því núverandi skrá hefur ekki verið vistuð. Vistaðu núverandi skrá til að virkja þennan eiginleika."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown non può creare un file per il link selezionato perché il file attuale non è ancora stato salvato. Salva il file attuale per abilitare questa funzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在のファイルがまだ保存されていないため、MacDown はクリックしたリンクのファイルを作成できません。この機能を使うには、現在のファイルを保存してください。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "현재 파일이 아직 저장되지 않았기 때문에 MacDown이 클릭한 링크에 대한 파일을 생성할 수 없습니다. 이 기능을 사용하려면 현재 파일을 저장하십시오."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kan ikke opprette en fil for lenken du klikket på, fordi den gjeldende filen ikke er lagret ennå. Lagre den gjeldende filen for å bruke denne funksjonen."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kan geen bestand aanmaken voor de aangeklikte link, omdat het huidige bestand nog nergens is bewaard. Bewaar het huidige bestand om deze functie te gebruiken."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O MacDown não pode criar um arquivo para o link clicado porque o arquivo atual ainda não foi salvo. Salve o arquivo atual para ativar este recurso."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown не может создать файл для этой ссылки, так как текущий файл ещё не сохранён. Сохраните текущий файл, чтобы использовать эту функцию."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown nemôže vytvoriť súbor pre kliknutý odkaz, pretože aktuálny súbor ešte nie je nikde uložený. Ak chcete túto funkciu použiť, aktuálny súbor uložte."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacDown kan inte skapa en fil för länken du klickade på eftersom den aktuella filen inte har sparats än. Spara den aktuella filen för att använda den här funktionen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Geçerli dosya henüz kaydedilmediği için MacDown tıklanan bağlantı için dosya oluşturamıyor. Bu özelliği kullanmak için geçerli dosyayı kaydedin."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "由于当前文件尚未存储，MacDown 无法为所点按的链接创建文件。请先存储当前文件以使用此功能。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "由於目前的檔案尚未儲存，MacDown 無法為所點按的連結建立檔案。請先儲存目前的檔案以使用此功能。"
+          }
+        }
+      }
+    },
     "MacDown Help" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7274,6 +8834,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新增段落"
+          }
+        }
+      }
+    },
+    "No Plug-ins Installed" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nejsou nainstalovány žádné zásuvné moduly"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ingen udvidelser installeret"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ingen udvidelser installeret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keine Plug-ins installiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No hay plug-ins instalados"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pluginaid pole installitud"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Laajennuksia ei ole asennettu"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aucune extension installée"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Engar viðbætur uppsettar"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nessun plug-in installato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プラグインがインストールされていません"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "설치된 플러그인 없음"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ingen utvidelser installert"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Geen plug-ins geïnstalleerd"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nenhum plug-in instalado"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Нет установленных плагинов"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nie sú nainštalované žiadne zásuvné moduly"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inga plugins installerade"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yüklü eklenti yok"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未安装插件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未安裝外掛"
           }
         }
       }
@@ -7932,6 +9622,136 @@
         }
       }
     },
+    "Please check the path of your link is correct. Turn on “Automatically create link targets” If you want MacDown to create nonexistent link targets for you." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zkontrolujte, zda je cesta odkazu správná. Pokud chcete, aby MacDown vytvářel neexistující cíle odkazů za vás, zapněte „Automaticky vytvářet odkazy na neexistující soubory“."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontrollér, at linkets sti er korrekt. Slå “Opret automatisk filer til link-mål” til, hvis MacDown skal oprette ikke-eksisterende link-mål for dig."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontrollér, at linkets sti er korrekt. Slå “Opret automatisk filer til link-mål” til, hvis MacDown skal oprette ikke-eksisterende link-mål for dig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bitte prüfe, ob der Pfad des Links stimmt. Aktiviere „Automatisch Dateien für Links erzeugen“, wenn MacDown nicht vorhandene Linkziele für dich erstellen soll."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comprueba que la ruta del enlace sea correcta. Activa “Crear automáticamente los archivos apuntados por los enlaces” si quieres que MacDown cree los destinos de enlace que no existan."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontrollige, kas lingi asukoht on õige. Lülitage sisse „Loo linkide sihtfailid automaatselt“, kui soovite, et MacDown looks puuduvad lingi sihtfailid teie eest."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tarkista, että linkin polku on oikein. Laita päälle ”Luo linkkien kohdetiedostot automaattisesti”, jos haluat MacDownin luovan puuttuvat linkkien kohteet puolestasi."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vérifiez que le chemin du lien est correct. Activez « Créer automatiquement les fichiers des cibles de lien » si vous voulez que MacDown crée pour vous les cibles de lien inexistantes."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Athugaðu hvort slóð tengilsins sé rétt. Kveiktu á „Búa sjálfvirkt til skrár fyrir tengla“ ef þú vilt að MacDown búi til markskrár tengla sem ekki eru til."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Controlla che il percorso del link sia corretto. Attiva “Crea automaticamente file per link di destinazione” se vuoi che MacDown crei per te le destinazioni dei link inesistenti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リンクのパスが正しいか確認してください。存在しないリンク先を MacDown に作成させたい場合は、「リンク先のファイルを自動的に作成」をオンにしてください。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "링크 경로가 올바른지 확인하십시오. 존재하지 않는 링크 대상을 MacDown이 생성하도록 하려면 '링크 대상 파일 자동 생성'을 켜십시오."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontroller at stien til lenken er riktig. Slå på «Lag filer for lenkemål automatisk» hvis du vil at MacDown skal opprette lenkemål som ikke finnes."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Controleer of het pad van de link klopt. Schakel ‘Creëer automatisch bestanden voor linkdoelen’ in als je wilt dat MacDown niet-bestaande linkdoelen voor je aanmaakt."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verifique se o caminho do link está correto. Ative “Criar automaticamente arquivos para os links de destino” se quiser que o MacDown crie os destinos de link inexistentes."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Проверьте правильность пути ссылки. Включите «Автоматически создавать файлы для ссылок», если хотите, чтобы MacDown создавал несуществующие файлы ссылок."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Skontrolujte, či je cesta odkazu správna. Ak chcete, aby MacDown vytváral neexistujúce ciele odkazov za vás, zapnite „Automaticky vytvárať súbory pre ciele odkazov“."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontrollera att länkens sökväg är korrekt. Aktivera ”Skapa filer för länkmål automatiskt” om du vill att MacDown ska skapa länkmål som inte finns."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bağlantının yolunun doğru olduğunu kontrol edin. MacDown'ın var olmayan bağlantı hedeflerini sizin için oluşturmasını istiyorsanız “Bağlantı hedefleri için dosyaları otomatik oluştur” seçeneğini açın."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "请检查链接路径是否正确。如果希望 MacDown 为你创建不存在的链接目标，请打开“自动创建链接目标文件”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請檢查連結路徑是否正確。若希望 MacDown 為你建立不存在的連結目標，請開啟「自動新增檔案於連結目標」。"
+          }
+        }
+      }
+    },
     "Plug-ins" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8386,6 +10206,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "引言"
+          }
+        }
+      }
+    },
+    "Reload" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Znovu načíst"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Genindlæs"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Genindlæs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recargar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Laadi uuesti"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lataa uudelleen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recharger"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Endurhlaða"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ricarica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再読み込み"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "다시 불러오기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Last inn på nytt"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Herlaad"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recarregar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Перезагрузить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Znovu načítať"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Läs in igen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yeniden Yükle"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "重新载入"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "重新載入"
           }
         }
       }
@@ -8849,6 +10799,656 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示預覽區"
+          }
+        }
+      }
+    },
+    "Reveal" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zobrazit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vis"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vis"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostrar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Näita"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Näytä"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Afficher"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sýna"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostra"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "表示"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "보기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vis"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Toon"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostrar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Показать"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zobraziť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Visa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Göster"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "显示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "顯示"
+          }
+        }
+      }
+    },
+    "Revert" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vrátit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vend tilbage"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vend tilbage"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Revertir"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Taasta"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Palauta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Revenir"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Endurheimta"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ripristina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "復帰"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "복귀"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tilbakestill"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Herstel"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reverter"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Вернуть"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vrátiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Återställ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Geri Döndür"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "复原"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "回復"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uložit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guardar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvesta"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tallenna"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enregistrer"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vista"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "저장"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lagre"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bewaar"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Сохранить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uložiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Spara"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kaydet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "存储"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "儲存"
+          }
+        }
+      }
+    },
+    "Save and Quit" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uložit a ukončit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem og afslut"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem og afslut"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Speichern und beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guardar y salir"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvesta ja välju"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tallenna ja lopeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enregistrer et quitter"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vista og hætta"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salva ed esci"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存して終了"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "저장 후 종료"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lagre og avslutt"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bewaar en stop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvar e Encerrar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Сохранить и завершить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uložiť a ukončiť"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Spara och avsluta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kaydet ve Çık"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "存储并退出"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "儲存並結束"
+          }
+        }
+      }
+    },
+    "Save changes automatically" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ukládat změny automaticky"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem ændringer automatisk"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gem ændringer automatisk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Änderungen automatisch speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guardar cambios automáticamente"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvesta muudatused automaatselt"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tallenna muutokset automaattisesti"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enregistrer automatiquement les modifications"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vista breytingar sjálfvirkt"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salva automaticamente le modifiche"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "変更を自動的に保存"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "변경 사항 자동 저장"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lagre endringer automatisk"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bewaar wijzigingen automatisch"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salvar alterações automaticamente"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Автоматически сохранять изменения"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ukladať zmeny automaticky"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Spara ändringar automatiskt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Değişiklikleri otomatik kaydet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自动存储更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自動儲存變更"
           }
         }
       }
@@ -10800,6 +13400,136 @@
         }
       }
     },
+    "The shell utility is missing from the application bundle." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "V balíčku aplikace chybí nástroj pro Shell."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Shell utility mangler i programpakken."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Shell utility mangler i programpakken."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Shell-Erweiterung fehlt im Programmpaket."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Falta la utilidad de terminal en el paquete de la aplicación."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rakenduse paketist puudub käsurea tööriist."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Komentorivityökalu puuttuu ohjelmapaketista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "L’utilitaire terminal est absent du paquet de l’application."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tól fyrir skel vantar í forritspakkann."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Il supporto Shell manca dal pacchetto dell'applicazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アプリケーションバンドルにコマンドラインツールがありません。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "응용 프로그램 번들에 셸 유틸리티가 없습니다."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Terminalverktøyet mangler i programpakken."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Het shell-hulpmiddel ontbreekt in de programmabundel."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O utilitário do Shell não está no pacote do aplicativo."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "В пакете приложения отсутствует утилита командной строки."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "V balíku aplikácie chýba nástroj pre príkazový riadok."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Skalverktyget saknas i programpaketet."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kabuk yardımcı programı uygulama paketinde eksik."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "应用程序包中缺少 Shell 工具。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "應用程式套件中缺少 Shell 工具。"
+          }
+        }
+      }
+    },
     "Theme" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11783,6 +14513,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 個字;%@ 個字"
+          }
+        }
+      }
+    },
+    "You have unsaved changes." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Máte neuložené změny."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du har ændringer, der ikke er gemt."
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du har ændringer, der ikke er gemt."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du hast nicht gespeicherte Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tienes cambios sin guardar."
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teil on salvestamata muudatusi."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sinulla on tallentamattomia muutoksia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vous avez des modifications non enregistrées."
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Þú ert með óvistaðar breytingar."
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ci sono modifiche non salvate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存されていない変更があります。"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "저장되지 않은 변경 사항이 있습니다."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du har endringer som ikke er lagret."
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Je hebt niet-bewaarde wijzigingen."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Você tem alterações não salvas."
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "У вас есть несохранённые изменения."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Máte neuložené zmeny."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du har osparade ändringar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kaydedilmemiş değişiklikleriniz var."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你有未存储的更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你有未儲存的變更。"
           }
         }
       }

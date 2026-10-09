@@ -49,7 +49,8 @@ will break
 ### Strong and Emphasize
 
 **Strong**: `**Strong**` or `__Strong__` (Command-B)  
-*Emphasize*: `*Emphasize*` or `_Emphasize_`[^emphasize] (Command-I)
+*Emphasize*: `*Emphasize*` or `_Emphasize_` (Command-I)  
+<u>Underline</u>: `<u>Underline</u>` (Command-U)
 
 ### Headers (like this one!)
 
@@ -246,7 +247,6 @@ Option name         | Markup           | Result if enabled     |
 --------------------|------------------|-----------------------|
 Intra-word emphasis | So A\*maz\*ing   | So A<em>maz</em>ing   |
 Strikethrough       | \~~Much wow\~~   | <del>Much wow</del>   |
-Underline [^under]  | \_So doge\_      | <u>So doge</u>        |
 Quote [^quote]      | \"Such editor\"  | <q>Such editor</q>    |
 Highlight           | \==So good\==    | <mark>So good</mark>  |
 Superscript         | hoge\^(fuga)     | hoge<sup>fuga</sup>   |
@@ -346,10 +346,6 @@ That’s about it. Thanks for listening. I’ll be quiet from now on (unless the
 
 Happy writing!
 
-
-[^emphasize]: If **Underlines** is turned on, `_this notation_` will render as underlined instead of emphasized 
-
-[^under]: If **Underline** is disabled `_this_` will be rendered as *emphasized* instead of being underlined.
 
 [^quote]: **Quote** replaces literal `"` characters with html `<q>` tags. **Quote** and **Smartypants** are syntactically incompatible. If both are enabled, **Quote** takes precedence. Note that **Quote** is different from *blockquote*, which is part of standard Markdown.
 

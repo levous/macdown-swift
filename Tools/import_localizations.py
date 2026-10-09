@@ -7,7 +7,10 @@ Localizable.strings (keyed by English text). This script:
 
 1. collects English → translation pairs for every language from those files,
 2. extracts the localizable English strings used by the Swift sources, and
-3. writes a String Catalog with a translation for every string that has one.
+3. writes a String Catalog with a translation for every string that has one,
+   adding the translations in Tools/port_translations.json for strings that
+   are new in the port (marked as needing review: they aren't the original
+   translators').
 
 It also copies each language's Credits.rtf (shown in the About panel).
 
@@ -27,6 +30,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCES = [ROOT / "Sources" / "MacDownKit", ROOT / "App"]
 CATALOG = ROOT / "App" / "Localizable.xcstrings"
 CREDITS_DIR = ROOT / "App" / "Localization"
+PORT_TRANSLATIONS = ROOT / "Tools" / "port_translations.json"
 
 # Keys looked up directly (not English text).
 PLURAL_KEYS = [
@@ -103,6 +107,8 @@ PATTERNS = [
     re.compile(r'\.help\(\s*' + LITERAL),
     # Toolbar helpers: button("ToolbarIcon…", "Label") / icon(…, "Label").
     re.compile(r'\b(?:button|icon)\(\s*"[^"]*",\s*' + LITERAL),
+    # Toolbar button groups: group("Label") { … }.
+    re.compile(r'\bgroup\(\s*' + LITERAL),
 ]
 # Every literal inside LocalizedStringKey(…), e.g. ternaries spanning lines.
 KEY_BLOCK = re.compile(r'LocalizedStringKey\((.*?)\)\)', re.S)
@@ -164,6 +170,22 @@ def translation_for(key, table):
     return None
 
 
+def add_port_translations(strings):
+    """Adds the translations of strings that are new in the port."""
+    port = json.loads(PORT_TRANSLATIONS.read_text())
+    for key, values in port.items():
+        # Interpolated text (not integers) is %@ at runtime; extraction
+        # guessed %lld.
+        strings.pop(key.replace("%@", "%lld"), None)
+        entry = strings.get(key) or {}
+        localizations = entry.setdefault("localizations", {})
+        for language, value in values.items():
+            localizations.setdefault(language, {
+                "stringUnit": {"state": "needs_review", "value": value}
+            })
+        strings[key] = entry
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
@@ -192,6 +214,7 @@ def main():
         if not entry["localizations"]:
             entry = {}
         strings[key] = entry
+    add_port_translations(strings)
 
     catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
     CATALOG.write_text(json.dumps(catalog, ensure_ascii=False, indent=2,

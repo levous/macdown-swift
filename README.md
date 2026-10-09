@@ -146,15 +146,24 @@ document's location exactly as before.
 - **Localization:** the original translations (21 locales; the original's `ar`,
   `de-DE` and `sk-SK` string tables were empty) were imported
   into `App/Localizable.xcstrings` by `Tools/import_localizations.py`, along
-  with each locale's `Credits.rtf`. Strings that are new in the port (or were
-  never translated in the original, such as the link error alerts) fall back
-  to English. Re-run the script after adding UI strings:
+  with each locale's `Credits.rtf`. Strings that are new in the port are
+  translated in `Tools/port_translations.json` (marked as needing review in
+  the catalog), or fall back to English, as do strings never translated in
+  the original, such as the link error alerts. Re-run the script after adding
+  UI strings:
   `python3 Tools/import_localizations.py /path/to/original/macdown`.
 - **Saving** is explicit by default: edits mark the window edited, ⌘S
   or the toolbar's Save button (enabled when there are unsaved changes)
   saves, and closing a window or quitting with unsaved changes asks "You have
   unsaved changes." (Save or Save and Quit / Discard / Cancel). Turn on Settings ▸ General ▸ "Save
   changes automatically" for macOS's usual save-in-place behavior.
+- **Changes on disk:** when another application changes an open file, the
+  window loads the new text right away if it has no unsaved changes. If it
+  has any, it asks once the window is in front: Keep My Changes (the file is
+  overwritten at the next save) or Revert.
+- **Underline** is HTML: the Underline button and ⌘U insert `<u>…</u>`, and
+  underscores follow standard Markdown (`_text_` italic, `__text__` bold).
+  The original's Underline setting, which made `_text_` underline, is gone.
 - **Mermaid** is version 12 (the original bundled 8.4), so newer diagram
   types such as mindmaps, timelines and C4 work. Diagrams use Mermaid's
   `forest` theme, and syntax errors are shown under the diagram's source.

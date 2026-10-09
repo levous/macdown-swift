@@ -89,7 +89,6 @@ public final class Preferences {
     public var extensionFencedCode = false { didSet { save(extensionFencedCode, "extensionFencedCode") } }
     public var extensionAutolink = false { didSet { save(extensionAutolink, "extensionAutolink") } }
     public var extensionStrikethough = false { didSet { save(extensionStrikethough, "extensionStrikethough") } }
-    public var extensionUnderline = false { didSet { save(extensionUnderline, "extensionUnderline") } }
     public var extensionSuperscript = false { didSet { save(extensionSuperscript, "extensionSuperscript") } }
     public var extensionHighlight = false { didSet { save(extensionHighlight, "extensionHighlight") } }
     public var extensionFootnotes = false { didSet { save(extensionFootnotes, "extensionFootnotes") } }
@@ -258,7 +257,6 @@ public final class Preferences {
         extensionFencedCode = d.bool(forKey: "extensionFencedCode")
         extensionAutolink = d.bool(forKey: "extensionAutolink")
         extensionStrikethough = d.bool(forKey: "extensionStrikethough")
-        extensionUnderline = d.bool(forKey: "extensionUnderline")
         extensionSuperscript = d.bool(forKey: "extensionSuperscript")
         extensionHighlight = d.bool(forKey: "extensionHighlight")
         extensionFootnotes = d.bool(forKey: "extensionFootnotes")

@@ -84,6 +84,17 @@ extension LiveDocumentTests {
         #expect(controller.presumedFileName == "A-B- Test")
     }
 
+    @Test func underlineUsesHTMLTags() {
+        let (controller, window) = makeController("word")
+        defer { controller.tearDown(); window.close() }
+        controller.editor.setSelectedRange(NSRange(location: 0, length: 4))
+        controller.toggleUnderline()
+        #expect(controller.editor.string == "<u>word</u>")
+        // Toggling again removes the tags.
+        controller.toggleUnderline()
+        #expect(controller.editor.string == "word")
+    }
+
     @Test func formattingActions() {
         let (controller, window) = makeController("word")
         defer { controller.tearDown(); window.close() }

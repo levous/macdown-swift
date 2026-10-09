@@ -45,6 +45,12 @@ public final class MarkdownDocument: ReferenceFileDocument, @unchecked Sendable 
 
     public let objectWillChange = ObservableObjectPublisher()
 
+    private let writtenText = Mutex<String?>(nil)
+
+    /// The text this document last wrote to disk, so its own saves aren't
+    /// mistaken for changes made by another application.
+    public var lastWrittenText: String? { writtenText.withLock { $0 } }
+
     public init() {
         text = PendingDocumentContent.take() ?? ""
     }
@@ -74,6 +80,7 @@ public final class MarkdownDocument: ReferenceFileDocument, @unchecked Sendable 
 
     public func fileWrapper(snapshot: String,
                             configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: Data(snapshot.utf8))
+        writtenText.withLock { $0 = snapshot }
+        return FileWrapper(regularFileWithContents: Data(snapshot.utf8))
     }
 }

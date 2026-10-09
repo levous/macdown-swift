@@ -49,7 +49,6 @@ extension Preferences {
         if extensionStrikethough { flags |= HOEDOWN_EXT_STRIKETHROUGH.rawValue }
         if extensionSuperscript { flags |= HOEDOWN_EXT_SUPERSCRIPT.rawValue }
         if extensionTables { flags |= HOEDOWN_EXT_TABLES.rawValue }
-        if extensionUnderline { flags |= HOEDOWN_EXT_UNDERLINE.rawValue }
         if htmlMathJax { flags |= HOEDOWN_EXT_MATH.rawValue }
         if htmlMathJaxInlineDollar { flags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
         return flags

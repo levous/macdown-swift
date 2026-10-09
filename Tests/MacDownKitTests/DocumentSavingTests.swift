@@ -35,9 +35,10 @@ extension LiveDocumentTests {
     /// A controller in a closable window, saving through `saves` (whether
     /// each save succeeds) instead of an NSDocument.
     func makeController(_ text: String = "saved", untitled: Bool = false,
+                        fileURL: URL? = nil,
                         saves: @escaping () -> Bool = { true })
         -> (DocumentController, NSWindow) {
-        let fileURL = untitled ? nil : URL(fileURLWithPath: "/tmp/macdown-test.md")
+        let fileURL = untitled ? nil : fileURL ?? URL(fileURLWithPath: "/tmp/macdown-test.md")
         let controller = DocumentController(document: MarkdownDocument(text: text),
                                             fileURL: fileURL)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -169,6 +170,140 @@ extension LiveDocumentTests {
             #expect(controller.markdown == "changed on disk mine")
             #expect(controller.hasUnsavedChanges)
         }
+    }
+
+    // MARK: Changes on disk
+
+    /// A file holding `text`, removed when the returned closure is called.
+    func makeFile(_ text: String = "saved") throws -> (URL, () -> Void) {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macdown-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("file.md")
+        try text.write(to: url, atomically: false, encoding: .utf8)
+        return (url, { try? FileManager.default.removeItem(at: directory) })
+    }
+
+    @Test func fileChangesLoadWithoutUnsavedChanges() throws {
+        try withAutosave(false) {
+            let (url, remove) = try makeFile()
+            defer { remove() }
+            let (controller, window) = makeController(fileURL: url)
+            defer { controller.tearDown(); window.close() }
+            var asked = 0
+            controller.isWindowActive = { _ in true }
+            controller.askAboutFileChange = { _, answer in asked += 1; answer(false) }
+
+            try "changed".write(to: url, atomically: true, encoding: .utf8)
+            controller.checkFileOnDisk()
+            #expect(controller.markdown == "changed")
+            #expect(controller.document.text == "changed")
+            #expect(!controller.hasUnsavedChanges)
+            #expect(asked == 0)
+        }
+    }
+
+    @Test func fileChangesAskBeforeReplacingUnsavedChanges() throws {
+        try withAutosave(false) {
+            let (url, remove) = try makeFile()
+            defer { remove() }
+            let (controller, window) = makeController(fileURL: url)
+            defer { controller.tearDown(); window.close() }
+            var answer = true
+            var asked = 0
+            controller.isWindowActive = { _ in true }
+            controller.askAboutFileChange = { _, reply in asked += 1; reply(answer) }
+
+            // Revert: the file is loaded.
+            type(" mine", in: controller)
+            try "changed".write(to: url, atomically: true, encoding: .utf8)
+            controller.checkFileOnDisk()
+            #expect(asked == 1)
+            #expect(controller.markdown == "changed")
+            #expect(!controller.hasUnsavedChanges)
+            // The undo actions referred to the old text.
+            #expect(!controller.undoManager.canUndo)
+
+            // Keep: the draft stays, unsaved relative to the new file, and
+            // the same change isn't asked about again.
+            answer = false
+            type(" mine", in: controller)
+            try "changed again".write(to: url, atomically: true, encoding: .utf8)
+            controller.checkFileOnDisk()
+            #expect(asked == 2)
+            #expect(controller.markdown == "changed mine")
+            #expect(controller.hasUnsavedChanges)
+            #expect(controller.document.text == "changed again")
+            controller.checkFileOnDisk()
+            #expect(asked == 2)
+        }
+    }
+
+    @Test func fileChangesWaitForTheWindowToAsk() throws {
+        try withAutosave(false) {
+            let (url, remove) = try makeFile()
+            defer { remove() }
+            let (controller, window) = makeController(fileURL: url)
+            defer { controller.tearDown(); window.close() }
+            var active = false
+            var asked = 0
+            controller.isWindowActive = { _ in active }
+            controller.askAboutFileChange = { _, reply in asked += 1; reply(false) }
+
+            type(" mine", in: controller)
+            try "changed".write(to: url, atomically: true, encoding: .utf8)
+            controller.checkFileOnDisk()
+            #expect(asked == 0)
+            #expect(controller.markdown == "saved mine")
+
+            active = true
+            controller.checkFileOnDisk()
+            #expect(asked == 1)
+        }
+    }
+
+    @Test func fileChangedToTheDraftIsSaved() throws {
+        try withAutosave(false) {
+            let (url, remove) = try makeFile()
+            defer { remove() }
+            let (controller, window) = makeController(fileURL: url)
+            defer { controller.tearDown(); window.close() }
+            var asked = 0
+            controller.isWindowActive = { _ in true }
+            controller.askAboutFileChange = { _, reply in asked += 1; reply(false) }
+
+            type(" mine", in: controller)
+            try "saved mine".write(to: url, atomically: true, encoding: .utf8)
+            controller.checkFileOnDisk()
+            #expect(asked == 0)
+            #expect(!controller.hasUnsavedChanges)
+        }
+    }
+
+    @Test func watcherNoticesFileChanges() async throws {
+        let autosaved = Preferences.shared.autosavesDocuments
+        Preferences.shared.autosavesDocuments = false
+        defer { Preferences.shared.autosavesDocuments = autosaved }
+        let (url, remove) = try makeFile()
+        defer { remove() }
+        let (controller, window) = makeController(fileURL: url)
+        defer { controller.tearDown(); window.close() }
+
+        func waitFor(_ text: String) async -> Bool {
+            for _ in 0..<50 {
+                if controller.markdown == text { return true }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return false
+        }
+        // Written in place, then replaced (an atomic save), then in place
+        // again, which needs the watcher to have followed the replacement.
+        try "in place".write(to: url, atomically: false, encoding: .utf8)
+        #expect(await waitFor("in place"))
+        try "replaced".write(to: url, atomically: true, encoding: .utf8)
+        #expect(await waitFor("replaced"))
+        try "in place again".write(to: url, atomically: false, encoding: .utf8)
+        #expect(await waitFor("in place again"))
     }
 
     // MARK: File ▸ Save (⌘S)

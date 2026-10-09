@@ -221,6 +221,23 @@ private func fixture(_ name: String, _ ext: String) -> URL {
 }
 
 @Suite @MainActor struct PreferencesTests {
+    @Test func underscoresAreEmphasisAndUnderlineIsHTML() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        // The removed Underline setting, still saved on for existing users,
+        // no longer turns `_text_` into underline.
+        defaults.set(true, forKey: "extensionUnderline")
+        let preferences = Preferences(defaults: defaults)
+        preferences.extensionHighlight = true
+        let html = MarkdownParser.parse(
+            "_italic_ __bold__ *italic* **bold** <u>under</u> ==mark==\n",
+            settings: preferences.renderSettings.parse).body
+        #expect(html.contains("<em>italic</em> <strong>bold</strong> <em>italic</em> <strong>bold</strong>"))
+        #expect(html.contains("<u>under</u>"))
+        #expect(html.contains("<mark>mark</mark>"))
+    }
+
     @Test func font() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
