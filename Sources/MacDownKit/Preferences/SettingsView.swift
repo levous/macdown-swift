@@ -74,7 +74,6 @@ struct MarkdownSettingsView: View {
             Section("Inline formatting:") {
                 Toggle("Intra-word emphasis", isOn: $preferences.extensionIntraEmphasis)
                 Toggle("Strikethrough", isOn: $preferences.extensionStrikethough)
-                Toggle("Underline", isOn: $preferences.extensionUnderline)
                 Toggle("Quote", isOn: $preferences.extensionQuote)
                 Toggle("Highlight", isOn: $preferences.extensionHighlight)
                 Toggle("Superscript", isOn: $preferences.extensionSuperscript)

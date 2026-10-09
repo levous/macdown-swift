@@ -24,6 +24,7 @@ public final class DocumentController: NSObject {
             if needsHtml { parseAndRender() }
             // Saving an untitled document gives it a file.
             updateUnsavedState()
+            watchFile()
         }
     }
 
@@ -140,6 +141,7 @@ public final class DocumentController: NSObject {
         preview.onLayoutChange = { [weak self] in self?.previewLayoutDidChange() }
 
         setUpObservers()
+        watchFile()
         Self.register(self)
     }
 
@@ -160,6 +162,7 @@ public final class DocumentController: NSObject {
     public func replaceDocument(_ newDocument: MarkdownDocument) {
         guard newDocument !== document else { return }
         document = newDocument
+        handledDiskText = newDocument.text
         let keepsDraft = hasUnsavedChanges
         savedText = newDocument.text
         if !keepsDraft && editor.string != newDocument.text {
@@ -171,6 +174,8 @@ public final class DocumentController: NSObject {
     }
 
     public func tearDown() {
+        fileWatcher?.stop()
+        fileWatcher = nil
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
         keyObservers.removeAll()
@@ -223,6 +228,18 @@ public final class DocumentController: NSObject {
         observe(.didRequestPreviewRender, nil) { [weak self] _ in
             self?.render()
         }
+        // Coming back to the window (or the app) is when to ask about a file
+        // that changed meanwhile; it also catches anything the watcher missed.
+        observers.append(center.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: nil,
+            queue: .main) { [weak self] note in
+            let window = note.object as? NSWindow
+            MainActor.assumeIsolated {
+                guard let self, let window, window === self.window else { return }
+                self.fileWatcher?.watchIfNeeded()
+                self.checkFileOnDisk()
+            }
+        })
         let clipView = editorScrollView.contentView
         clipView.postsBoundsChangedNotifications = true
         observe(NSView.boundsDidChangeNotification, clipView) { [weak self] _ in
@@ -413,6 +430,133 @@ public final class DocumentController: NSObject {
         } catch {
             if let window { NSAlert(error: error).beginSheetModal(for: window) }
         }
+    }
+
+    // MARK: - Changes on disk
+    //
+    // Another application changing the file loads the new text, unless the
+    // window has unsaved changes (or, saving automatically, changes not yet
+    // autosaved); then the user is asked, once the window is the one they're
+    // working in. Whether the file changed is decided by its contents, so
+    // this window's own saves don't count.
+
+    /// The file's contents as last loaded, saved or asked about.
+    @ObservationIgnored private var handledDiskText: String?
+    @ObservationIgnored private var fileWatcher: FileWatcher?
+    @ObservationIgnored private(set) var isAskingAboutFileChange = false
+    /// Asks whether to load the changed file instead of keeping the unsaved
+    /// changes, and reports the answer. Replaceable for tests; the app shows
+    /// a sheet on the window.
+    @ObservationIgnored var askAboutFileChange: ((DocumentController, @escaping (Bool) -> Void) -> Void)?
+    /// Whether the user is working in this window, so it can ask now.
+    /// Replaceable for tests.
+    @ObservationIgnored var isWindowActive: ((DocumentController) -> Bool)?
+
+    private func watchFile() {
+        guard fileWatcher?.url != fileURL else { return }
+        fileWatcher?.stop()
+        fileWatcher = fileURL.map { url in
+            FileWatcher(url: url) { [weak self] in self?.checkFileOnDisk() }
+        }
+        handledDiskText = fileURL.flatMap(readFile) ?? document.text
+    }
+
+    private func readFile(_ url: URL) -> String? {
+        try? String(contentsOf: url, encoding: .utf8)
+    }
+
+    private var hasChangesNotOnDisk: Bool {
+        if autosaves { return platformDocument?.hasUnautosavedChanges ?? false }
+        return hasUnsavedChanges
+    }
+
+    /// Loads the file if another application changed it, or asks first if
+    /// that would lose changes.
+    func checkFileOnDisk() {
+        guard let fileURL, !isAskingAboutFileChange,
+              let disk = readFile(fileURL), disk != handledDiskText
+        else { return }
+        if disk == document.lastWrittenText || disk == editor.string {
+            // Saved by this window, or changed to what the editor has.
+            handledDiskText = disk
+            if disk == editor.string, !autosaves { savedText = disk }
+            updateFileModificationDate()
+            updateUnsavedState()
+        } else if !hasChangesNotOnDisk {
+            loadFromDisk(disk)
+        } else if isWindowActive?(self) ?? (NSApp.isActive && window?.isKeyWindow == true) {
+            askToLoadFromDisk()
+        }
+        // Otherwise it asks when the window becomes key.
+    }
+
+    private func askToLoadFromDisk() {
+        isAskingAboutFileChange = true
+        let finish: (Bool) -> Void = { [weak self] load in
+            guard let self else { return }
+            self.isAskingAboutFileChange = false
+            // Read it again: the file may have changed while the alert was up.
+            guard let fileURL = self.fileURL, let disk = self.readFile(fileURL) else { return }
+            if load {
+                self.loadFromDisk(disk)
+            } else {
+                self.keepChanges(over: disk)
+            }
+        }
+        if let askAboutFileChange {
+            askAboutFileChange(self, finish)
+        } else if let window {
+            FileChangeAlert.ask(in: window, name: displayName, completion: finish)
+        } else {
+            isAskingAboutFileChange = false
+        }
+    }
+
+    /// Replaces the editor's text with the file's.
+    private func loadFromDisk(_ text: String) {
+        handledDiskText = text
+        savedText = text
+        document.text = text
+        if editor.string != text {
+            let selection = editor.selectedRange()
+            let origin = editorScrollView.contentView.bounds.origin
+            editor.string = text
+            // The undo actions refer to the old text.
+            undoManager.removeAllActions()
+            let length = (text as NSString).length
+            editor.setSelectedRange(NSRange(location: min(selection.location, length),
+                                            length: 0))
+            editorScrollView.contentView.scroll(to: origin)
+            editorScrollView.reflectScrolledClipView(editorScrollView.contentView)
+            highlighter.parseAndHighlightNow()
+            parseAndRenderNow()
+        }
+        // Saving automatically, the document now matches the file.
+        if autosaves { platformDocument?.updateChangeCount(.changeCleared) }
+        updateFileModificationDate()
+        updateUnsavedState()
+    }
+
+    /// Keeps the editor's text, which is now unsaved relative to the file.
+    private func keepChanges(over disk: String) {
+        handledDiskText = disk
+        if autosaves {
+            platformDocument?.updateChangeCount(.changeDone)
+        } else {
+            savedText = disk
+            document.text = disk
+        }
+        updateFileModificationDate()
+        updateUnsavedState()
+    }
+
+    /// The window's NSDocument compares this with the file's when saving,
+    /// and would ask about the change again.
+    private func updateFileModificationDate() {
+        guard let fileURL, let platformDocument,
+              let date = try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.modificationDate] as? Date
+        else { return }
+        platformDocument.fileModificationDate = date
     }
 
     /// Drops the draft's unsaved changes (when closing or quitting).
@@ -923,7 +1067,8 @@ public final class DocumentController: NSObject {
     public func toggleEmphasis() { editor.toggleForMarkup(prefix: "*", suffix: "*") }
     public func toggleInlineCode() { editor.toggleForMarkup(prefix: "`", suffix: "`") }
     public func toggleStrikethrough() { editor.toggleForMarkup(prefix: "~~", suffix: "~~") }
-    public func toggleUnderline() { editor.toggleForMarkup(prefix: "_", suffix: "_") }
+    /// Markdown has no underline, so this uses HTML; `_text_` is emphasis.
+    public func toggleUnderline() { editor.toggleForMarkup(prefix: "<u>", suffix: "</u>") }
     public func toggleHighlight() { editor.toggleForMarkup(prefix: "==", suffix: "==") }
     public func toggleComment() { editor.toggleForMarkup(prefix: "<!--", suffix: "-->") }
 

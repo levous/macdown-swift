@@ -71,3 +71,5 @@ fastlane/test_output
 # Project
 /MacDown.xcodeproj
 .DS_Store
+.ralph/
+.claude/

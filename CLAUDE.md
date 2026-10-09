@@ -55,7 +55,7 @@ The editor edits a draft (its text); `MarkdownDocument.text` is the persisted st
 
 ## Localization
 
-UI strings use `String(localized:)` and go into `App/Localizable.xcstrings`. After adding UI strings, re-run `python3 Tools/import_localizations.py /path/to/original/macdown` to pull in the original translations. New strings fall back to English.
+UI strings use `String(localized:)` and go into `App/Localizable.xcstrings`. After adding UI strings, re-run `python3 Tools/import_localizations.py /path/to/original/macdown` to pull in the original translations. New strings fall back to English unless translated in `Tools/port_translations.json`, which the script merges in.
 
 ## Debugging rendered output
 
