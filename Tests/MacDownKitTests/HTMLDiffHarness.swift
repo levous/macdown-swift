@@ -130,52 +130,139 @@ enum HTMLDiff {
             + (selfClosing ? " />" : ">")
     }
 
-    struct Difference: Sendable {
-        let document: String
-        let setting: String
-        let left: String
-        let right: String
+    /// An intended difference between hoedown and the new engine, listed
+    /// once in Resources/expected-html-diffs.json rather than per document.
+    /// A hunk is expected when the entries' `find` → `replace` rewrites,
+    /// applied in turn, make hoedown's side into the other side (neighboring
+    /// differences can share a hunk).
+    struct ExpectedDifference: Decodable, Sendable {
+        let id: String
+        let reason: String
+        let find: String
+        let replace: String
 
-        /// The first differing position, with some context either side.
-        var excerpt: (left: String, right: String) {
-            let common = zip(left, right).prefix { $0 == $1 }.count
-            func around(_ s: String) -> String {
-                let start = s.index(s.startIndex, offsetBy: max(0, common - 80))
-                let end = s.index(start, offsetBy: min(240, s.distance(from: start, to: s.endIndex)))
-                return String(s[start..<end])
-            }
-            return (around(left), around(right))
+        func rewrite(_ html: String) -> String {
+            guard let regex = try? NSRegularExpression(pattern: find) else { return html }
+            return regex.stringByReplacingMatches(
+                in: html, range: NSRange(location: 0, length: (html as NSString).length),
+                withTemplate: replace)
         }
     }
 
-    /// Renders every document with every setting on both engines, and
-    /// returns the documents whose normalized HTML differs.
-    @MainActor static func compare(_ documents: [Corpus.Document],
-                                   left: Engine, right: Engine) -> [Difference] {
+    /// The ids of the entries that explain a hunk, or nil if they don't.
+    static func explanation(of hunk: Hunk, by entries: [ExpectedDifference]) -> [String]? {
+        var html = hunk.left
+        var ids: [String] = []
+        for entry in entries {
+            let rewritten = entry.rewrite(html)
+            if rewritten != html { ids.append(entry.id); html = rewritten }
+        }
+        return !ids.isEmpty && html == hunk.right ? ids : nil
+    }
+
+    static func expectedDifferences() throws -> [ExpectedDifference] {
+        let url = Bundle.module.url(forResource: "expected-html-diffs", withExtension: "json",
+                                    subdirectory: "Resources")!
+        return try JSONDecoder().decode([ExpectedDifference].self, from: Data(contentsOf: url))
+    }
+
+    /// A run of differing tokens: what the left engine has there, and what
+    /// the right one has.
+    struct Hunk: Sendable, Equatable {
+        let left: String
+        let right: String
+    }
+
+    /// Tags and words (with their spacing) of normalized HTML.
+    static func tokens(_ html: String) -> [Substring] {
+        html.matches(of: /<[^>]*>|[^<\s]+|\s/).map(\.output)
+    }
+
+    /// The differing token runs between two normalized HTML strings.
+    static func hunks(_ left: String, _ right: String) -> [Hunk] {
+        let a = tokens(left), b = tokens(right)
+        let difference = b.difference(from: a)
+        var removed = Set<Int>(), inserted = Set<Int>()
+        for change in difference {
+            switch change {
+            case .remove(let offset, _, _): removed.insert(offset)
+            case .insert(let offset, _, _): inserted.insert(offset)
+            }
+        }
+        // Tokens that aren't removed (left) or inserted (right) match in
+        // order, so walk both and collect each run of changes.
+        var hunks: [Hunk] = []
+        var i = 0, j = 0
+        while i < a.count || j < b.count {
+            if i < a.count && !removed.contains(i) && j < b.count && !inserted.contains(j) {
+                i += 1; j += 1; continue
+            }
+            var l = "", r = ""
+            while i < a.count && removed.contains(i) { l += a[i]; i += 1 }
+            while j < b.count && inserted.contains(j) { r += b[j]; j += 1 }
+            hunks.append(Hunk(left: l, right: r))
+        }
+        return hunks
+    }
+
+    struct Difference: Sendable {
+        let document: String
+        let setting: String
+        /// Hunks no expected difference explains.
+        let hunks: [Hunk]
+    }
+
+    struct Comparison: Sendable {
         var differences: [Difference] = []
+        /// How often each expected difference occurred.
+        var expected: [String: Int] = [:]
+    }
+
+    /// Renders every document with every setting on both engines, and
+    /// returns the differences the expected list doesn't explain.
+    @MainActor static func compare(_ documents: [Corpus.Document], left: Engine, right: Engine,
+                                   expected: [ExpectedDifference] = []) -> Comparison {
+        var comparison = Comparison()
         for (name, settings) in matrix() {
             for document in documents {
                 let l = normalize(left(document.text, settings))
                 let r = normalize(right(document.text, settings))
-                if l != r {
-                    differences.append(Difference(document: document.name, setting: name,
-                                                  left: l, right: r))
+                guard l != r else { continue }
+                var unexplained: [Hunk] = []
+                for hunk in hunks(l, r) {
+                    if let ids = explanation(of: hunk, by: expected) {
+                        for id in ids { comparison.expected[id, default: 0] += 1 }
+                    } else {
+                        unexplained.append(hunk)
+                    }
+                }
+                if !unexplained.isEmpty {
+                    comparison.differences.append(Difference(
+                        document: document.name, setting: name, hunks: unexplained))
                 }
             }
         }
-        return differences
+        return comparison
     }
 
     /// A Markdown report, written to $MACDOWN_DIFF_REPORT if it's set.
-    static func report(_ differences: [Difference], left: String, right: String,
+    static func report(_ comparison: Comparison, expected: [ExpectedDifference] = [],
+                       left: String, right: String,
                        documents: Int, settings: Int, writes: Bool = true) -> String {
+        let differences = comparison.differences
         var lines = ["# HTML diff: \(left) vs \(right)", "",
-                     "\(documents) documents × \(settings) settings: \(differences.count) differ.", ""]
+                     "\(documents) documents × \(settings) settings: \(differences.count) with unexpected differences.", ""]
+        if !expected.isEmpty {
+            lines += ["## Expected differences", ""]
+            lines += expected.map { "- **\($0.id)** (\(comparison.expected[$0.id] ?? 0)×): \($0.reason)" }
+            lines.append("")
+        }
         for difference in differences {
-            let excerpt = difference.excerpt
-            lines += ["## \(difference.document) (\(difference.setting))", "",
-                      "\(left):", "", "```html", excerpt.left, "```", "",
-                      "\(right):", "", "```html", excerpt.right, "```", ""]
+            lines += ["## \(difference.document) (\(difference.setting))", ""]
+            for hunk in difference.hunks.prefix(20) {
+                lines += ["- \(left): `\(hunk.left.prefix(200))`", "  \(right): `\(hunk.right.prefix(200))`"]
+            }
+            lines.append("")
         }
         let text = lines.joined(separator: "\n")
         if writes, let directory = ProcessInfo.processInfo.environment["MACDOWN_DIFF_REPORT"] {
@@ -222,20 +309,57 @@ extension LiveDocumentTests {
     /// differences, and a deliberately different engine is reported.
     @Test func hoedownAgainstItself() throws {
         let corpus = try Corpus.all()
-        let differences = HTMLDiff.compare(corpus, left: HTMLDiff.hoedown, right: HTMLDiff.hoedown)
-        let report = HTMLDiff.report(differences, left: "hoedown", right: "hoedown",
-                                     documents: corpus.count, settings: HTMLDiff.matrix().count)
-        #expect(differences.isEmpty, "\(report)")
+        let expected = try HTMLDiff.expectedDifferences()
+        let comparison = HTMLDiff.compare(corpus, left: HTMLDiff.hoedown,
+                                          right: HTMLDiff.hoedown, expected: expected)
+        let report = HTMLDiff.report(comparison, expected: expected, left: "hoedown",
+                                     right: "hoedown", documents: corpus.count,
+                                     settings: HTMLDiff.matrix().count)
+        #expect(comparison.differences.isEmpty && comparison.expected.isEmpty, "\(report)")
 
+        let files = try Corpus.files()
         let altered: HTMLDiff.Engine = {
             HTMLDiff.hoedown($0, $1).replacingOccurrences(of: "<strong>", with: "<b>")
         }
-        let files = try Corpus.files()
         let caught = HTMLDiff.compare(files, left: HTMLDiff.hoedown, right: altered)
-        #expect(caught.contains { $0.document == "01-inline.md" && $0.setting == "standard" })
+        #expect(caught.differences.contains { $0.document == "01-inline.md" && $0.setting == "standard" })
         #expect(HTMLDiff.report(caught, left: "hoedown", right: "altered",
                                 documents: files.count, settings: 9, writes: false)
                     .contains("## 01-inline.md (standard)"))
+    }
+
+    @Test func hunksAreTheDifferingRuns() {
+        let hunks = HTMLDiff.hunks("<p>one two three</p><p>four</p>",
+                                   "<p>one 2 three</p><p>four five</p>")
+        #expect(hunks == [HTMLDiff.Hunk(left: "two", right: "2"),
+                          HTMLDiff.Hunk(left: "", right: " five")])
+    }
+
+    /// An engine that leaves intra-word underscores alone, as CommonMark
+    /// does, differs from hoedown only by expected differences, each listed
+    /// once with its count.
+    @Test func expectedDifferencesAreListedOnce() throws {
+        let expected = try HTMLDiff.expectedDifferences()
+        #expect(Set(expected.map(\.id)).count == expected.count)
+        let commonMark: HTMLDiff.Engine = { text, settings in
+            HTMLDiff.hoedown(text, settings)
+                .replacing(/snake<em>case<\/em>name/, with: "snake_case_name")
+                .replacing(/foo<strong>bar<\/strong>baz/, with: "foo__bar__baz")
+        }
+        let files = try Corpus.files()
+        let comparison = HTMLDiff.compare(files, left: HTMLDiff.hoedown, right: commonMark,
+                                          expected: expected)
+        #expect(comparison.differences.isEmpty)
+        #expect(comparison.expected["intraword-underscore-emphasis", default: 0] > 0)
+        #expect(comparison.expected["intraword-underscore-strong", default: 0] > 0)
+        let report = HTMLDiff.report(comparison, expected: expected, left: "hoedown",
+                                     right: "CommonMark", documents: files.count,
+                                     settings: 9, writes: false)
+        #expect(report.contains("0 with unexpected differences"))
+        #expect(report.components(separatedBy: "intraword-underscore-emphasis").count == 2)
+        // Without the list, the same differences are unexpected.
+        #expect(!HTMLDiff.compare(files, left: HTMLDiff.hoedown, right: commonMark)
+            .differences.isEmpty)
     }
 }
 }
