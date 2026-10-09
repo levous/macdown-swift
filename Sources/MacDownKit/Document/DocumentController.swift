@@ -34,6 +34,9 @@ public final class DocumentController: NSObject {
     public var editorBackgroundColor: NSColor = .textBackgroundColor
     /// Divider color; nil draws the default divider.
     public var dividerColor: NSColor?
+    /// Background color of the preview page, which the divider's drag area
+    /// extends.
+    public var previewBackgroundColor: NSColor = .white
     public var textCount = TextCount()
     public var isTextCountReady = false
     public var editorOnRight: Bool
@@ -309,8 +312,15 @@ public final class DocumentController: NSObject {
             if self.preferences.editorShowWordCount {
                 await self.updateWordCount()
             }
+            if let color = await self.preview.fetchBackgroundColor(),
+               color.alphaComponent > 0 {
+                self.previewBackgroundColor = color
+            } else {
+                // A transparent page shows the web view's white background.
+                self.previewBackgroundColor = .white
+            }
             if !self.editorVisible {
-                self.dividerColor = await self.preview.fetchBackgroundColor()
+                self.dividerColor = self.previewBackgroundColor
             }
             #if DEBUG
             if DebugReport.directory != nil {

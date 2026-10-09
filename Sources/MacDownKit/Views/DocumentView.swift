@@ -58,6 +58,10 @@ struct DocumentContentView: View {
         DocumentSplitView(
             fraction: leadingFraction,
             dividerColor: controller.dividerColor.map { Color(nsColor: $0) },
+            leadingBackground: Color(nsColor: editorOnRight
+                ? controller.previewBackgroundColor : controller.editorBackgroundColor),
+            trailingBackground: Color(nsColor: editorOnRight
+                ? controller.editorBackgroundColor : controller.previewBackgroundColor),
             onResize: { fraction in
                 controller.userDidResizeSplit(to: editorOnRight ? 1 - fraction : fraction)
             }
