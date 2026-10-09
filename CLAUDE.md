@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Swift 6 / SwiftUI port of MacDown (the Objective-C Markdown editor for macOS). The port aims to keep the original's behavior, HTML output, and user defaults keys unchanged. When changing behavior, check whether it diverges from the original MacDown; intentional differences are listed in README.md ("Differences from the original"). Many files say which Objective-C file they were ported from (e.g. `Ported from MPRenderer.m`), and docs/ARCHITECTURE.md has a table mapping the original classes onto the port.
+A Swift 6 / SwiftUI port of MacDown (the Objective-C Markdown editor for macOS). The port aims to keep the original's behavior, HTML output, and user defaults keys unchanged. When changing behavior, check whether it diverges from the original MacDown; intentional differences are listed in docs/MACDOWN-PORT.md ("Differences from the original"). Many files say which Objective-C file they were ported from (e.g. `Ported from MPRenderer.m`), and docs/MACDOWN-PORT.md has a table mapping the original classes onto the port.
 
-README.md is for users: the app, installing, differences from the original. Technical detail goes in docs/ARCHITECTURE.md (layout, pipelines, development workflow), and architecture decisions are logged, dated, in its "Decisions" section.
+Documentation: README.md welcomes users (what MacDown is, how to install it, what it does) and doesn't discuss the port. docs/ARCHITECTURE.md has the technical detail (layout, pipelines, development workflow) and a dated "Decisions" log. docs/MACDOWN-PORT.md has everything about the relationship to the original MacDown (what carries over, differences, class map, port decisions).
 
 ## Commands
 

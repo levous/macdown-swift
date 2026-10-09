@@ -49,7 +49,7 @@ Parse each document once with swift-markdown (cmark-gfm), and use that single pa
 
 ### Non-goals
 
-- Byte-identical HTML with the original MacDown. This project goal is replaced by "CommonMark/GFM output, with differences listed in the README".
+- Byte-identical HTML with the original MacDown. This project goal is replaced by "CommonMark/GFM output, with differences listed in docs/MACDOWN-PORT.md".
 - New Markdown syntax beyond what MacDown supports today.
 - Changing existing users' editing settings; new defaults apply to new installs only.
 - Keeping `"quote"` → `<q>`: it's dropped in favor of smart punctuation.
@@ -128,7 +128,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 | US-13 | P1 | As a writer, I want footnotes to render without having to turn anything on so that my references always work. |
 | US-14 | P1 | As a writer, I want to turn on smart punctuation (curly quotes, dashes, ellipses) when I want typeset prose, and leave it off by default, so that my straight quotes aren't changed unless I ask. |
 | US-15 | P1 | As a writer, I want highlighting to stay smooth in a 10,000-line document so that typing doesn't lag. |
-| US-16 | P1 | As a writer, I want the README and help to list the Markdown that's always available, and what was dropped, so that I know why `^text` or `"text"` no longer format. |
+| US-16 | P1 | As a writer, I want the help (and docs/MACDOWN-PORT.md) to list the Markdown that's always available, and what was dropped, so that I know why `^text` or `"text"` no longer format. |
 | US-17 | P1 | As a writer, I want dropped syntax to show as plain text so that none of my content disappears. |
 | US-17a | P0 | As a writer, I want standard Markdown to work in the preview, print and export without hunting for settings, with only extended features (highlight, superscript, autolinks, smart punctuation, math, `[TOC]`, hard wrap, Graphviz) as opt-in choices, so that my documents look the way Markdown is expected to look. |
 | US-17b | P1 | As a new user, I want the editor to insert conventional Markdown (`-` list items, spaces, a trailing newline) so that my files match common style guides and linters. |
@@ -205,7 +205,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 35a. FR-35a: On a new install, the editor defaults are: unordered list marker `-`, ensure newline at end of file on, insert spaces instead of tabs on. Existing users' values are unchanged.
 36. FR-36: The user defaults keys of dropped settings stay untouched in the user's defaults, so a downgrade still finds them.
 37. FR-37: `Licenses/` drops hoedown and PEG Markdown Highlight and adds swift-markdown and swift-cmark.
-38. FR-38: README ("Differences from the original", layout table; "Regenerating the highlighter parser" removed), CLAUDE.md (render pipeline, Editor, Tests, output goal) and `help.md` (Inline Formatting table and footnotes, Smartypants paragraph) describe the new behavior.
+38. FR-38: docs/MACDOWN-PORT.md ("Differences from the original") and docs/ARCHITECTURE.md (layout table; "Regenerating the highlighter parser" removed), CLAUDE.md (render pipeline, Editor, Tests, output goal) and `help.md` (Inline Formatting table and footnotes, Smartypants paragraph) describe the new behavior.
 
 ### Non-Functional Requirements
 
@@ -249,7 +249,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 |---|---|---|
 | Parses per edit | 1 (down from 2) | Instrumentation or code review of the pipeline |
 | Vendored C parser targets | 0 (down from 2), no generated parser source | Package.swift and repo tree after Phase 5 |
-| Unreviewed HTML diffs on the corpus | 0 | HTML diff tool; every remaining diff is an intended CommonMark difference listed in the README |
+| Unreviewed HTML diffs on the corpus | 0 | HTML diff tool; every remaining diff is an intended CommonMark difference listed in docs/MACDOWN-PORT.md |
 | Unreviewed highlight-span diffs on the corpus | 0 per element type | Span diff tool |
 | Themes loading with identical styles | 15 / 15 bundled | `ThemeStyleParser` vs `pmh_styleparser.c` comparison test |
 | Highlight latency, 10k-line file | ≤ PEG baseline | Phase 2 benchmark |
@@ -284,8 +284,8 @@ An optional early step can apply the settings and defaults on hoedown before the
 - [ ] Re-highlight time on a 10k-line file is ≤ the PEG baseline.
 
 **Phase 3: Renderer**
-- [ ] `RendererTests` pass on both engines. Every expectation changed for CommonMark is noted in the test or README.
-- [ ] The HTML diff on the corpus has been reviewed, and remaining differences are listed in the README.
+- [ ] `RendererTests` pass on both engines. Every expectation changed for CommonMark is noted in the test or docs/MACDOWN-PORT.md.
+- [ ] The HTML diff on the corpus has been reviewed, and remaining differences are listed in docs/MACDOWN-PORT.md.
 - [ ] Mermaid, Graphviz, MathJax and Prism render in the running app.
 - [ ] HTML and PDF export contain no `data-source-line` attributes.
 - [ ] Tests confirm `==x==`, `^x` and `"x"` render as plain text and `_x_` as `<em>`.

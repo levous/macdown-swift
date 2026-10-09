@@ -31,7 +31,7 @@
 
 ## Non-goals
 
-- Byte-identical HTML with the original MacDown. This goal (CLAUDE.md, README) is dropped and replaced by "CommonMark/GFM output, with differences listed in the README".
+- Byte-identical HTML with the original MacDown. This goal (CLAUDE.md, README) is dropped and replaced by "CommonMark/GFM output, with differences listed in docs/MACDOWN-PORT.md".
 - New Markdown syntax beyond what MacDown supports today.
 - Changing existing users' editing settings. New defaults apply to new installs only.
 - Changing the editor theme file format (`.style`). Existing and user themes must keep working.
@@ -125,7 +125,7 @@ Places that change:
 - `Preferences.swift`: the removed properties go; `loadDefaultPreferences` gets the new editing defaults. `Renderer.swift`: `extensionFlags` / `rendererFlags` always set the always-on features (hoedown), then only the opt-in ones remain (swift-markdown).
 - The editor highlighter's footnote extension, which follows the Footnote setting today (backwards; see "Decisions").
 - The bundled help (`Resources/help.md`): "The Markdown Preference Pane" section, the "Inline Formatting" table and the Quote footnote, the Smartypants paragraph, and the Rendering pane section (task lists, front matter), rewritten for what's always available and what's opt-in.
-- README "Differences from the original".
+- docs/MACDOWN-PORT.md "Differences from the original".
 
 ## Target architecture
 
@@ -178,7 +178,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 - Settings ▸ Rendering loses Task list syntax and Detect Jekyll front-matter; both always on.
 - The editor highlighter always enables footnotes.
 - New editing defaults for new installs (list marker `-`, newline at end of file, spaces for tabs).
-- Rewrite the affected help sections; README note.
+- Rewrite the affected help sections; docs/MACDOWN-PORT.md note.
 - Ships the principle now and makes the later engine switch a pure parser change.
 
 ### Phase 0: Spike and parity harness
@@ -219,7 +219,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 - Default `markdownEngine` to `swiftMarkdown`, ship a release, keep `hoedown` reachable through the hidden setting for one release.
 - Then remove `Sources/CHoedown`, `Sources/CPegMarkdown`, the hidden setting, `ScrollAnchors`' scanner, and the hoedown and PEG licenses from `Licenses/` (add swift-markdown and cmark's).
 - If the early step didn't ship: apply "Settings afterwards" and the editing defaults.
-- Update README ("Differences from the original" lists CommonMark output, always-on features, opt-in settings and dropped syntax; "Regenerating the highlighter parser" removed; layout table), CLAUDE.md (render pipeline, Editor, Tests, the byte-identical output goal), and the bundled `help.md`.
+- Update docs/MACDOWN-PORT.md ("Differences from the original" lists CommonMark output, always-on features, opt-in settings and dropped syntax; "Regenerating the highlighter parser" removed; layout table), CLAUDE.md (render pipeline, Editor, Tests, the byte-identical output goal), and the bundled `help.md`.
 
 ## Risks and mitigations
 
@@ -230,8 +230,8 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 | swift-markdown doesn't support smart punctuation, highlight or superscript natively | Our own pass over text nodes (never in code), behind each setting |
 | GFM autolinks can't be turned off at parse time | The renderer un-links autolink-extension links when Autolink is off; `<url>` links (CommonMark) still work |
 | swift-markdown doesn't expose footnotes (confirmed, F1) | Open question 1: a source scan, keeping hoedown for footnotes (and not removing it), or using cmark-gfm directly |
-| Users relied on `"quote"` → `<q>` | Listed in the README and release notes; the text still shows; Smart punctuation gives curly quotes |
-| Our highlight/superscript scan differs from hoedown's | Plain text only (not around other formatting, like `==*a* b==`); listed in the README; corpus diff shows real use |
+| Users relied on `"quote"` → `<q>` | Listed in docs/MACDOWN-PORT.md and the release notes; the text still shows; Smart punctuation gives curly quotes |
+| Our highlight/superscript scan differs from hoedown's | Plain text only (not around other formatting, like `==*a* b==`); listed in docs/MACDOWN-PORT.md; corpus diff shows real use |
 | Math protection mishandles edge cases (escaped `\$`, `$` in code, currency) | Dedicated tests from MathJax's own delimiter rules; math and inline `$` stay opt-in |
 | New editing defaults surprise users | New installs only; existing users keep their settings |
 | Highlighting performance on large files | Measured in Phase 2; the highlighter already debounces and only styles the visible range |
@@ -249,7 +249,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 
 ## Decisions
 
-1. **Byte-identical output with the original MacDown is dropped.** Output is CommonMark/GFM, with differences listed in the README.
+1. **Byte-identical output with the original MacDown is dropped.** Output is CommonMark/GFM, with differences listed in docs/MACDOWN-PORT.md.
 2. **Principle:** the most expected, standard behavior with the greatest feature support. Standard Markdown is always on; extended features are opt-in settings, off by default; editing follows conventions.
 3. **Always on:** CommonMark, GFM tables, fenced code, strikethrough and task lists, footnotes, and front matter (rendered as a table). Intra-word emphasis follows CommonMark. Code highlighting and Mermaid stay on by default.
 4. **Underline is HTML `<u>…</u>`** (the Underline setting was removed on 2026-10-09); underscores follow standard Markdown (`_x_` italic, `__x__` bold).
@@ -268,7 +268,7 @@ Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift`
 - **F1. Footnotes are not exposed** (checked 2026-10-09). swift-markdown never sets `CMARK_OPT_FOOTNOTES` and has no footnote node types; `a[^1]` and `[^1]: note` stay literal `Text` in ordinary paragraphs (the definition isn't swallowed as a link reference definition). cmark-gfm itself, which swift-markdown depends on, parses `footnote_reference` and `footnote_definition` nodes with source positions when given `CMARK_OPT_FOOTNOTES`. How to render them is open question 1.
 - **F2. Bare-URL autolinks are never parsed** (checked 2026-10-09). swift-markdown attaches only the `table`, `strikethrough` and `tasklist` extensions, not GFM's `autolink`, so `https://…`, `www.…` and emails stay text, and there's nothing to turn off. CommonMark `<https://…>` and `<a@b.c>` are always links. The Autolink setting (FR-8a) needs our own pass over text runs when it's on (or cmark-gfm's `autolink` extension, if cmark-gfm is used directly).
 - **F3. Smart punctuation is native and on by default** (checked 2026-10-09). cmark's `CMARK_OPT_SMART` is set unless `ParseOptions.disableSmartOpts` is passed: quotes become curly, `--` an en dash, `---` an em dash and `...` an ellipsis, never inside code. Every parse with Smart punctuation off must pass `.disableSmartOpts` (FR-17); with it on, no pass of our own is needed.
-- **F4. Highlight and superscript are not native** (checked 2026-10-09). `==marked==`, `x^2` and `x^(a b)` stay plain `Text`, so FR-19/FR-19a use our own pass over text runs (the plain-text-run limit in the README).
+- **F4. Highlight and superscript are not native** (checked 2026-10-09). `==marked==`, `x^2` and `x^(a b)` stay plain `Text`, so FR-19/FR-19a use our own pass over text runs (the plain-text-run limit in docs/MACDOWN-PORT.md).
 - **F5. Every block has a source range** (checked 2026-10-09): headings (ATX and setext), paragraphs, block quotes, both list kinds and their items, fenced and indented code, HTML blocks, thematic breaks and tables (with their parts). Columns are 1-based UTF-8 byte offsets, so `LineIndex` converts them to UTF-16.
 - **F6. `Markdown.Document` is not `Sendable`** (checked 2026-10-09): returning it from `Task.detached` fails to compile under Swift 6 ("type 'Document' does not conform to the 'Sendable' protocol"); only value types such as `SourceLocation` and `ParseOptions` are `Sendable`. So the Phase 1 model runs all visitors inside the detached task and holds their `Sendable` outputs (body HTML, highlight spans, source-line anchors), not the tree.
 - **F7. Math delimiters stay MacDown's** (Phase 1, 2026-10-09). hoedown's bracket math is written `\\(…\\)` and `\\[…\\]` (two backslashes), as help.md documents; a single `\(` is an ordinary Markdown escape, so the protection pass keeps the double form rather than changing what existing documents mean. Inline `$…$` is stricter than hoedown (which took any pair): the opening `$` needs a non-space after it and the closing one a non-space before it and no digit after, so "$5 and $10" isn't math. Math never crosses a blank line or enters code or raw HTML; code is found by a swift-markdown parse, which also covers indented code.

@@ -34,7 +34,7 @@ what's missing (see the first task).
 - [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
 - [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
 - [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
-- [x] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
+- [x] docs/MACDOWN-PORT.md "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
 - [x] Front matter detection: require the closing `---`/`...` on its own line and a YAML mapping, so a document that opens with a thematic break isn't swallowed now that detection is always on (found by the corpus, 2026-10-09)
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
@@ -106,11 +106,11 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [ ] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
 - [ ] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
 - [ ] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
-- [ ] Tests: `RendererTests` pass on both engines; each CommonMark-changed expectation commented in the test or README
+- [ ] Tests: `RendererTests` pass on both engines; each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
 - [ ] Tests: `==x==`, `^x`, `"x"` plain text by default; `_x_` is `<em>`; each opt-in off and on; TOC, task list, front matter (valid/invalid), footnotes, code-block markup; standard formatting with empty defaults
 - [ ] Test: HTML/PDF export contains no `data-source-line`
 - [ ] Live test: Mermaid, Graphviz, MathJax, Prism render in the running app (`LiveDocumentTests`), and a screenshot of the corpus documents in a throwaway build looks right
-- [ ] Run the HTML-diff harness hoedown vs `HTMLRenderer` on the corpus (full settings matrix) and review; remaining differences listed in README
+- [ ] Run the HTML-diff harness hoedown vs `HTMLRenderer` on the corpus (full settings matrix) and review; remaining differences listed in docs/MACDOWN-PORT.md
 
 ### Phase 4: Scroll sync by source line (FR-28 to FR-31)
 - [ ] `PreviewController.fetchMetrics` JS: report `[sourceLine, y]` pairs from `[data-source-line]` elements instead of `h`/`i` kinds
@@ -127,7 +127,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [ ] After that release: remove `Sources/CHoedown`, `Sources/CPegMarkdown`, their `Package.swift` targets/dependencies, the hidden setting, and `ScrollAnchors.scan`
 - [ ] Apply early-step settings/defaults here if the early step didn't ship
 - [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses
-- [ ] README "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
+- [ ] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
 - [ ] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
 - [ ] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation
 - [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass
