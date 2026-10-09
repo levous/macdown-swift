@@ -80,7 +80,8 @@ extension Preferences {
                                  rendererFlags: rendererFlags,
                                  smartyPants: extensionSmartyPants,
                                  rendersTOC: htmlRendersTOC,
-                                 detectsFrontMatter: true),
+                                 detectsFrontMatter: true,
+                                 engine: markdownEngine),
             page: page)
     }
 }
@@ -303,6 +304,8 @@ public enum PageBuilder {
 @MainActor
 public final class Renderer {
     public private(set) var result = ParseResult(body: "", languages: [])
+    /// The swift-markdown model of the same text, when that engine is on.
+    public private(set) var model: MarkdownDocumentModel?
     public private(set) var lastParseSettings: ParseSettings?
     public private(set) var lastPageSettings: PageSettings?
 
@@ -317,7 +320,7 @@ public final class Renderer {
     public func parseNow(_ markdown: String, settings: ParseSettings) {
         parseTask?.cancel()
         generation += 1
-        result = MarkdownParser.parse(markdown, settings: settings)
+        (result, model) = Self.parse(markdown, settings)
         lastParseSettings = settings
     }
 
@@ -329,16 +332,25 @@ public final class Renderer {
         generation += 1
         let current = generation
         parseTask = Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                MarkdownParser.parse(markdown, settings: settings)
+            let (result, model) = await Task.detached(priority: .userInitiated) {
+                Self.parse(markdown, settings)
             }.value
             guard let self, !Task.isCancelled, current == self.generation else {
                 return
             }
             self.result = result
+            self.model = model
             self.lastParseSettings = settings
             completion()
         }
+    }
+
+    private nonisolated static func parse(
+        _ markdown: String, _ settings: ParseSettings
+    ) -> (ParseResult, MarkdownDocumentModel?) {
+        let result = MarkdownParser.parse(markdown, settings: settings)
+        guard settings.engine == .swiftMarkdown else { return (result, nil) }
+        return (result, MarkdownDocumentModel(markdown, options: .init(settings)))
     }
 
     public func markRendered(with settings: PageSettings) {

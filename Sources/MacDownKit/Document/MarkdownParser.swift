@@ -16,15 +16,19 @@ public struct ParseSettings: Sendable, Equatable {
     public var smartyPants = false
     public var rendersTOC = false
     public var detectsFrontMatter = false
+    /// Which parser also builds the document model (the hidden
+    /// `markdownEngine` setting). The HTML is hoedown's until Phase 3.
+    public var engine = MarkdownEngine.hoedown
 
     public init(extensionFlags: UInt32 = 0, rendererFlags: UInt32 = 0,
                 smartyPants: Bool = false, rendersTOC: Bool = false,
-                detectsFrontMatter: Bool = false) {
+                detectsFrontMatter: Bool = false, engine: MarkdownEngine = .hoedown) {
         self.extensionFlags = extensionFlags
         self.rendererFlags = rendererFlags
         self.smartyPants = smartyPants
         self.rendersTOC = rendersTOC
         self.detectsFrontMatter = detectsFrontMatter
+        self.engine = engine
     }
 }
 

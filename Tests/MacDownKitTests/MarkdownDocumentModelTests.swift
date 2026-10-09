@@ -73,3 +73,52 @@ import Testing
         }
     }
 }
+
+/// The hidden engine setting routes parses through the model (FR-2).
+@MainActor @Suite struct RendererEngineTests {
+    @Test func renderSettingsCarryTheEngine() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = Preferences(defaults: defaults)
+        #expect(preferences.renderSettings.parse.engine == .hoedown)
+        preferences.markdownEngine = .swiftMarkdown
+        #expect(preferences.renderSettings.parse.engine == .swiftMarkdown)
+    }
+
+    @Test func swiftMarkdownBuildsTheModel() async {
+        let renderer = Renderer()
+        var settings = ParseSettings()
+        renderer.parseNow("# A\n", settings: settings)
+        #expect(renderer.model == nil)
+
+        settings.engine = .swiftMarkdown
+        renderer.parseNow("# A\n", settings: settings)
+        #expect(renderer.model?.blocks.map(\.kind) == [.heading(level: 1)])
+        #expect(renderer.result.body.contains("<h1"))    // HTML is still hoedown's
+
+        await withCheckedContinuation { done in
+            renderer.parse("# B\n\nText\n", settings: settings) { done.resume() }
+        }
+        #expect(renderer.model?.source == "# B\n\nText\n")
+        settings.engine = .hoedown
+        renderer.parseNow("# A\n", settings: settings)
+        #expect(renderer.model == nil)
+    }
+
+    /// Only the newest of several background parses lands.
+    @Test func stalePassesAreDiscarded() async {
+        let renderer = Renderer()
+        var settings = ParseSettings()
+        settings.engine = .swiftMarkdown
+        var completions = 0
+        renderer.parse(Corpus.generated(lines: 5_000), settings: settings) { completions += 1 }
+        await withCheckedContinuation { done in
+            renderer.parse("# Latest\n", settings: settings) { completions += 1; done.resume() }
+        }
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(completions == 1)
+        #expect(renderer.model?.source == "# Latest\n")
+        #expect(renderer.result.body.contains("Latest"))
+    }
+}

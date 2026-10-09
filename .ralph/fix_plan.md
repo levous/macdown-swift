@@ -60,7 +60,7 @@ what's missing (see the first task).
 - [x] Tests: byte offsets unchanged after protection; math with `_`, `*`, `\` survives emphasis-heavy content; escaped `\$`, `$` in code and currency amounts are not math
 - [x] `MarkdownDocumentModel` (`Sendable`): source, `LineIndex`, protected source, protected math/front-matter ranges, `Markdown.Document`; only this file area imports `Markdown` (TR-2)
   - Shape depends on the Phase 0 Sendable spike: if `Markdown.Document` is not `Sendable`, run all three visitors inside the detached task and have the model hold their `Sendable` outputs (body HTML, `[HighlightSpan]`, source-line anchors), not the tree
-- [ ] `Renderer.parse`: when `markdownEngine == swiftMarkdown`, build the model in the existing detached task and keep the generation counter that discards stale results (FR-2, NFR-2)
+- [x] `Renderer.parse`: when `markdownEngine == swiftMarkdown`, build the model in the existing detached task and keep the generation counter that discards stale results (FR-2, NFR-2)
 
 ## Medium Priority
 
