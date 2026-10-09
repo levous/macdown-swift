@@ -68,7 +68,7 @@ what's missing (see the first task).
 - [x] `ThemeStyleParser`: Swift port of `Sources/CPegMarkdown/pmh_styleparser.c` (same element names, attributes, colors, font traits, error messages)
 - [x] Test: `ThemeStyleParser` output equals `pmh_styleparser.c` output for all 15 themes in `Resources/Themes`
 - [x] `MarkdownHighlighter.applyStyles(fromStylesheet:)` uses `ThemeStyleParser` instead of `pmh_parse_styles` (needed before Phase 5 removes CPegMarkdown; same error strings)
-- [ ] `HighlightMapper` (`MarkupWalker`, pure): spans for `H1`…`H6`, `EMPH`, `STRONG`, `HRULE`, `LINK`, `AUTO_LINK_URL`, `AUTO_LINK_EMAIL`, `IMAGE`, `CODE`, `VERBATIM`, `BLOCKQUOTE`, `HTMLBLOCK`, and the rest of the PEG set used by themes
+- [x] `HighlightMapper` (`MarkupWalker`, pure): spans for `H1`…`H6`, `EMPH`, `STRONG`, `HRULE`, `LINK`, `AUTO_LINK_URL`, `AUTO_LINK_EMAIL`, `IMAGE`, `CODE`, `VERBATIM`, `BLOCKQUOTE`, `HTMLBLOCK`, and the rest of the PEG set used by themes
 - [ ] Source scans for gaps: `REFERENCE` definitions, `HTML_ENTITY`, `LIST_BULLET`/`LIST_ENUMERATOR` markers, `<!-- -->` `COMMENT`
 - [ ] `NOTE` spans for footnote references and definitions (FR-27)
 - [ ] New highlight types: math (FR-23), highlight `==…==` and superscript `^` (only with their settings on); themes without a style leave them uncolored

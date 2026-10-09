@@ -34,6 +34,17 @@ enum HighlightDiff {
         return spans
     }
 
+    /// HighlightMapper, through the document model (fresh-install options).
+    static let mapper: Engine = { text in
+        let model = MarkdownDocumentModel(text, options: .init())
+        var spans: Spans = [:]
+        for (type, list) in model.highlights.spans.enumerated() where !list.isEmpty {
+            spans[ThemeStyle.elementNames[type]] = Set(list.filter { $0.end > $0.pos }
+                .map { $0.pos..<$0.end })
+        }
+        return spans
+    }
+
     struct Difference: Sendable {
         let document: String
         let type: String

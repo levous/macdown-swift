@@ -55,6 +55,8 @@ public struct MarkdownDocumentModel: Sendable {
     public let math: [NSRange]
     /// Blocks in document order (parents before their children).
     public let blocks: [Block]
+    /// Editor highlighting, by PEG element type (`ThemeStyle.elementNames`).
+    let highlights: HighlightElements
 
     public init(_ source: String, options: Options) {
         let protected = ProtectedSource(source, math: options.math,
@@ -87,6 +89,7 @@ public struct MarkdownDocumentModel: Sendable {
         }
         walk(document)
         self.blocks = blocks
+        highlights = HighlightMapper.spans(of: document, source: source, lineIndex: lineIndex)
     }
 
     private static func kind(of markup: Markup) -> Block.Kind? {
