@@ -127,3 +127,69 @@ extension SwiftMarkdownSpikeTests {
         #expect(text("==marked== and x^2 and x^(a b)\n") == "==marked== and x^2 and x^(a b)")
     }
 }
+
+// MARK: Source ranges and concurrency
+
+extension SwiftMarkdownSpikeTests {
+    /// Every block node has a source range; columns count UTF-8 bytes, from 1.
+    @Test func everyBlockHasASourceRange() {
+        let source = """
+            # Title
+
+            Text with 😀 *em*.
+
+            > Quote
+            > - item
+            >   1. nested
+
+            ```swift
+            let x = 1
+            ```
+
+                indented
+
+            <div>html</div>
+
+            ---
+
+            | a | b |
+            |---|---|
+            | 1 | 2 |
+
+            - [x] task
+
+            Setext
+            ======
+            """
+        let document = Document(parsing: source)
+        var kinds: Set<String> = []
+        var missing: [String] = []
+        func walk(_ markup: Markup) {
+            if markup is BlockMarkup {
+                let kind = String(describing: type(of: markup))
+                kinds.insert(kind)
+                if markup.range == nil { missing.append(kind) }
+            }
+            markup.children.forEach(walk)
+        }
+        walk(document)
+        #expect(kinds.isSuperset(of: ["Heading", "Paragraph", "BlockQuote", "UnorderedList",
+                                      "OrderedList", "ListItem", "CodeBlock", "HTMLBlock",
+                                      "ThematicBreak", "Table"]), "\(kinds)")
+        #expect(missing.isEmpty, "no range: \(missing)")
+
+        // "Text with 😀 " is 10 + 4 + 1 bytes, so *em* starts at column 16.
+        var emphasis: SourceRange?
+        func find(_ markup: Markup) {
+            if markup is Emphasis { emphasis = markup.range }
+            markup.children.forEach(find)
+        }
+        find(document)
+        #expect(emphasis?.lowerBound == SourceLocation(line: 3, column: 16, source: nil))
+    }
+
+    // Document is not Sendable: `await Task.detached { Document(parsing: s) }.value`
+    // fails to compile ("type 'Document' does not conform to the 'Sendable'
+    // protocol"). The model must run the visitors in the detached task and
+    // keep only their Sendable results (F6).
+}
