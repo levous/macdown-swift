@@ -60,6 +60,10 @@ import Testing
         settings.smartyPants = true
         #expect(MarkdownDocumentModel.Options(settings)
                 == .init(math: true, inlineDollar: true, smartPunctuation: true))
+        settings.extensionFlags |= HOEDOWN_EXT_HIGHLIGHT.rawValue | HOEDOWN_EXT_SUPERSCRIPT.rawValue
+        #expect(MarkdownDocumentModel.Options(settings)
+                == .init(math: true, inlineDollar: true, smartPunctuation: true,
+                         highlight: true, superscript: true))
     }
 
     @Test(arguments: try Corpus.all())

@@ -137,11 +137,13 @@ private func cStyle(_ stylesheet: String) -> ThemeStyle {
 
     /// The highlighter uses an element's index as its PEG element type.
     @Test func elementNamesFollowThePEGOrder() {
-        for (index, name) in ThemeStyle.elementNames.enumerated() {
+        for (index, name) in ThemeStyle.elementNames.prefix(Int(pmh_NUM_LANG_TYPES)).enumerated() {
             let type = name.withCString { pmh_element_type_from_name(UnsafeMutablePointer(mutating: $0)) }
             #expect(Int(type.rawValue) == index, "\(name)")
         }
-        #expect(ThemeStyle.elementNames.count == Int(pmh_NUM_LANG_TYPES))
+        // Then the types PEG didn't have.
+        #expect(ThemeStyle.elementNames.dropFirst(Int(pmh_NUM_LANG_TYPES))
+                == ["MATH", "HIGHLIGHT", "SUPERSCRIPT"])
     }
 
     @Test func errorMessagesReadLikeTheHighlighters() {

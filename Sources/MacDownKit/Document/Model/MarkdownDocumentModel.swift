@@ -18,18 +18,25 @@ public struct MarkdownDocumentModel: Sendable {
         public var math = false
         public var inlineDollar = false
         public var smartPunctuation = false
+        public var highlight = false
+        public var superscript = false
 
         public init(math: Bool = false, inlineDollar: Bool = false,
-                    smartPunctuation: Bool = false) {
+                    smartPunctuation: Bool = false, highlight: Bool = false,
+                    superscript: Bool = false) {
             self.math = math
             self.inlineDollar = inlineDollar
             self.smartPunctuation = smartPunctuation
+            self.highlight = highlight
+            self.superscript = superscript
         }
 
         public init(_ settings: ParseSettings) {
             math = settings.extensionFlags & HOEDOWN_EXT_MATH.rawValue != 0
             inlineDollar = math && settings.extensionFlags & HOEDOWN_EXT_MATH_EXPLICIT.rawValue != 0
             smartPunctuation = settings.smartyPants
+            highlight = settings.extensionFlags & HOEDOWN_EXT_HIGHLIGHT.rawValue != 0
+            superscript = settings.extensionFlags & HOEDOWN_EXT_SUPERSCRIPT.rawValue != 0
         }
     }
 
@@ -90,7 +97,7 @@ public struct MarkdownDocumentModel: Sendable {
         walk(document)
         self.blocks = blocks
         highlights = HighlightMapper.spans(of: document, source: source, lineIndex: lineIndex,
-                                             math: math)
+                                           math: math, options: options)
     }
 
     private static func kind(of markup: Markup) -> Block.Kind? {

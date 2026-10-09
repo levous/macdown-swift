@@ -11,8 +11,8 @@ import Testing
 
 @Suite struct HighlightMapperTests {
     /// The source text of each span, by element name.
-    func spans(_ text: String) -> [String: [String]] {
-        let model = MarkdownDocumentModel(text, options: .init())
+    func spans(_ text: String, options: MarkdownDocumentModel.Options = .init()) -> [String: [String]] {
+        let model = MarkdownDocumentModel(text, options: options)
         let source = text as NSString
         var result: [String: [String]] = [:]
         for (type, list) in model.highlights.spans.enumerated() where !list.isEmpty {
@@ -118,5 +118,29 @@ import Testing
     @Test func footnotes() {
         let s = spans("A note[^1] and[^long-label].\n\n[^1]: The note.\n\n`[^code]` and [link](x) and [^ spaced].\n")
         #expect(s["NOTE"] == ["[^1]", "[^long-label]", "[^1]:"])
+    }
+
+    /// New types (FR-23, FR-19): each only with its setting on.
+    @Test func mathHighlightAndSuperscript() {
+        let text = "$x_1$ and $$y$$, ==marked== and == spaced ==, x^2 and 10^(-6). `==code== x^2`\n"
+        let off = spans(text)
+        #expect(off["MATH"] == nil && off["HIGHLIGHT"] == nil && off["SUPERSCRIPT"] == nil)
+        let on = spans(text, options: .init(math: true, inlineDollar: true,
+                                            highlight: true, superscript: true))
+        #expect(on["MATH"] == ["$x_1$", "$$y$$"])
+        #expect(on["HIGHLIGHT"] == ["==marked=="])
+        #expect(on["SUPERSCRIPT"] == ["^2", "^(-6)"])
+    }
+
+    /// Links carry their address, for clickable links in the editor.
+    @Test func linkAddresses() {
+        let model = MarkdownDocumentModel("[a](https://a.org) <https://b.org> <me@c.org>\n",
+                                          options: .init())
+        func addresses(_ name: String) -> [String?] {
+            model.highlights.spans[ThemeStyle.elementNames.firstIndex(of: name)!].map(\.address)
+        }
+        #expect(addresses("LINK") == ["https://a.org"])
+        #expect(addresses("AUTO_LINK_URL") == ["https://b.org"])
+        #expect(addresses("AUTO_LINK_EMAIL") == ["me@c.org"])    // the editor adds mailto:
     }
 }

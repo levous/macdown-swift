@@ -33,31 +33,40 @@ struct HighlightMapper: MarkupWalker {
     /// Where they can't: code spans, inline HTML, autolinks, math.
     private var opaque: [NSRange]
 
-    init(source: String, lineIndex: LineIndex, math: [NSRange]) {
+    private let options: MarkdownDocumentModel.Options
+
+    init(source: String, lineIndex: LineIndex, math: [NSRange],
+         options: MarkdownDocumentModel.Options) {
         text = source
         self.source = Array(source.utf16)
         self.lineIndex = lineIndex
+        self.options = options
         opaque = math
         spans = Array(repeating: [], count: ThemeStyle.elementNames.count)
+        for range in math { add("MATH", range) }
     }
 
     /// The spans of a parsed document, sorted by position within each type.
     static func spans(of document: Document, source: String, lineIndex: LineIndex,
-                      math: [NSRange] = []) -> HighlightElements {
-        var mapper = HighlightMapper(source: source, lineIndex: lineIndex, math: math)
+                      math: [NSRange] = [], options: MarkdownDocumentModel.Options) -> HighlightElements {
+        var mapper = HighlightMapper(source: source, lineIndex: lineIndex, math: math,
+                                     options: options)
         mapper.visit(document)
         mapper.scanReferences()
         mapper.scanEntities()
         mapper.scanFootnotes()
+        if options.highlight { mapper.scan(ExtendedSyntax.highlight, as: "HIGHLIGHT") }
+        if options.superscript { mapper.scan(ExtendedSyntax.superscript, as: "SUPERSCRIPT") }
         return HighlightElements(spans: mapper.spans.map { $0.sorted { $0.pos < $1.pos } })
     }
 
     // MARK: - Helpers
 
-    private mutating func add(_ name: String, _ range: NSRange?) {
+    private mutating func add(_ name: String, _ range: NSRange?, address: String? = nil) {
         guard let range, range.length > 0,
               let type = ThemeStyle.elementNames.firstIndex(of: name) else { return }
-        spans[type].append(HighlightSpan(pos: range.location, end: NSMaxRange(range), address: nil))
+        spans[type].append(HighlightSpan(pos: range.location, end: NSMaxRange(range),
+                                         address: address))
     }
 
     private func nsRange(_ markup: Markup) -> NSRange? {
@@ -232,12 +241,14 @@ struct HighlightMapper: MarkupWalker {
         let range = nsRange(link)
         if let range, character(at: range.location) == "<" {
             // A CommonMark autolink, <https://…> or <a@b.c>.
-            add(link.destination?.hasPrefix("mailto:") == true
-                    && !(link.plainText.hasPrefix("mailto:")) ? "AUTO_LINK_EMAIL" : "AUTO_LINK_URL",
-                range)
+            // Emails without "mailto:", as PEG gave them; the editor adds it.
+            let isEmail = link.destination?.hasPrefix("mailto:") == true
+                && !link.plainText.hasPrefix("mailto:")
+            add(isEmail ? "AUTO_LINK_EMAIL" : "AUTO_LINK_URL", range,
+                address: isEmail ? link.plainText : link.destination)
             opaque.append(range)
         } else {
-            add("LINK", range)
+            add("LINK", range, address: link.destination)
             descendInto(link)
         }
     }
@@ -320,6 +331,16 @@ struct HighlightMapper: MarkupWalker {
                     range.length -= 1
                 }
                 add("NOTE", range)
+            }
+        }
+    }
+
+    /// Opt-in syntax in plain text, outside code, HTML and math.
+    private mutating func scan(_ pattern: NSRegularExpression, as name: String) {
+        for container in inlineContainers {
+            for match in pattern.matches(in: text, range: container)
+            where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
+                add(name, match.range)
             }
         }
     }

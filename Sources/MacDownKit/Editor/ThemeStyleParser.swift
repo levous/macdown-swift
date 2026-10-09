@@ -60,6 +60,8 @@ public struct ThemeStyle: Sendable, Equatable {
         "HTML_ENTITY", "EMPH", "STRONG", "LIST_BULLET", "LIST_ENUMERATOR", "COMMENT",
         "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "VERBATIM", "HTMLBLOCK",
         "HRULE", "REFERENCE", "NOTE",
+        // Not in PEG Markdown Highlight: math and the opt-in syntax.
+        "MATH", "HIGHLIGHT", "SUPERSCRIPT",
     ]
 
     public init(parsing stylesheet: String) {
