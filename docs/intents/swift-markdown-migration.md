@@ -59,7 +59,7 @@
 |---|---|---|
 | CommonMark: emphasis, strong, headings, lists, links, `<url>` autolinks, images, code, block quotes, rules, inline and block HTML | Built in | `_x_`/`*x*` italic, `__x__`/`**x**` bold; intra-word emphasis follows CommonMark (`*` works inside words, `_` doesn't) |
 | Tables, fenced code, strikethrough, task lists | GFM, built in | Always on. Task lists render with MacDown's current markup and classes |
-| Footnotes | cmark-gfm has footnotes; **check that swift-markdown exposes them** | Always on. Phase 0 decides how; if not exposed, see Risks |
+| Footnotes | cmark-gfm has footnotes, but swift-markdown doesn't parse them (F1) | Always on. How they render is open question 1 |
 | Front matter (a valid YAML block at the very top) | Not supported | Always rendered as a table, as GitHub does. Keep the current Yams step; blank the block before parsing so positions stay correct. A leading `---` that isn't valid YAML stays ordinary Markdown |
 | Underline | No Markdown syntax | HTML `<u>…</u>` (the Underline toolbar button and ⌘U insert it). Done 2026-10-09 |
 | Fenced-code syntax highlighting (Prism), Mermaid | Renderer + page scripts | On by default as today (settings kept for performance); GitHub renders both |
@@ -70,10 +70,10 @@ Each keeps its current user defaults key, so existing users keep their choice.
 
 | Feature | Where | Plan |
 |---|---|---|
-| `==highlight==` | Settings ▸ Markdown (`extensionHighlight`) | Native if swift-markdown has it, otherwise our own scan (see "Highlight and superscript") |
-| `^superscript` | Settings ▸ Markdown (`extensionSuperscript`) | Native if swift-markdown has it, otherwise our own scan (see "Highlight and superscript"); `x^2` and `x^(text)` as today |
+| `==highlight==` | Settings ▸ Markdown (`extensionHighlight`) | Our own scan; not native (F4, see "Highlight and superscript") |
+| `^superscript` | Settings ▸ Markdown (`extensionSuperscript`) | Our own scan; not native (F4, see "Highlight and superscript"); `x^2` and `x^(text)` as today |
 | Autolinks (bare URLs and email addresses) | Settings ▸ Markdown (`extensionAutolink`) | GFM, built in; **check whether swift-markdown can turn it off**. If not, the renderer shows autolinked URLs as plain text when off. `<url>` links always work |
-| Smart punctuation (curly quotes, dashes, ellipses) | Settings ▸ Markdown (`extensionSmartyPants`, labeled "Smart punctuation") | Native if supported, otherwise our own pass over text nodes (never in code) |
+| Smart punctuation (curly quotes, dashes, ellipses) | Settings ▸ Markdown (`extensionSmartyPants`, labeled "Smart punctuation") | Native: cmark's smart punctuation, turned off with `.disableSmartOpts` when the setting is off (F3); never in code |
 | Math (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`) | Settings ▸ Rendering (`htmlMathJax`, `htmlMathJaxInlineDollar`) | Off by default as today (MathJax loads from the internet). Protect math before parsing (see "Math") |
 | `[TOC]` | Settings ▸ Rendering (`htmlRendersTOC`) | Build from `Heading` nodes; replace a paragraph containing only `[TOC]` |
 | Hard wrap | Settings ▸ Rendering (`htmlHardWrap`) | Soft breaks render as `<br>` |
@@ -153,7 +153,7 @@ MarkdownDocumentModel (new, value type, Sendable)
 
 ### Highlight and superscript
 
-`==text==` and `^text` stay, each behind its setting (off by default). Where swift-markdown has no native support, handle them ourselves without changing the parser:
+`==text==` and `^text` stay, each behind its setting (off by default). swift-markdown has no native support (F4), so handle them ourselves without changing the parser:
 
 - **Renderer:** with the setting on, when visiting a `Text` node, split it on `==…==` pairs (emit `<mark>`) or `^word` / `^(text)` (emit `<sup>`).
 - **Highlighter:** with the setting on, the same scanner yields spans of a new highlight type, so the editor can color them too (themes without a style for them don't).
@@ -253,7 +253,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 2. **Principle:** the most expected, standard behavior with the greatest feature support. Standard Markdown is always on; extended features are opt-in settings, off by default; editing follows conventions.
 3. **Always on:** CommonMark, GFM tables, fenced code, strikethrough and task lists, footnotes, and front matter (rendered as a table). Intra-word emphasis follows CommonMark. Code highlighting and Mermaid stay on by default.
 4. **Underline is HTML `<u>…</u>`** (the Underline setting was removed on 2026-10-09); underscores follow standard Markdown (`_x_` italic, `__x__` bold).
-5. **Opt-in settings, off by default:** Highlight, Superscript, Autolink, Smart punctuation (Settings ▸ Markdown); math and inline `$`, `[TOC]`, hard wrap, Graphviz (Settings ▸ Rendering). Highlight, superscript and smart punctuation use swift-markdown natively where it supports them, otherwise our own pass; autolinks use a parse option or are un-linked by the renderer.
+5. **Opt-in settings, off by default:** Highlight, Superscript, Autolink, Smart punctuation (Settings ▸ Markdown); math and inline `$`, `[TOC]`, hard wrap, Graphviz (Settings ▸ Rendering). Smart punctuation is cmark's own (on unless `.disableSmartOpts` is passed, F3); highlight, superscript and bare-URL autolinks are our own pass over text runs, since swift-markdown parses none of them (F2, F4).
 6. **`"quote"` → `<q>` is dropped;** Smart punctuation covers typographic quotes.
 7. **Math stays opt-in, off by default** (MathJax needs a network connection).
 8. **Editing defaults follow conventions for new installs:** list marker `-`, newline at end of file on, spaces instead of tabs. Existing users keep their settings.

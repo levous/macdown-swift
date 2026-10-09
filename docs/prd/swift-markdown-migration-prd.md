@@ -90,10 +90,10 @@ Main parts:
 
 | Feature | Setting | Implementation |
 |---|---|---|
-| Highlight (`==…==`) | Settings ▸ Markdown | Native if available, otherwise our own scan (plain text only) |
-| Superscript (`x^2`, `x^(text)`) | Settings ▸ Markdown | Native if available, otherwise our own scan (plain text only) |
-| Autolinks (bare URLs, email addresses) | Settings ▸ Markdown | Parse option if swift-markdown has one; otherwise the renderer shows them as plain text when off |
-| Smart punctuation | Settings ▸ Markdown (today's Smartypants, relabeled) | Native if available, otherwise our own pass over text (never in code) |
+| Highlight (`==…==`) | Settings ▸ Markdown | Our own scan (plain text only); not native |
+| Superscript (`x^2`, `x^(text)`) | Settings ▸ Markdown | Our own scan (plain text only); not native |
+| Autolinks (bare URLs, email addresses) | Settings ▸ Markdown | Our own pass when on; swift-markdown never links them |
+| Smart punctuation | Settings ▸ Markdown (today's Smartypants, relabeled) | Native (cmark); parse with `.disableSmartOpts` when off (never in code) |
 | Math, inline `$` | Settings ▸ Rendering | Protection pass; MathJax loads from the internet |
 | `[TOC]`, hard wrap, Graphviz | Settings ▸ Rendering | Our renderer / page scripts |
 
@@ -164,7 +164,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 7. FR-7: Core blocks and inlines render as CommonMark HTML.
 8. FR-8: Tables, fenced code, strikethrough and task lists always render as GFM; there is no setting to turn them off.
-8a. FR-8a: With the Autolink setting on (off by default), bare URLs and email addresses render as links; off, they render as plain text, through a swift-markdown parse option if there is one, otherwise by the renderer. `<url>` autolinks (CommonMark) always render as links.
+8a. FR-8a: With the Autolink setting on (off by default), bare URLs and email addresses render as links; off, they render as plain text. swift-markdown never parses bare URLs as links, so the renderer links them in its own pass when the setting is on. `<url>` autolinks (CommonMark) always render as links.
 9. FR-9: Fenced code blocks render as `<div><pre class="line-numbers" data-information><code class="language-…">`, the same markup as today, with the line-numbers class only when that setting is on.
 10. FR-10: Each code-block language is added to the parse result's Prism language list, with today's alias mapping from `languageAddition`.
 11. FR-11: Task list items always render with MacDown's current task-list markup and classes; there is no setting.
@@ -264,9 +264,9 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 **Phase 0: Spike and parity harness**
 - [ ] swift-markdown is pinned to an exact version in `Package.swift` and builds under Swift 6 strict concurrency.
-- [ ] "Decisions" in the intent doc records answers on footnotes, smart punctuation, native support for highlight and superscript, source positions on every block node, and concurrency compatibility.
+- [x] "Decisions" in the intent doc records answers on footnotes, smart punctuation, native support for highlight and superscript, source positions on every block node, and concurrency compatibility.
 - [ ] The HTML diff compares swift-markdown against hoedown with the same formatting: the always-on set, plus each opt-in feature off and on.
-- [ ] Phase 0 records whether GFM autolinks can be turned off at parse time, and whether smart punctuation, highlight and superscript are native.
+- [x] Phase 0 records whether GFM autolinks can be turned off at parse time, and whether smart punctuation, highlight and superscript are native.
 - [x] Today's behavior of the inline formatters (hoedown, each toggle on) is checked and recorded: they work (see "Dropped features" in the intent doc), so dropping any of them is a user-visible removal for the release notes.
 - [ ] The corpus is checked in.
 - [ ] Both diff tools run in CI. Diffs caused by dropped features are listed once.
