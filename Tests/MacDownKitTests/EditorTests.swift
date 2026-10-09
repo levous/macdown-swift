@@ -40,6 +40,42 @@ import Testing
     }
 }
 
+@MainActor @Suite struct ThemeApplicationTests {
+    @Test func appliesABundledTheme() throws {
+        let url = try #require(MPPaths.resourceBundle.url(forResource: "Solarized (Dark)",
+                                                          withExtension: "style",
+                                                          subdirectory: "Themes"))
+        let stylesheet = try String(contentsOf: url, encoding: .utf8)
+        let theme = ThemeStyle(parsing: stylesheet)
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        textView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
+        textView.string = "# Title\n"
+        let highlighter = MarkdownHighlighter(textView: textView)
+        #expect(highlighter.applyStyles(fromStylesheet: stylesheet).isEmpty)
+
+        guard case .backgroundColor(let background)? = theme.editor
+            .first(where: { if case .backgroundColor = $0.value { true } else { false } })?.value
+        else { Issue.record("no editor background"); return }
+        #expect(textView.backgroundColor == HighlightingStyle.color(background))
+        let h1 = try #require(highlighter.styles.first { $0.elementType == Int(pmh_H1.rawValue) })
+        let rule = try #require(theme.elements.first { $0.element == "H1" })
+        let foreground = rule.attributes.compactMap { attribute -> ThemeStyle.Color? in
+            if case .foregroundColor(let c) = attribute.value { c } else { nil }
+        }.first
+        #expect(h1.attributesToAdd[.foregroundColor] as? NSColor
+                == foreground.map(HighlightingStyle.color))
+    }
+
+    @Test func reportsStylesheetErrors() {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let highlighter = MarkdownHighlighter(textView: textView)
+        #expect(highlighter.applyStyles(fromStylesheet: "H1\ncolor: 12\nfont-style: wavy\n") == [
+            "(Line 2): Value '12' is not a valid color value: it should be a hexadecimal number, 6 or 8 characters long.",
+            "(Line 3): Value 'wavy' is invalid for attribute 'font-style'",
+        ])
+    }
+}
+
 @MainActor
 @Suite struct AutocompleteTests {
     func makeTextView(_ text: String, selection: NSRange? = nil) -> NSTextView {

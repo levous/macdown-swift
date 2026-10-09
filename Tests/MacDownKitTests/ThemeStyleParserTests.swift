@@ -135,6 +135,15 @@ private func cStyle(_ stylesheet: String) -> ThemeStyle {
         #expect(!swift.elements.contains { $0.element == "EMPH" })
     }
 
+    /// The highlighter uses an element's index as its PEG element type.
+    @Test func elementNamesFollowThePEGOrder() {
+        for (index, name) in ThemeStyle.elementNames.enumerated() {
+            let type = name.withCString { pmh_element_type_from_name(UnsafeMutablePointer(mutating: $0)) }
+            #expect(Int(type.rawValue) == index, "\(name)")
+        }
+        #expect(ThemeStyle.elementNames.count == Int(pmh_NUM_LANG_TYPES))
+    }
+
     @Test func errorMessagesReadLikeTheHighlighters() {
         let style = ThemeStyle(parsing: "H1\ncolor: 12\n")
         #expect(style.errors.map(\.description) == [
