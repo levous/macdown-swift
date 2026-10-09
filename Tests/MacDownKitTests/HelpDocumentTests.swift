@@ -40,7 +40,8 @@ enum HelpDocument {
                         "<u>Underline</u>", "<code>Inline code</code>", "<pre>",
                         "<blockquote>", "<ol>", "<ul>", "<hr>", "<table>",
                         "<kbd>Command</kbd>", "H<sub>2</sub>O", "&copy;",
-                        "<del>struck through</del>", "task-list-item",
+                        "<del>struck through</del>", "task-list-item", "So A<em>maz</em>ing",
+                        #"<a name="standard-extensions"></a>"#,
                         "<!-- This is an HTML comment."] {
             #expect(html.contains(element), "missing \(element)")
         }

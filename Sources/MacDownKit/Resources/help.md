@@ -21,7 +21,7 @@ By default, edits stay in the window until you save, like a classic Mac document
 
 ## The Basics
 
-Before I tell you about all the extra syntax and capabilities I have, here are the basics of standard Markdown. If you already know them, skip to the [**Markdown** settings](#markdown-pane).
+Before I tell you about all the extra syntax and capabilities I have, here are the basics of standard Markdown. If you already know them, skip to the [standard extensions](#standard-extensions).
 
 ### Paragraphs and Line Breaks
 
@@ -45,13 +45,15 @@ won’t break
 will break
 ```
 
-### Emphasis
+### <a name="emphasis"></a>Emphasis
 
 **Strong**: `**Strong**` or `__Strong__` (Command-B)  
 *Emphasize*: `*Emphasize*` or `_Emphasize_` (Command-I)  
 ~~Strikethrough~~: `~~struck through~~` gives ~~struck through~~ (Command-Hyphen)  
 ***Both***: `***Both***`  
 <u>Underline</u>: `<u>Underline</u>` (Command-U; Markdown has no underline syntax, so I use HTML)
+
+Emphasis works inside words too: `So A*maz*ing` gives So A*maz*ing. That goes for underscores as well, so snake_case_name shows *case* emphasized; escape the underscores (`snake\_case\_name`) to keep them.
 
 ### Headers (like this one!)
 
@@ -226,15 +228,11 @@ Markdown lets you mix in HTML when you need it: press <kbd>Command</kbd>-<kbd>S<
 
 HTML comments, like the one in the editor above this line, don’t appear in the preview. **Format ▸ Comment** (Command-/) comments out the selection.
 
-## <a name="markdown-pane"></a>The Markdown Settings
+## <a name="standard-extensions"></a>Standard Extensions
 
-This is where I keep the settings for how I turn Markdown into HTML: **MacDown ▸ Settings… ▸ Markdown**. Each setting below shows its default and a live example, so you can turn it on and watch the example change.
+These are part of [GitHub Flavored Markdown](https://github.github.com/gfm/) and always on: tables, fenced code blocks, strikethrough (see [Emphasis](#emphasis)), footnotes, task lists and front-matter.
 
-### Block Formatting
-
-#### Table
-
-*Table* (on by default)
+### Table
 
 This is a table:
 
@@ -253,9 +251,7 @@ You can align cell contents with syntax like this:
 
 The left- and right-most pipes (`|`) are only aesthetic, and can be omitted. The spaces don’t matter, either. Alignment depends solely on `:` marks.
 
-#### <a name="fenced-code-block"></a>Fenced Code Block
-
-*Fenced code block* (on by default)
+### <a name="fenced-code-block"></a>Fenced Code Block
 
 This is a fenced code block:
 
@@ -290,9 +286,7 @@ def greet(name: str) -> str:
 
 I know hundreds of languages, including common aliases such as `js`, `py`, `sh` and `objc`.
 
-#### Footnotes
-
-*Footnote* (on by default)
+### Footnotes
 
 Write a footnote reference like this[^1], and the footnote itself anywhere in the document[^note].
 
@@ -302,27 +296,53 @@ Write a footnote reference like this[^1], and the footnote itself anywhere in th
 
 [^note]: You don’t have to use a number. Arbitrary labels like `[^note]` work too, but they *render* as numbered footnotes, in the order they’re referenced.
 
-### Inline Formatting
+### Task Lists
 
-These are off by default unless noted. Each line shows the markup, then a live example: turn the setting on in **Settings ▸ Markdown** to see it format.
+`[ ]` and `[x]` at the start of a list item become checkboxes:
 
-Setting             | Markup             | Result when on        |
---------------------|--------------------|-----------------------|
-Intra-word emphasis | So A\*maz\*ing     | So A<em>maz</em>ing   |
-Highlight           | \==So good\==      | <mark>So good</mark>  |
-Superscript         | x\^2, hoge\^(fuga) | x<sup>2</sup>, hoge<sup>fuga</sup> |
-Autolink            | https://example.com | <https://example.com> |
-Smartypants         | \"Quotes\" -- and ... | “Quotes” – and …   |
+1. [x] I can render checkbox list syntax
+	* [x] I support nesting
+	* [x] I support ordered *and* unordered lists
+2. [ ] I don’t support clicking checkboxes directly in the preview
+
+```
+1. [x] I can render checkbox list syntax
+	* [x] I support nesting
+	* [x] I support ordered *and* unordered lists
+2. [ ] I don’t support clicking checkboxes directly in the preview
+```
+
+### Jekyll Front-matter
+
+I display Jekyll-style front-matter as a table. Put it at the very beginning of the file, fenced with `---`:
+
+```
+---
+title: "MacDown is my friend"
+date: 2014-06-06 20:00:00
+tags: [markdown, notes]
+---
+```
+
+## <a name="markdown-pane"></a>The Markdown Settings
+
+**MacDown ▸ Settings… ▸ Markdown** turns on syntax that isn’t standard Markdown. It’s all off by default, because other Markdown programs won’t show it the same way. Each line shows the markup, then a live example: turn the setting on to see it format.
+
+Setting             | Markup                    | Result when on        |
+--------------------|---------------------------|-----------------------|
+Highlight           | `==So good==`             | <mark>So good</mark>  |
+Superscript         | `x^2`, `hoge^(fuga)`      | x<sup>2</sup>, hoge<sup>fuga</sup> |
+Autolink            | `https://example.com`     | <https://example.com> |
+Smart punctuation   | `"Quotes" -- and ...`     | “Quotes” – and …      |
 
 Live examples:
 
-* **Intra-word emphasis** (on by default): So A*maz*ing. It applies to underscores too, so snake_case_name shows *case* emphasized; turn the setting off, or escape the underscores (`snake\_case\_name`), to keep them.
 * **Highlight** (Command-Equals): ==highlighted==
 * **Superscript**: y^3 and 10^(-6)
 * **Autolink**: https://example.org and hello@example.org
-* **Smartypants**: "Curly quotes," 'single quotes,' en -- dash, em --- dash, and an ellipsis...
+* **Smart punctuation**: "Curly quotes," 'single quotes,' en -- dash, em --- dash, and an ellipsis...
 
-**Smartypants** turns straight quotes, `--`, `---` and `...` into typographer’s quotes, dashes and ellipses, but never inside code.
+**Smart punctuation** turns straight quotes, `--`, `---` and `...` into typographer’s quotes, dashes and ellipses, but never inside code.
 
 ## <a name="rendering-pane"></a>The Rendering Settings
 
@@ -415,34 +435,6 @@ or (in MathML)
 </math>
 
 With *Use dollar sign ($) as inline delimiter* on too, $e^{i\pi} + 1 = 0$ works inline. It’s a separate setting because dollar signs are common in ordinary text, like $1600 in the table above.
-
-### Task List Syntax
-
-Task lists are standard and always on: `[ ]` and `[x]` at the start of a list item become checkboxes:
-
-1. [x] I can render checkbox list syntax
-	* [x] I support nesting
-	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
-
-```
-1. [x] I can render checkbox list syntax
-	* [x] I support nesting
-	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
-```
-
-### Jekyll Front-matter
-
-Front-matter is always detected and displayed as a table. Put it at the very beginning of the file, fenced with `---`:
-
-```
----
-title: "MacDown is my friend"
-date: 2014-06-06 20:00:00
-tags: [markdown, notes]
----
-```
 
 ### Table of Contents
 

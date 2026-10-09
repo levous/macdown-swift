@@ -33,7 +33,7 @@ what's missing (see the first task).
 - [x] `Preferences.loadDefaultPreferences` (fresh install only): `editorUnorderedListMarkerType = .minusSign`, `editorEnsuresNewlineAtEndOfFile = true`, `editorConvertTabs = true`; remove now-dead `extensionFootnotes = true` default
 - [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
 - [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
-- [ ] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
+- [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
 - [ ] README "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
