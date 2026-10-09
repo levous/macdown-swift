@@ -88,3 +88,42 @@ extension SwiftMarkdownSpikeTests {
                 == ["https://example.org", "mailto:hello@example.org"])
     }
 }
+
+// MARK: Smart punctuation, highlight, superscript
+
+extension SwiftMarkdownSpikeTests {
+    func text(_ source: String, options: ParseOptions = []) -> String {
+        var result = ""
+        func walk(_ markup: Markup) {
+            if let t = markup as? Text { result += t.string }
+            markup.children.forEach(walk)
+        }
+        walk(Document(parsing: source, options: options))
+        return result
+    }
+
+    /// Smart punctuation is native, and ON by default: cmark's CMARK_OPT_SMART
+    /// is set unless `.disableSmartOpts` is passed. Code is never changed.
+    @Test func smartPunctuationIsOnByDefault() {
+        let source = #""Quotes," 'single,' en -- dash, em --- dash... `"code" --`"#
+        #expect(text(source) == "\u{201C}Quotes,\u{201D} \u{2018}single,\u{2019} en \u{2013} dash, em \u{2014} dash\u{2026} ")
+        #expect(text(source, options: .disableSmartOpts) == #""Quotes," 'single,' en -- dash, em --- dash... "#)
+        var code = ""
+        func walk(_ markup: Markup) {
+            if let c = markup as? InlineCode { code = c.code }
+            markup.children.forEach(walk)
+        }
+        walk(Document(parsing: source))
+        #expect(code == #""code" --"#)
+    }
+
+    /// `==highlight==` and `^superscript` aren't native: they stay text.
+    @Test func highlightAndSuperscriptAreNotNative() {
+        let document = Document(parsing: "==marked== and x^2 and x^(a b)\n",
+                                options: .disableSmartOpts)
+        let paragraph = document.child(at: 0)
+        #expect(paragraph?.childCount == 1)
+        #expect(paragraph?.child(at: 0) is Text)
+        #expect(text("==marked== and x^2 and x^(a b)\n") == "==marked== and x^2 and x^(a b)")
+    }
+}

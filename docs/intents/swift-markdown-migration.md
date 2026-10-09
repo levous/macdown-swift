@@ -265,6 +265,8 @@ Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift`
 
 - **F1. Footnotes are not exposed** (checked 2026-10-09). swift-markdown never sets `CMARK_OPT_FOOTNOTES` and has no footnote node types; `a[^1]` and `[^1]: note` stay literal `Text` in ordinary paragraphs (the definition isn't swallowed as a link reference definition). cmark-gfm itself, which swift-markdown depends on, parses `footnote_reference` and `footnote_definition` nodes with source positions when given `CMARK_OPT_FOOTNOTES`. How to render them is open question 1.
 - **F2. Bare-URL autolinks are never parsed** (checked 2026-10-09). swift-markdown attaches only the `table`, `strikethrough` and `tasklist` extensions, not GFM's `autolink`, so `https://…`, `www.…` and emails stay text, and there's nothing to turn off. CommonMark `<https://…>` and `<a@b.c>` are always links. The Autolink setting (FR-8a) needs our own pass over text runs when it's on (or cmark-gfm's `autolink` extension, if cmark-gfm is used directly).
+- **F3. Smart punctuation is native and on by default** (checked 2026-10-09). cmark's `CMARK_OPT_SMART` is set unless `ParseOptions.disableSmartOpts` is passed: quotes become curly, `--` an en dash, `---` an em dash and `...` an ellipsis, never inside code. Every parse with Smart punctuation off must pass `.disableSmartOpts` (FR-17); with it on, no pass of our own is needed.
+- **F4. Highlight and superscript are not native** (checked 2026-10-09). `==marked==`, `x^2` and `x^(a b)` stay plain `Text`, so FR-19/FR-19a use our own pass over text runs (the plain-text-run limit in the README).
 
 ## Open questions
 
