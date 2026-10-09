@@ -58,6 +58,18 @@ public struct LineIndex: Sendable {
         return utf16
     }
 
+    /// The UTF-16 offset of a UTF-8 offset into the text.
+    public func utf16Offset(utf8 offset: Int) -> Int? {
+        guard offset >= 0, offset <= utf8.count else { return nil }
+        // The last line starting at or before the offset.
+        var low = 0, high = lineStarts.count - 1
+        while low < high {
+            let mid = (low + high + 1) / 2
+            if lineStarts[mid].utf8 <= offset { low = mid } else { high = mid - 1 }
+        }
+        return utf16Offset(line: low + 1, column: offset - lineStarts[low].utf8 + 1)
+    }
+
     /// The UTF-16 range between two (line, column) positions, end exclusive.
     public func range(from start: (line: Int, column: Int),
                       to end: (line: Int, column: Int)) -> NSRange? {
