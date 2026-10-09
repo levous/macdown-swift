@@ -162,3 +162,17 @@ import Testing
         #expect(tv.string == "    x")
     }
 }
+
+extension LiveDocumentTests {
+@MainActor @Suite struct EditorHighlightingSetupTests {
+    /// Footnotes are standard, so the editor always parses them (the old
+    /// `extensionFootnotes` setting had this inverted).
+    @Test func highlighterAlwaysParsesFootnotes() {
+        let controller = DocumentController(document: MarkdownDocument(text: "a[^1]\n\n[^1]: b\n"),
+                                            fileURL: nil)
+        defer { controller.tearDown() }
+        controller.setupEditor(nil)
+        #expect(controller.highlighter.extensions == Int32(pmh_EXT_NOTES.rawValue))
+    }
+}
+}

@@ -246,7 +246,6 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let preferences = Preferences(defaults: defaults)
 
         // Fresh install defaults.
-        #expect(preferences.extensionTables)
         #expect(preferences.editorStyleName == "Tomorrow+")
         #expect(preferences.htmlTemplateName == "Default")
         #expect(preferences.htmlSyntaxHighlighting)
@@ -279,6 +278,24 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         // Intra-word emphasis on (no NO_INTRA_EMPHASIS); Quote is dropped.
         #expect(flags & HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue == 0)
         #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
+    }
+
+    /// Settings that became standard are no longer read, but their saved
+    /// values stay in user defaults (FR-36), so a downgrade still finds them.
+    @Test func removedSettingsKeepTheirSavedValues() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let keys = ["extensionTables", "extensionFencedCode", "extensionFootnotes",
+                    "extensionStrikethough", "extensionIntraEmphasis", "extensionQuote",
+                    "htmlTaskList", "htmlDetectFrontMatter"]
+        defaults.set("1", forKey: "firstVersionInstalled")
+        for key in keys { defaults.set(true, forKey: key) }
+        let preferences = Preferences(defaults: defaults)
+        preferences.extensionHighlight = true    // Saving other settings.
+        for key in keys {
+            #expect(defaults.object(forKey: key) as? Bool == true, "\(key) removed")
+        }
     }
 
     @Test func taskListsAndFrontMatterAreAlwaysOn() throws {

@@ -104,7 +104,7 @@ public final class DocumentController: NSObject {
     ]
 
     private static let editorPreferencesToObserve: Set<String> = [
-        "editorBaseFontInfo", "extensionFootnotes", "editorHorizontalInset",
+        "editorBaseFontInfo", "editorHorizontalInset",
         "editorVerticalInset", "editorWidthLimited", "editorMaximumWidth",
         "editorLineSpacing", "editorOnRight", "editorStyleName",
         "editorShowWordCount", "editorScrollsPastEnd",
@@ -761,10 +761,7 @@ public final class DocumentController: NSObject {
         editorAnchorsKey = nil    // Fonts and insets move the text.
         highlighter.deactivate()
 
-        if changedKey == nil || changedKey == "extensionFootnotes" {
-            highlighter.extensions = preferences.extensionFootnotes
-                ? Int32(pmh_EXT_NONE.rawValue) : Int32(pmh_EXT_NOTES.rawValue)
-        }
+        highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
 
         if changedKey == nil || ["editorHorizontalInset", "editorVerticalInset",
                                  "editorWidthLimited", "editorMaximumWidth"]
@@ -942,7 +939,7 @@ public final class DocumentController: NSObject {
         else { return }
         let key = (text: editor.string, width: container.size.width,
                    frontMatter: true,
-                   fencedCode: preferences.extensionFencedCode)
+                   fencedCode: true)
         if let old = editorAnchorsKey, old == key { return }
         editorAnchorsKey = key
         let origin = editor.textContainerOrigin.y
@@ -1359,7 +1356,7 @@ extension DocumentController: NSTextViewDelegate {
         if preferences.editorCompleteMatchingCharacters {
             if textView.completeMatchingCharacters(
                 forTextIn: range, with: string,
-                strikethroughEnabled: preferences.extensionStrikethough) {
+                strikethroughEnabled: true) {
                 return false
             }
         }

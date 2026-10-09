@@ -84,15 +84,9 @@ public final class Preferences {
 
     // MARK: Markdown extensions
 
-    public var extensionIntraEmphasis = false { didSet { save(extensionIntraEmphasis, "extensionIntraEmphasis") } }
-    public var extensionTables = false { didSet { save(extensionTables, "extensionTables") } }
-    public var extensionFencedCode = false { didSet { save(extensionFencedCode, "extensionFencedCode") } }
     public var extensionAutolink = false { didSet { save(extensionAutolink, "extensionAutolink") } }
-    public var extensionStrikethough = false { didSet { save(extensionStrikethough, "extensionStrikethough") } }
     public var extensionSuperscript = false { didSet { save(extensionSuperscript, "extensionSuperscript") } }
     public var extensionHighlight = false { didSet { save(extensionHighlight, "extensionHighlight") } }
-    public var extensionFootnotes = false { didSet { save(extensionFootnotes, "extensionFootnotes") } }
-    public var extensionQuote = false { didSet { save(extensionQuote, "extensionQuote") } }
     public var extensionSmartyPants = false { didSet { save(extensionSmartyPants, "extensionSmartyPants") } }
 
     public var markdownManualRender = false { didSet { save(markdownManualRender, "markdownManualRender") } }
@@ -125,8 +119,6 @@ public final class Preferences {
 
     public var htmlTemplateName: String? { didSet { save(htmlTemplateName, "htmlTemplateName") } }
     public var htmlStyleName: String? { didSet { save(htmlStyleName, "htmlStyleName") } }
-    public var htmlDetectFrontMatter = false { didSet { save(htmlDetectFrontMatter, "htmlDetectFrontMatter") } }
-    public var htmlTaskList = false { didSet { save(htmlTaskList, "htmlTaskList") } }
     public var htmlHardWrap = false { didSet { save(htmlHardWrap, "htmlHardWrap") } }
     public var htmlMathJax = false { didSet { save(htmlMathJax, "htmlMathJax") } }
     public var htmlMathJaxInlineDollar = false { didSet { save(htmlMathJaxInlineDollar, "htmlMathJaxInlineDollar") } }
@@ -252,15 +244,9 @@ public final class Preferences {
         createFileForLinkTarget = d.bool(forKey: "createFileForLinkTarget")
         autosavesDocuments = d.bool(forKey: Self.autosavesDocumentsKey)
 
-        extensionIntraEmphasis = d.bool(forKey: "extensionIntraEmphasis")
-        extensionTables = d.bool(forKey: "extensionTables")
-        extensionFencedCode = d.bool(forKey: "extensionFencedCode")
         extensionAutolink = d.bool(forKey: "extensionAutolink")
-        extensionStrikethough = d.bool(forKey: "extensionStrikethough")
         extensionSuperscript = d.bool(forKey: "extensionSuperscript")
         extensionHighlight = d.bool(forKey: "extensionHighlight")
-        extensionFootnotes = d.bool(forKey: "extensionFootnotes")
-        extensionQuote = d.bool(forKey: "extensionQuote")
         extensionSmartyPants = d.bool(forKey: "extensionSmartyPants")
         markdownManualRender = d.bool(forKey: "markdownManualRender")
 
@@ -287,8 +273,6 @@ public final class Preferences {
 
         htmlTemplateName = d.string(forKey: "htmlTemplateName")
         htmlStyleName = d.string(forKey: "htmlStyleName")
-        htmlDetectFrontMatter = d.bool(forKey: "htmlDetectFrontMatter")
-        htmlTaskList = d.bool(forKey: "htmlTaskList")
         htmlHardWrap = d.bool(forKey: "htmlHardWrap")
         htmlMathJax = d.bool(forKey: "htmlMathJax")
         htmlMathJaxInlineDollar = d.bool(forKey: "htmlMathJaxInlineDollar")
@@ -324,10 +308,6 @@ public final class Preferences {
     /// here, since existing users won't have this invoked when upgrading.
     /// See `loadDefaultUserDefaults()`.
     private func loadDefaultPreferences() {
-        extensionIntraEmphasis = true
-        extensionTables = true
-        extensionFencedCode = true
-        extensionFootnotes = true
         editorBaseFontInfo = [
             "name": Self.defaultEditorFontName,
             "size": Self.defaultEditorFontPointSize,
