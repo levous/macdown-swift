@@ -166,8 +166,9 @@ walking every node, 4.5 ms. swift-markdown also doesn't parse footnotes or
 bare-URL autolinks, which cmark-gfm does. So the model, highlighter and
 renderer walk cmark-gfm's C tree inside the parse task, and swift-markdown is
 dropped. Cost: we own a thin wrapper over a C API (`CMarkTree`) instead of a
-Swift one. Result: the model and editor highlighting take 14.6 ms at default
-settings, against PEG's 19.7, and 20.5 ms with math and every opt-in on.
+Swift one. Result: the whole model, editor highlighting and the preview's HTML
+together, takes 16.8 ms at default settings, against 19.3 ms for PEG's
+highlighting alone, and 19.3 ms with math and every opt-in on.
 (Intent Decision 10, finding F8.)
 
 **Standard Markdown always on, extensions opt-in (2026-10-09).** Tables,
