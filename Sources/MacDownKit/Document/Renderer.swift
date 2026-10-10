@@ -38,25 +38,23 @@ public struct RenderSettings: Sendable, Equatable {
 
 @MainActor
 extension Preferences {
+    /// Standard Markdown (tables, fenced code, footnotes, strikethrough and
+    /// intra-word emphasis) is always on; extended syntax is opt-in. Quote
+    /// (`"…"` as `<q>`) is dropped in favor of smart punctuation.
     public var extensionFlags: UInt32 {
-        var flags: UInt32 = 0
+        var flags: UInt32 = HOEDOWN_EXT_TABLES.rawValue | HOEDOWN_EXT_FENCED_CODE.rawValue
+            | HOEDOWN_EXT_FOOTNOTES.rawValue | HOEDOWN_EXT_STRIKETHROUGH.rawValue
         if extensionAutolink { flags |= HOEDOWN_EXT_AUTOLINK.rawValue }
-        if extensionFencedCode { flags |= HOEDOWN_EXT_FENCED_CODE.rawValue }
-        if extensionFootnotes { flags |= HOEDOWN_EXT_FOOTNOTES.rawValue }
         if extensionHighlight { flags |= HOEDOWN_EXT_HIGHLIGHT.rawValue }
-        if !extensionIntraEmphasis { flags |= HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue }
-        if extensionQuote { flags |= HOEDOWN_EXT_QUOTE.rawValue }
-        if extensionStrikethough { flags |= HOEDOWN_EXT_STRIKETHROUGH.rawValue }
         if extensionSuperscript { flags |= HOEDOWN_EXT_SUPERSCRIPT.rawValue }
-        if extensionTables { flags |= HOEDOWN_EXT_TABLES.rawValue }
         if htmlMathJax { flags |= HOEDOWN_EXT_MATH.rawValue }
         if htmlMathJaxInlineDollar { flags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
         return flags
     }
 
+    /// Task lists are standard (GFM) and always on.
     public var rendererFlags: UInt32 {
-        var flags: UInt32 = 0
-        if htmlTaskList { flags |= UInt32(HOEDOWN_HTML_USE_TASK_LIST) }
+        var flags = UInt32(HOEDOWN_HTML_USE_TASK_LIST)
         if htmlLineNumbers { flags |= UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) }
         if htmlHardWrap { flags |= HOEDOWN_HTML_HARD_WRAP.rawValue }
         if codeBlockAccessory == .custom {
@@ -72,7 +70,7 @@ extension Preferences {
         page.highlightingThemeName = htmlHighlightingThemeName
         page.lineNumbers = htmlLineNumbers
         page.codeBlockAccessory = codeBlockAccessory
-        page.taskList = htmlTaskList
+        page.taskList = true
         page.mermaid = htmlMermaid
         page.graphviz = htmlGraphviz
         page.mathJax = htmlMathJax
@@ -82,7 +80,8 @@ extension Preferences {
                                  rendererFlags: rendererFlags,
                                  smartyPants: extensionSmartyPants,
                                  rendersTOC: htmlRendersTOC,
-                                 detectsFrontMatter: htmlDetectFrontMatter),
+                                 detectsFrontMatter: true,
+                                 engine: markdownEngine),
             page: page)
     }
 }
@@ -263,6 +262,17 @@ public enum PageBuilder {
              scriptOption: .fullLink, linkTransform: linkTransform)
     }
 
+    /// HTML without the preview's `data-source-line` attributes (FR-18),
+    /// for export and copying.
+    public static func withoutSourceLines(_ html: String) -> String {
+        guard html.contains(" data-source-line=") else { return html }
+        return sourceLinePattern.stringByReplacingMatches(
+            in: html, range: NSRange(html.startIndex..., in: html), withTemplate: "")
+    }
+
+    private static let sourceLinePattern = try! NSRegularExpression(
+        pattern: #" data-source-line="\d+""#)
+
     /// A self-contained page for export.
     public static func exportHTML(title: String?, result: ParseResult,
                                   settings: PageSettings, withStyles: Bool,
@@ -293,7 +303,7 @@ public enum PageBuilder {
             scriptsOption = .embedded
             scripts += mathJaxScripts()
         }
-        return html(title: title ?? "", body: result.body,
+        return html(title: title ?? "", body: withoutSourceLines(result.body),
                     templateName: settings.templateName,
                     styles: styles, styleOption: stylesOption,
                     scripts: scripts, scriptOption: scriptsOption)
@@ -305,6 +315,8 @@ public enum PageBuilder {
 @MainActor
 public final class Renderer {
     public private(set) var result = ParseResult(body: "", languages: [])
+    /// The swift-markdown model of the same text, when that engine is on.
+    public private(set) var model: MarkdownDocumentModel?
     public private(set) var lastParseSettings: ParseSettings?
     public private(set) var lastPageSettings: PageSettings?
 
@@ -319,7 +331,7 @@ public final class Renderer {
     public func parseNow(_ markdown: String, settings: ParseSettings) {
         parseTask?.cancel()
         generation += 1
-        result = MarkdownParser.parse(markdown, settings: settings)
+        (result, model) = Self.parse(markdown, settings)
         lastParseSettings = settings
     }
 
@@ -331,16 +343,30 @@ public final class Renderer {
         generation += 1
         let current = generation
         parseTask = Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                MarkdownParser.parse(markdown, settings: settings)
+            let (result, model) = await Task.detached(priority: .userInitiated) {
+                Self.parse(markdown, settings)
             }.value
             guard let self, !Task.isCancelled, current == self.generation else {
                 return
             }
             self.result = result
+            self.model = model
             self.lastParseSettings = settings
             completion()
         }
+    }
+
+    private nonisolated static func parse(
+        _ markdown: String, _ settings: ParseSettings
+    ) -> (ParseResult, MarkdownDocumentModel?) {
+        guard settings.engine == .cmarkGfm else {
+            return (MarkdownParser.parse(markdown, settings: settings), nil)
+        }
+        // One cmark-gfm parse for the preview and the editor (FR-20, NFR-3).
+        var options = MarkdownDocumentModel.Options(settings)
+        options.sourceLines = true
+        let model = MarkdownDocumentModel(markdown, options: options)
+        return (ParseResult(body: model.body, languages: model.languages), model)
     }
 
     public func markRendered(with settings: PageSettings) {

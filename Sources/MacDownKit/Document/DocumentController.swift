@@ -80,7 +80,8 @@ public final class DocumentController: NSObject {
     /// What `editorAnchors` were computed for, to skip recomputing them.
     @ObservationIgnored private var editorLayoutSyncScheduled = false
     @ObservationIgnored private var editorAnchorsKey: (text: String, width: CGFloat,
-                                                       frontMatter: Bool, fencedCode: Bool)?
+                                                       frontMatter: Bool, fencedCode: Bool,
+                                                       lines: [Int])?
     @ObservationIgnored private(set) var previewMetrics = PreviewMetrics()
     /// The pane the user scrolled last; the other one follows it.
     @ObservationIgnored private var scrollLeader = ScrollLeader.editor
@@ -90,30 +91,13 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var isSetUp = false
 
-    /// Text checking settings of the editor persisted to user defaults, with
-    /// their default values.
-    private static let editorKeysToObserve: [(String, Any)] = [
-        ("automaticDashSubstitutionEnabled", false),
-        ("automaticDataDetectionEnabled", false),
-        ("automaticQuoteSubstitutionEnabled", false),
-        ("automaticSpellingCorrectionEnabled", false),
-        ("automaticTextReplacementEnabled", false),
-        ("continuousSpellCheckingEnabled", false),
-        ("enabledTextCheckingTypes", NSTextCheckingAllTypes),
-        ("grammarCheckingEnabled", false),
+    /// Preferences that change the editor's setup (see `setupEditor`).
+    private static let editorPreferencesToObserve: Set<PreferenceSettingKey> = [
+        .editorBaseFontInfo, .editorHorizontalInset, .markdownEngine,
+        .editorVerticalInset, .editorWidthLimited, .editorMaximumWidth,
+        .editorLineSpacing, .editorOnRight, .editorStyleName,
+        .editorShowWordCount, .editorScrollsPastEnd,
     ]
-
-    private static let editorPreferencesToObserve: Set<String> = [
-        "editorBaseFontInfo", "extensionFootnotes", "editorHorizontalInset",
-        "editorVerticalInset", "editorWidthLimited", "editorMaximumWidth",
-        "editorLineSpacing", "editorOnRight", "editorStyleName",
-        "editorShowWordCount", "editorScrollsPastEnd",
-    ]
-
-    private static func preferenceKey(forEditorKey key: String) -> String {
-        guard let first = key.first else { return "editor" }
-        return "editor" + first.uppercased() + key.dropFirst()
-    }
 
     // MARK: - Init
 
@@ -194,12 +178,12 @@ public final class DocumentController: NSObject {
 
     private func setUpObservers() {
         let center = NotificationCenter.default
-        // Handlers receive the notification's "key" user info value.
+        // Handlers receive the preference the notification is about, if any.
         func observe(_ name: Notification.Name, _ object: Any?,
-                     _ handler: @escaping @MainActor (String?) -> Void) {
+                     _ handler: @escaping @MainActor (PreferenceSettingKey?) -> Void) {
             observers.append(center.addObserver(forName: name, object: object,
                                                 queue: .main) { note in
-                let key = note.userInfo?["key"] as? String
+                let key = note.preferenceKey
                 MainActor.assumeIsolated { handler(key) }
             })
         }
@@ -255,12 +239,11 @@ public final class DocumentController: NSObject {
             self?.inLiveScroll = false
         }
 
-        for (key, _) in Self.editorKeysToObserve {
-            let kvo = KeyValueObserver(object: editor, keyPath: key) {
+        for setting in PreferenceSettingKey.textChecking {
+            let kvo = KeyValueObserver(object: editor, keyPath: setting.textViewKeyPath) {
                 [weak self] value in
                 guard let self, self.highlighter.isActive else { return }
-                UserDefaults.standard.set(value,
-                                          forKey: Self.preferenceKey(forEditorKey: key))
+                UserDefaults.standard.set(value, forKey: setting.key)
             }
             keyObservers.append(kvo)
         }
@@ -619,13 +602,32 @@ public final class DocumentController: NSObject {
     private func parseAndRender() {
         renderer.parse(editor.string, settings: preferences.renderSettings.parse) {
             [weak self] in
+            self?.highlightFromModel()
             self?.render()
         }
     }
 
     private func parseAndRenderNow() {
         renderer.parseNow(editor.string, settings: preferences.renderSettings.parse)
+        highlightFromModel()
         render()
+    }
+
+    /// With the swift-markdown engine, the editor is highlighted from the
+    /// renderer's model of the same text (one parse for both, FR-1).
+    private func highlightFromModel() {
+        guard highlighter.usesExternalElements, let model = renderer.model,
+              model.source == editor.string
+        else { return }
+        highlighter.update(model.highlights)
+    }
+
+    /// A parse only for highlighting, when the preview isn't updating.
+    private func parseForHighlighting() {
+        renderer.parse(editor.string, settings: preferences.renderSettings.parse) {
+            [weak self] in
+            self?.highlightFromModel()
+        }
     }
 
     /// Renders the latest parse result into the preview.
@@ -713,11 +715,15 @@ public final class DocumentController: NSObject {
     private func editorTextDidChange() {
         draftDidChange()
         scrollLeader = .editor
-        if needsHtml { parseAndRender() }
+        if needsHtml {
+            parseAndRender()
+        } else if highlighter.usesExternalElements {
+            parseForHighlighting()
+        }
     }
 
-    private func preferenceDidChange(_ key: String?) {
-        if key == Preferences.autosavesDocumentsKey || key == nil {
+    private func preferenceDidChange(_ key: PreferenceSettingKey?) {
+        if key == .autosavesDocuments || key == nil {
             // Turning autosaving on saves the draft from then on.
             if autosaves && editor.string != savedText {
                 commitDraft()
@@ -729,7 +735,7 @@ public final class DocumentController: NSObject {
             if highlighter.isActive { setupEditor(key) }
             redrawDivider()
         }
-        if key == "editorShowWordCount" || key == nil {
+        if key == .editorShowWordCount || key == nil {
             showsWordCount = preferences.editorShowWordCount
         }
 
@@ -740,6 +746,8 @@ public final class DocumentController: NSObject {
             || settings.parse != renderer.lastParseSettings {
             if needsHtml || renderer.lastParseSettings != nil {
                 parseAndRender()
+            } else if highlighter.usesExternalElements {
+                parseForHighlighting()
             }
         } else if settings.page != renderer.lastPageSettings {
             render()
@@ -757,23 +765,21 @@ public final class DocumentController: NSObject {
 
     // MARK: - Editor setup
 
-    public func setupEditor(_ changedKey: String?) {
+    public func setupEditor(_ changedKey: PreferenceSettingKey?) {
         editorAnchorsKey = nil    // Fonts and insets move the text.
         highlighter.deactivate()
 
-        if changedKey == nil || changedKey == "extensionFootnotes" {
-            highlighter.extensions = preferences.extensionFootnotes
-                ? Int32(pmh_EXT_NONE.rawValue) : Int32(pmh_EXT_NOTES.rawValue)
-        }
+        highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
+        highlighter.usesExternalElements = preferences.markdownEngine == .cmarkGfm
 
-        if changedKey == nil || ["editorHorizontalInset", "editorVerticalInset",
-                                 "editorWidthLimited", "editorMaximumWidth"]
+        if changedKey == nil || [.editorHorizontalInset, .editorVerticalInset,
+                                 .editorWidthLimited, .editorMaximumWidth]
             .contains(changedKey!) {
             adjustEditorInsets()
         }
 
-        if changedKey == nil || ["editorBaseFontInfo", "editorStyleName",
-                                 "editorLineSpacing"].contains(changedKey!) {
+        if changedKey == nil || [.editorBaseFontInfo, .editorStyleName,
+                                 .editorLineSpacing].contains(changedKey!) {
             let style = NSMutableParagraphStyle()
             style.lineSpacing = preferences.editorLineSpacing
             editor.defaultParagraphStyle = style
@@ -808,31 +814,30 @@ public final class DocumentController: NSObject {
             editorScrollView.backgroundColor = editor.backgroundColor
         }
 
-        if changedKey == "editorBaseFontInfo" {
+        if changedKey == .editorBaseFontInfo {
             scaleWebView()
         }
 
-        if changedKey == nil || changedKey == "editorShowWordCount" {
+        if changedKey == nil || changedKey == .editorShowWordCount {
             showsWordCount = preferences.editorShowWordCount
             if showsWordCount {
                 Task { await updateWordCount() }
             }
         }
 
-        if changedKey == nil || changedKey == "editorScrollsPastEnd" {
+        if changedKey == nil || changedKey == .editorScrollsPastEnd {
             editor.scrollsPastEnd = preferences.editorScrollsPastEnd
         }
 
         if changedKey == nil {
             let defaults = UserDefaults.standard
-            for (key, defaultValue) in Self.editorKeysToObserve {
-                let value = defaults.object(forKey: Self.preferenceKey(forEditorKey: key))
-                    ?? defaultValue
-                editor.setValue(value, forKey: key)
+            for setting in PreferenceSettingKey.textChecking {
+                let value = defaults.object(forKey: setting.key) ?? setting.defaultValue
+                editor.setValue(value, forKey: setting.textViewKeyPath)
             }
         }
 
-        if changedKey == nil || changedKey == "editorOnRight" {
+        if changedKey == nil || changedKey == .editorOnRight {
             let onRight = preferences.editorOnRight
             if onRight != editorOnRight {
                 editorOnRight = onRight
@@ -840,6 +845,7 @@ public final class DocumentController: NSObject {
         }
 
         highlighter.activate()
+        highlightFromModel()    // Reactivating cleared the spans.
         editor.isAutomaticLinkDetectionEnabled = false
     }
 
@@ -940,20 +946,36 @@ public final class DocumentController: NSObject {
         guard let layoutManager = editor.layoutManager,
               let container = editor.textContainer
         else { return }
+        // The preview's source lines, when the new engine marks them.
+        let lines = previewMetrics.anchors.compactMap { anchor -> Int? in
+            if case .line(let line) = anchor.kind { line } else { nil }
+        }
         let key = (text: editor.string, width: container.size.width,
-                   frontMatter: preferences.htmlDetectFrontMatter,
-                   fencedCode: preferences.extensionFencedCode)
-        if let old = editorAnchorsKey, old == key { return }
+                   frontMatter: true, fencedCode: true, lines: lines)
+        if let old = editorAnchorsKey, old.text == key.text, old.width == key.width,
+           old.lines == key.lines { return }
         editorAnchorsKey = key
         let origin = editor.textContainerOrigin.y
         layoutManager.ensureLayout(for: container)
-        let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
-                                               fencedCode: key.fencedCode)
-        editorAnchors = sourceAnchors.map { anchor in
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
-                                                      actualCharacterRange: nil)
-            let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
-            return ScrollAnchor(anchor.kind, origin + rect.midY)
+        if !lines.isEmpty {
+            // The top of each of those lines in the editor.
+            let index = LineIndex(key.text)
+            let length = (key.text as NSString).length
+            editorAnchors = Set(lines).sorted().compactMap { line in
+                guard let offset = index.utf16Offset(line: line, column: 1) else { return nil }
+                let glyph = layoutManager.glyphIndexForCharacter(at: min(offset, max(0, length - 1)))
+                let rect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
+                return ScrollAnchor(.line(line), origin + rect.minY)
+            }
+        } else {
+            let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
+                                                   fencedCode: key.fencedCode)
+            editorAnchors = sourceAnchors.map { anchor in
+                let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
+                                                          actualCharacterRange: nil)
+                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
+                return ScrollAnchor(anchor.kind, origin + rect.midY)
+            }
         }
         editorTextEnd = origin + layoutManager.usedRect(for: container).maxY
     }
@@ -1052,7 +1074,7 @@ public final class DocumentController: NSObject {
     private func writeHTMLToPasteboard() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.writeObjects([renderer.currentHTML as NSString])
+        pasteboard.writeObjects([PageBuilder.withoutSourceLines(renderer.currentHTML) as NSString])
     }
 
     public func renderNow() {
@@ -1134,8 +1156,7 @@ public final class DocumentController: NSObject {
             return fileURL.deletingPathExtension().lastPathComponent
         }
         let string = editor.string
-        if preferences.htmlDetectFrontMatter,
-           let title = string.frontMatter().object?["title"]?.stringValue {
+        if let title = string.frontMatter().object?["title"]?.stringValue {
             return title
         }
         guard let title = string.titleString else {
@@ -1360,7 +1381,7 @@ extension DocumentController: NSTextViewDelegate {
         if preferences.editorCompleteMatchingCharacters {
             if textView.completeMatchingCharacters(
                 forTextIn: range, with: string,
-                strikethroughEnabled: preferences.extensionStrikethough) {
+                strikethroughEnabled: true) {
                 return false
             }
         }

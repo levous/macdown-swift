@@ -11,16 +11,25 @@ import Observation
 import MacDownShared
 
 public extension Notification.Name {
-    /// Posted when a preference changes. `userInfo["key"]` holds the
-    /// preference key.
+    /// Posted when a preference changes. `Notification.preferenceKey` is the
+    /// `PreferenceSettingKey` that changed.
     static let preferencesDidChange = Notification.Name("MPPreferencesDidChange")
     /// Posted on first launch after the preferences are initialized.
     static let didDetectFreshInstallation =
         Notification.Name("MPDidDetectFreshInstallationNotificationName")
-    /// Requests editors to reapply their setup for `userInfo["key"]`.
+    /// Requests editors to reapply their setup for `Notification.preferenceKey`.
     static let didRequestEditorSetup = Notification.Name("MPDidRequestEditorSetup")
     /// Requests previews to render again.
     static let didRequestPreviewRender = Notification.Name("MPDidRequestPreviewRender")
+}
+
+/// The Markdown parser behind the preview and highlighting. 
+/// `cmarkGfm` is cmark-gfm, the default; `hoedown` is the
+/// original's engine, kept selectable for one release before it's removed
+/// (docs/intents/swift-markdown-migration.md, Phase 5). Hidden: set with
+/// `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
+public enum MarkdownEngine: String, CaseIterable, Sendable {
+    case hoedown, cmarkGfm
 }
 
 public enum UnorderedListMarkerType: Int, CaseIterable, Sendable {
@@ -72,78 +81,72 @@ public final class Preferences {
 
     // MARK: General
 
-    public var firstVersionInstalled: String? { didSet { save(firstVersionInstalled, "firstVersionInstalled") } }
-    public var latestVersionInstalled: String? { didSet { save(latestVersionInstalled, "latestVersionInstalled") } }
-    public var supressesUntitledDocumentOnLaunch = false { didSet { save(supressesUntitledDocumentOnLaunch, "supressesUntitledDocumentOnLaunch") } }
-    public var createFileForLinkTarget = false { didSet { save(createFileForLinkTarget, "createFileForLinkTarget") } }
+    public var firstVersionInstalled: String? { didSet { save(firstVersionInstalled, .firstVersionInstalled) } }
+    public var latestVersionInstalled: String? { didSet { save(latestVersionInstalled, .latestVersionInstalled) } }
+    public var supressesUntitledDocumentOnLaunch = false { didSet { save(supressesUntitledDocumentOnLaunch, .supressesUntitledDocumentOnLaunch) } }
+    public var createFileForLinkTarget = false { didSet { save(createFileForLinkTarget, .createFileForLinkTarget) } }
     /// Whether edits are saved to the document's file automatically (the
     /// macOS default for document apps). Off, documents are saved explicitly
     /// and quitting asks about unsaved changes. New in the Swift port.
-    public var autosavesDocuments = false { didSet { save(autosavesDocuments, Self.autosavesDocumentsKey) } }
-    public static let autosavesDocumentsKey = "autosavesDocuments"
+    public var autosavesDocuments = false { didSet { save(autosavesDocuments, .autosavesDocuments) } }
 
     // MARK: Markdown extensions
 
-    public var extensionIntraEmphasis = false { didSet { save(extensionIntraEmphasis, "extensionIntraEmphasis") } }
-    public var extensionTables = false { didSet { save(extensionTables, "extensionTables") } }
-    public var extensionFencedCode = false { didSet { save(extensionFencedCode, "extensionFencedCode") } }
-    public var extensionAutolink = false { didSet { save(extensionAutolink, "extensionAutolink") } }
-    public var extensionStrikethough = false { didSet { save(extensionStrikethough, "extensionStrikethough") } }
-    public var extensionSuperscript = false { didSet { save(extensionSuperscript, "extensionSuperscript") } }
-    public var extensionHighlight = false { didSet { save(extensionHighlight, "extensionHighlight") } }
-    public var extensionFootnotes = false { didSet { save(extensionFootnotes, "extensionFootnotes") } }
-    public var extensionQuote = false { didSet { save(extensionQuote, "extensionQuote") } }
-    public var extensionSmartyPants = false { didSet { save(extensionSmartyPants, "extensionSmartyPants") } }
+    public var extensionAutolink = false { didSet { save(extensionAutolink, .extensionAutolink) } }
+    public var extensionSuperscript = false { didSet { save(extensionSuperscript, .extensionSuperscript) } }
+    public var extensionHighlight = false { didSet { save(extensionHighlight, .extensionHighlight) } }
+    public var extensionSmartyPants = false { didSet { save(extensionSmartyPants, .extensionSmartyPants) } }
 
-    public var markdownManualRender = false { didSet { save(markdownManualRender, "markdownManualRender") } }
+    public var markdownManualRender = false { didSet { save(markdownManualRender, .markdownManualRender) } }
 
     // MARK: Editor
 
-    public var editorBaseFontInfo: [String: Any] = [:] { didSet { save(editorBaseFontInfo, "editorBaseFontInfo") } }
-    public var editorAutoIncrementNumberedLists = false { didSet { save(editorAutoIncrementNumberedLists, "editorAutoIncrementNumberedLists") } }
-    public var editorConvertTabs = false { didSet { save(editorConvertTabs, "editorConvertTabs") } }
-    public var editorInsertPrefixInBlock = false { didSet { save(editorInsertPrefixInBlock, "editorInsertPrefixInBlock") } }
-    public var editorCompleteMatchingCharacters = false { didSet { save(editorCompleteMatchingCharacters, "editorCompleteMatchingCharacters") } }
-    public var editorSyncScrolling = false { didSet { save(editorSyncScrolling, "editorSyncScrolling") } }
-    public var editorSmartHome = false { didSet { save(editorSmartHome, "editorSmartHome") } }
-    public var editorStyleName: String? { didSet { save(editorStyleName, "editorStyleName") } }
-    public var editorHorizontalInset = 0.0 { didSet { save(editorHorizontalInset, "editorHorizontalInset") } }
-    public var editorVerticalInset = 0.0 { didSet { save(editorVerticalInset, "editorVerticalInset") } }
-    public var editorLineSpacing = 0.0 { didSet { save(editorLineSpacing, "editorLineSpacing") } }
-    public var editorWidthLimited = false { didSet { save(editorWidthLimited, "editorWidthLimited") } }
-    public var editorMaximumWidth = 0.0 { didSet { save(editorMaximumWidth, "editorMaximumWidth") } }
-    public var editorOnRight = false { didSet { save(editorOnRight, "editorOnRight") } }
-    public var editorShowWordCount = false { didSet { save(editorShowWordCount, "editorShowWordCount") } }
-    public var editorWordCountType = 0 { didSet { save(editorWordCountType, "editorWordCountType") } }
-    public var editorScrollsPastEnd = false { didSet { save(editorScrollsPastEnd, "editorScrollsPastEnd") } }
-    public var editorEnsuresNewlineAtEndOfFile = false { didSet { save(editorEnsuresNewlineAtEndOfFile, "editorEnsuresNewlineAtEndOfFile") } }
-    public var editorUnorderedListMarkerType = 0 { didSet { save(editorUnorderedListMarkerType, "editorUnorderedListMarkerType") } }
+    public var editorBaseFontInfo: [String: Any] = [:] { didSet { save(editorBaseFontInfo, .editorBaseFontInfo) } }
+    public var editorAutoIncrementNumberedLists = false { didSet { save(editorAutoIncrementNumberedLists, .editorAutoIncrementNumberedLists) } }
+    public var editorConvertTabs = false { didSet { save(editorConvertTabs, .editorConvertTabs) } }
+    public var editorInsertPrefixInBlock = false { didSet { save(editorInsertPrefixInBlock, .editorInsertPrefixInBlock) } }
+    public var editorCompleteMatchingCharacters = false { didSet { save(editorCompleteMatchingCharacters, .editorCompleteMatchingCharacters) } }
+    public var editorSyncScrolling = false { didSet { save(editorSyncScrolling, .editorSyncScrolling) } }
+    public var editorSmartHome = false { didSet { save(editorSmartHome, .editorSmartHome) } }
+    public var editorStyleName: String? { didSet { save(editorStyleName, .editorStyleName) } }
+    public var editorHorizontalInset = 0.0 { didSet { save(editorHorizontalInset, .editorHorizontalInset) } }
+    public var editorVerticalInset = 0.0 { didSet { save(editorVerticalInset, .editorVerticalInset) } }
+    public var editorLineSpacing = 0.0 { didSet { save(editorLineSpacing, .editorLineSpacing) } }
+    public var editorWidthLimited = false { didSet { save(editorWidthLimited, .editorWidthLimited) } }
+    public var editorMaximumWidth = 0.0 { didSet { save(editorMaximumWidth, .editorMaximumWidth) } }
+    public var editorOnRight = false { didSet { save(editorOnRight, .editorOnRight) } }
+    public var editorShowWordCount = false { didSet { save(editorShowWordCount, .editorShowWordCount) } }
+    public var editorWordCountType = 0 { didSet { save(editorWordCountType, .editorWordCountType) } }
+    public var editorScrollsPastEnd = false { didSet { save(editorScrollsPastEnd, .editorScrollsPastEnd) } }
+    public var editorEnsuresNewlineAtEndOfFile = false { didSet { save(editorEnsuresNewlineAtEndOfFile, .editorEnsuresNewlineAtEndOfFile) } }
+    public var editorUnorderedListMarkerType = 0 { didSet { save(editorUnorderedListMarkerType, .editorUnorderedListMarkerType) } }
 
-    public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, "previewZoomRelativeToBaseFontSize") } }
+    public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, .previewZoomRelativeToBaseFontSize) } }
+
+    /// Not shown in Settings (FR-32).
+    public var markdownEngine = MarkdownEngine.cmarkGfm { didSet { save(markdownEngine.rawValue, .markdownEngine) } }
 
     // MARK: HTML rendering
 
-    public var htmlTemplateName: String? { didSet { save(htmlTemplateName, "htmlTemplateName") } }
-    public var htmlStyleName: String? { didSet { save(htmlStyleName, "htmlStyleName") } }
-    public var htmlDetectFrontMatter = false { didSet { save(htmlDetectFrontMatter, "htmlDetectFrontMatter") } }
-    public var htmlTaskList = false { didSet { save(htmlTaskList, "htmlTaskList") } }
-    public var htmlHardWrap = false { didSet { save(htmlHardWrap, "htmlHardWrap") } }
-    public var htmlMathJax = false { didSet { save(htmlMathJax, "htmlMathJax") } }
-    public var htmlMathJaxInlineDollar = false { didSet { save(htmlMathJaxInlineDollar, "htmlMathJaxInlineDollar") } }
-    public var htmlSyntaxHighlighting = false { didSet { save(htmlSyntaxHighlighting, "htmlSyntaxHighlighting") } }
-    public var htmlHighlightingThemeName: String? { didSet { save(htmlHighlightingThemeName, "htmlHighlightingThemeName") } }
-    public var htmlLineNumbers = false { didSet { save(htmlLineNumbers, "htmlLineNumbers") } }
-    public var htmlGraphviz = false { didSet { save(htmlGraphviz, "htmlGraphviz") } }
-    public var htmlMermaid = false { didSet { save(htmlMermaid, "htmlMermaid") } }
-    public var htmlCodeBlockAccessory = 0 { didSet { save(htmlCodeBlockAccessory, "htmlCodeBlockAccessory") } }
+    public var htmlTemplateName: String? { didSet { save(htmlTemplateName, .htmlTemplateName) } }
+    public var htmlStyleName: String? { didSet { save(htmlStyleName, .htmlStyleName) } }
+    public var htmlHardWrap = false { didSet { save(htmlHardWrap, .htmlHardWrap) } }
+    public var htmlMathJax = false { didSet { save(htmlMathJax, .htmlMathJax) } }
+    public var htmlMathJaxInlineDollar = false { didSet { save(htmlMathJaxInlineDollar, .htmlMathJaxInlineDollar) } }
+    public var htmlSyntaxHighlighting = false { didSet { save(htmlSyntaxHighlighting, .htmlSyntaxHighlighting) } }
+    public var htmlHighlightingThemeName: String? { didSet { save(htmlHighlightingThemeName, .htmlHighlightingThemeName) } }
+    public var htmlLineNumbers = false { didSet { save(htmlLineNumbers, .htmlLineNumbers) } }
+    public var htmlGraphviz = false { didSet { save(htmlGraphviz, .htmlGraphviz) } }
+    public var htmlMermaid = false { didSet { save(htmlMermaid, .htmlMermaid) } }
+    public var htmlCodeBlockAccessory = 0 { didSet { save(htmlCodeBlockAccessory, .htmlCodeBlockAccessory) } }
     public var htmlDefaultDirectoryUrl: URL? {
         didSet {
             guard !loading else { return }
-            defaults.set(htmlDefaultDirectoryUrl, forKey: "htmlDefaultDirectoryUrl")
-            changed("htmlDefaultDirectoryUrl")
+            defaults.set(htmlDefaultDirectoryUrl, forKey: .htmlDefaultDirectoryUrl)
+            changed(.htmlDefaultDirectoryUrl)
         }
     }
-    public var htmlRendersTOC = false { didSet { save(htmlRendersTOC, "htmlRendersTOC") } }
+    public var htmlRendersTOC = false { didSet { save(htmlRendersTOC, .htmlRendersTOC) } }
 
     // MARK: - Init
 
@@ -226,7 +229,7 @@ public final class Preferences {
 
     // MARK: - Private
 
-    private func save(_ value: Any?, _ key: String) {
+    private func save(_ value: Any?, _ key: PreferenceSettingKey) {
         guard !loading else { return }
         if let value {
             defaults.set(value, forKey: key)
@@ -236,9 +239,9 @@ public final class Preferences {
         changed(key)
     }
 
-    private func changed(_ key: String) {
+    private func changed(_ key: PreferenceSettingKey) {
         NotificationCenter.default.post(name: .preferencesDidChange, object: self,
-                                        userInfo: ["key": key])
+                                        userInfo: [Notification.preferenceKeyUserInfoKey: key])
     }
 
     /// Reads all values from user defaults.
@@ -246,60 +249,53 @@ public final class Preferences {
         loading = true
         defer { loading = false }
         let d = defaults
-        firstVersionInstalled = d.string(forKey: "firstVersionInstalled")
-        latestVersionInstalled = d.string(forKey: "latestVersionInstalled")
-        supressesUntitledDocumentOnLaunch = d.bool(forKey: "supressesUntitledDocumentOnLaunch")
-        createFileForLinkTarget = d.bool(forKey: "createFileForLinkTarget")
-        autosavesDocuments = d.bool(forKey: Self.autosavesDocumentsKey)
+        firstVersionInstalled = d.string(forKey: .firstVersionInstalled)
+        latestVersionInstalled = d.string(forKey: .latestVersionInstalled)
+        supressesUntitledDocumentOnLaunch = d.bool(forKey: .supressesUntitledDocumentOnLaunch)
+        createFileForLinkTarget = d.bool(forKey: .createFileForLinkTarget)
+        autosavesDocuments = d.bool(forKey: .autosavesDocuments)
 
-        extensionIntraEmphasis = d.bool(forKey: "extensionIntraEmphasis")
-        extensionTables = d.bool(forKey: "extensionTables")
-        extensionFencedCode = d.bool(forKey: "extensionFencedCode")
-        extensionAutolink = d.bool(forKey: "extensionAutolink")
-        extensionStrikethough = d.bool(forKey: "extensionStrikethough")
-        extensionSuperscript = d.bool(forKey: "extensionSuperscript")
-        extensionHighlight = d.bool(forKey: "extensionHighlight")
-        extensionFootnotes = d.bool(forKey: "extensionFootnotes")
-        extensionQuote = d.bool(forKey: "extensionQuote")
-        extensionSmartyPants = d.bool(forKey: "extensionSmartyPants")
-        markdownManualRender = d.bool(forKey: "markdownManualRender")
+        extensionAutolink = d.bool(forKey: .extensionAutolink)
+        extensionSuperscript = d.bool(forKey: .extensionSuperscript)
+        extensionHighlight = d.bool(forKey: .extensionHighlight)
+        extensionSmartyPants = d.bool(forKey: .extensionSmartyPants)
+        markdownManualRender = d.bool(forKey: .markdownManualRender)
 
-        editorBaseFontInfo = d.dictionary(forKey: "editorBaseFontInfo") ?? [:]
-        editorAutoIncrementNumberedLists = d.bool(forKey: "editorAutoIncrementNumberedLists")
-        editorConvertTabs = d.bool(forKey: "editorConvertTabs")
-        editorInsertPrefixInBlock = d.bool(forKey: "editorInsertPrefixInBlock")
-        editorCompleteMatchingCharacters = d.bool(forKey: "editorCompleteMatchingCharacters")
-        editorSyncScrolling = d.bool(forKey: "editorSyncScrolling")
-        editorSmartHome = d.bool(forKey: "editorSmartHome")
-        editorStyleName = d.string(forKey: "editorStyleName")
-        editorHorizontalInset = d.double(forKey: "editorHorizontalInset")
-        editorVerticalInset = d.double(forKey: "editorVerticalInset")
-        editorLineSpacing = d.double(forKey: "editorLineSpacing")
-        editorWidthLimited = d.bool(forKey: "editorWidthLimited")
-        editorMaximumWidth = d.double(forKey: "editorMaximumWidth")
-        editorOnRight = d.bool(forKey: "editorOnRight")
-        editorShowWordCount = d.bool(forKey: "editorShowWordCount")
-        editorWordCountType = d.integer(forKey: "editorWordCountType")
-        editorScrollsPastEnd = d.bool(forKey: "editorScrollsPastEnd")
-        editorEnsuresNewlineAtEndOfFile = d.bool(forKey: "editorEnsuresNewlineAtEndOfFile")
-        editorUnorderedListMarkerType = d.integer(forKey: "editorUnorderedListMarkerType")
-        previewZoomRelativeToBaseFontSize = d.bool(forKey: "previewZoomRelativeToBaseFontSize")
+        editorBaseFontInfo = d.dictionary(forKey: .editorBaseFontInfo) ?? [:]
+        editorAutoIncrementNumberedLists = d.bool(forKey: .editorAutoIncrementNumberedLists)
+        editorConvertTabs = d.bool(forKey: .editorConvertTabs)
+        editorInsertPrefixInBlock = d.bool(forKey: .editorInsertPrefixInBlock)
+        editorCompleteMatchingCharacters = d.bool(forKey: .editorCompleteMatchingCharacters)
+        editorSyncScrolling = d.bool(forKey: .editorSyncScrolling)
+        editorSmartHome = d.bool(forKey: .editorSmartHome)
+        editorStyleName = d.string(forKey: .editorStyleName)
+        editorHorizontalInset = d.double(forKey: .editorHorizontalInset)
+        editorVerticalInset = d.double(forKey: .editorVerticalInset)
+        editorLineSpacing = d.double(forKey: .editorLineSpacing)
+        editorWidthLimited = d.bool(forKey: .editorWidthLimited)
+        editorMaximumWidth = d.double(forKey: .editorMaximumWidth)
+        editorOnRight = d.bool(forKey: .editorOnRight)
+        editorShowWordCount = d.bool(forKey: .editorShowWordCount)
+        editorWordCountType = d.integer(forKey: .editorWordCountType)
+        editorScrollsPastEnd = d.bool(forKey: .editorScrollsPastEnd)
+        editorEnsuresNewlineAtEndOfFile = d.bool(forKey: .editorEnsuresNewlineAtEndOfFile)
+        editorUnorderedListMarkerType = d.integer(forKey: .editorUnorderedListMarkerType)
+        previewZoomRelativeToBaseFontSize = d.bool(forKey: .previewZoomRelativeToBaseFontSize)
 
-        htmlTemplateName = d.string(forKey: "htmlTemplateName")
-        htmlStyleName = d.string(forKey: "htmlStyleName")
-        htmlDetectFrontMatter = d.bool(forKey: "htmlDetectFrontMatter")
-        htmlTaskList = d.bool(forKey: "htmlTaskList")
-        htmlHardWrap = d.bool(forKey: "htmlHardWrap")
-        htmlMathJax = d.bool(forKey: "htmlMathJax")
-        htmlMathJaxInlineDollar = d.bool(forKey: "htmlMathJaxInlineDollar")
-        htmlSyntaxHighlighting = d.bool(forKey: "htmlSyntaxHighlighting")
-        htmlHighlightingThemeName = d.string(forKey: "htmlHighlightingThemeName")
-        htmlLineNumbers = d.bool(forKey: "htmlLineNumbers")
-        htmlGraphviz = d.bool(forKey: "htmlGraphviz")
-        htmlMermaid = d.bool(forKey: "htmlMermaid")
-        htmlCodeBlockAccessory = d.integer(forKey: "htmlCodeBlockAccessory")
-        htmlDefaultDirectoryUrl = d.url(forKey: "htmlDefaultDirectoryUrl")
-        htmlRendersTOC = d.bool(forKey: "htmlRendersTOC")
+        markdownEngine = d.string(forKey: .markdownEngine).flatMap(MarkdownEngine.init) ?? .cmarkGfm
+        htmlTemplateName = d.string(forKey: .htmlTemplateName)
+        htmlStyleName = d.string(forKey: .htmlStyleName)
+        htmlHardWrap = d.bool(forKey: .htmlHardWrap)
+        htmlMathJax = d.bool(forKey: .htmlMathJax)
+        htmlMathJaxInlineDollar = d.bool(forKey: .htmlMathJaxInlineDollar)
+        htmlSyntaxHighlighting = d.bool(forKey: .htmlSyntaxHighlighting)
+        htmlHighlightingThemeName = d.string(forKey: .htmlHighlightingThemeName)
+        htmlLineNumbers = d.bool(forKey: .htmlLineNumbers)
+        htmlGraphviz = d.bool(forKey: .htmlGraphviz)
+        htmlMermaid = d.bool(forKey: .htmlMermaid)
+        htmlCodeBlockAccessory = d.integer(forKey: .htmlCodeBlockAccessory)
+        htmlDefaultDirectoryUrl = d.url(forKey: .htmlDefaultDirectoryUrl)
+        htmlRendersTOC = d.bool(forKey: .htmlRendersTOC)
     }
 
     private func cleanupObsoleteAutosaveValues() {
@@ -324,10 +320,6 @@ public final class Preferences {
     /// here, since existing users won't have this invoked when upgrading.
     /// See `loadDefaultUserDefaults()`.
     private func loadDefaultPreferences() {
-        extensionIntraEmphasis = true
-        extensionTables = true
-        extensionFencedCode = true
-        extensionFootnotes = true
         editorBaseFontInfo = [
             "name": Self.defaultEditorFontName,
             "size": Self.defaultEditorFontPointSize,
@@ -337,6 +329,10 @@ public final class Preferences {
         editorVerticalInset = 30.0
         editorLineSpacing = 3.0
         editorSyncScrolling = true
+        // Common Markdown editing conventions.
+        editorUnorderedListMarkerType = UnorderedListMarkerType.minusSign.rawValue
+        editorEnsuresNewlineAtEndOfFile = true
+        editorConvertTabs = true
         htmlStyleName = "GitHub2"
         htmlSyntaxHighlighting = true
         htmlMermaid = true
@@ -347,16 +343,16 @@ public final class Preferences {
     /// Load default preferences every time the app launches. Suitable for
     /// backward-compatibility checks.
     private func loadDefaultUserDefaults() {
-        if defaults.object(forKey: "editorMaximumWidth") == nil {
+        if defaults.object(forKey: .editorMaximumWidth) == nil {
             editorMaximumWidth = 1000.0
         }
-        if defaults.object(forKey: "editorAutoIncrementNumberedLists") == nil {
+        if defaults.object(forKey: .editorAutoIncrementNumberedLists) == nil {
             editorAutoIncrementNumberedLists = true
         }
-        if defaults.object(forKey: "editorInsertPrefixInBlock") == nil {
+        if defaults.object(forKey: .editorInsertPrefixInBlock) == nil {
             editorInsertPrefixInBlock = true
         }
-        if defaults.object(forKey: "htmlTemplateName") == nil {
+        if defaults.object(forKey: .htmlTemplateName) == nil {
             htmlTemplateName = "Default"
         }
     }

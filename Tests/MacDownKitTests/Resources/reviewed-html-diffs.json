@@ -1,0 +1,614 @@
+[
+  {
+    "document": "01-inline.md",
+    "hoedown": "<strong>",
+    "cmark": "",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "",
+    "cmark": "<strong>",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "</em>",
+    "cmark": "",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "",
+    "cmark": "</em>",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "*emphasis",
+    "cmark": "<em>emphasis",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "inside*.",
+    "cmark": "inside</em>.",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "~single",
+    "cmark": "<del>single",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "tilde~.",
+    "cmark": "tilde</del>.",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "backslash\\",
+    "cmark": "backslash<br>",
+    "reason": "CommonMark inlines: ***x*** nests as <em><strong>, nested emphasis parses, ~single~ is GFM strikethrough, a backslash at line end is a hard break"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<h6 id=\"toc_8\">#",
+    "cmark": "<p>#######",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</h6><h1 id=\"toc_9\">Not",
+    "cmark": "</p><p>#Not",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</h1><h2 id=\"toc_10\">",
+    "cmark": "</p><h2 id=\"toc_8\">",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</p>",
+    "cmark": "",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "",
+    "cmark": "</ul><ul>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "",
+    "cmark": "<p>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "",
+    "cmark": "</p>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<p>1) ",
+    "cmark": "<ol><li>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": " 2) ",
+    "cmark": "</li><li>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</p>",
+    "cmark": "</li></ol>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": " ",
+    "cmark": "</p>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</li>",
+    "cmark": " <ul>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "",
+    "cmark": "</ul></li>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<p>",
+    "cmark": "<div><pre><code class=\"language-none\">",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</p>",
+    "cmark": "</code></pre></div>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<ol>",
+    "cmark": "<ol start=\"10\">",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": " - ",
+    "cmark": "</p><ul><li>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "</p>",
+    "cmark": "</li></ul>",
+    "reason": "CommonMark blocks: 7 hashes and #Not are paragraphs, list tightness, a new list when the marker changes, 1) lists, start numbers, indented code in items, a list may interrupt a paragraph"
+  },
+  {
+    "document": "03-blockquotes.md",
+    "hoedown": "",
+    "cmark": "</blockquote><blockquote>",
+    "reason": "CommonMark: quotes separated by a blank line are two quotes"
+  },
+  {
+    "document": "03-blockquotes.md",
+    "hoedown": "",
+    "cmark": "</blockquote>",
+    "reason": "CommonMark: quotes separated by a blank line are two quotes"
+  },
+  {
+    "document": "03-blockquotes.md",
+    "hoedown": "",
+    "cmark": "<blockquote>",
+    "reason": "CommonMark: quotes separated by a blank line are two quotes"
+  },
+  {
+    "document": "04-code.md",
+    "hoedown": "</code><code>swift",
+    "cmark": "```swift",
+    "reason": "CommonMark: a fence inside a code span stays inline"
+  },
+  {
+    "document": "04-code.md",
+    "hoedown": "`",
+    "cmark": "",
+    "reason": "CommonMark: a fence inside a code span stays inline"
+  },
+  {
+    "document": "05-links-images.md",
+    "hoedown": "[shortcut],",
+    "cmark": "<a href=\"https://example.org/with%20spaces\">shortcut</a>,",
+    "reason": "CommonMark: an angle-bracket destination may contain spaces, so the definition and the shortcut link work"
+  },
+  {
+    "document": "05-links-images.md",
+    "hoedown": "</p><p>[shortcut]: <https: example.org spaces with>",
+    "cmark": "",
+    "reason": "CommonMark: an angle-bracket destination may contain spaces, so the definition and the shortcut link work"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "CommonMark HTML blocks; an unknown entity is escaped; &#0; becomes U+FFFD"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "</p>",
+    "cmark": "",
+    "reason": "CommonMark HTML blocks; an unknown entity is escaped; &#0; becomes U+FFFD"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "&unknownentity;",
+    "cmark": "&amp;unknownentity;",
+    "reason": "CommonMark HTML blocks; an unknown entity is escaped; &#0; becomes U+FFFD"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "\u0000",
+    "cmark": "�",
+    "reason": "CommonMark HTML blocks; an unknown entity is escaped; &#0; becomes U+FFFD"
+  },
+  {
+    "document": "08-footnotes.md",
+    "hoedown": "twice[^1].",
+    "cmark": "twice<sup id=\"fnref1\"><a href=\"#fn1\" rel=\"footnote\">1</a></sup>.",
+    "reason": "GFM footnotes: one referenced twice links both times"
+  },
+  {
+    "document": "10-front-matter-invalid.md",
+    "hoedown": "<p>",
+    "cmark": "<h2 id=\"toc_0\">",
+    "reason": "CommonMark: a setext header spans both YAML lines"
+  },
+  {
+    "document": "10-front-matter-invalid.md",
+    "hoedown": "</p><h2 id=\"toc_0\">",
+    "cmark": " ",
+    "reason": "CommonMark: a setext header spans both YAML lines"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "<li>[X]",
+    "cmark": "<li class=\"task-list-item\"><input checked type=\"checkbox\">",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "<li class=\"task-list-item\"><input type=\"checkbox\">not",
+    "cmark": "<li>[ ]not",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "</p>",
+    "cmark": "",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "</p>",
+    "cmark": " ",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "12-task-lists.md",
+    "hoedown": "",
+    "cmark": "</ul><ul>",
+    "reason": "GFM task lists: [X] is checked, the box needs a space after it, tight nested items have no <p>"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "\\,",
+    "cmark": ",",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "a<em>1",
+    "cmark": "a_1",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "a</em>2",
+    "cmark": "a_2",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "$A^T<em>S",
+    "cmark": "$A^T_S",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "$x</em>1",
+    "cmark": "$x_1",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "$a<em>b",
+    "cmark": "$a_b",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "c</em>d$",
+    "cmark": "c_d$",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "$$x",
+    "cmark": "$$x_{",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "{*}",
+    "cmark": "}",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "y",
+    "cmark": "y_{",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "{*}$$.",
+    "cmark": "}$$.",
+    "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
+  },
+  {
+    "document": "generated-10k.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "CommonMark list tightness"
+  },
+  {
+    "document": "generated-10k.md",
+    "hoedown": "</p>",
+    "cmark": " ",
+    "reason": "CommonMark list tightness"
+  },
+  {
+    "document": "08-footnotes.md",
+    "hoedown": "twice[<sup>1].",
+    "cmark": "twice<sup id=\"fnref1\"><a href=\"#fn1\" rel=\"footnote\">1</a>",
+    "reason": "hoedown read footnote syntax as superscript; GFM footnotes come first"
+  },
+  {
+    "document": "08-footnotes.md",
+    "hoedown": "",
+    "cmark": ".",
+    "reason": "hoedown read footnote syntax as superscript; GFM footnotes come first"
+  },
+  {
+    "document": "08-footnotes.md",
+    "hoedown": "definition[<sup>missing].</sup>",
+    "cmark": "definition[^missing].",
+    "reason": "hoedown read footnote syntax as superscript; GFM footnotes come first"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "$x<em>1",
+    "cmark": "$x_1",
+    "reason": "math off: the text is Markdown"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "y</em>2$.",
+    "cmark": "y_2$.",
+    "reason": "math off: the text is Markdown"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "",
+    "cmark": " &amp;unknownentity;",
+    "reason": "same entity rules"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "&unknownentity;",
+    "cmark": "�",
+    "reason": "same entity rules"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "\\(5",
+    "cmark": "$5",
+    "reason": "\"$5 and $10\" isn't math (finding F7); hoedown took it"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "\\)10,",
+    "cmark": "$10,",
+    "reason": "\"$5 and $10\" isn't math (finding F7); hoedown took it"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "<br>",
+    "cmark": "",
+    "reason": "hoedown added a second <br> after an explicit break, and kept the backslash"
+  },
+  {
+    "document": "01-inline.md",
+    "hoedown": "backslash\\",
+    "cmark": "backslash",
+    "reason": "hoedown added a second <br> after an explicit break, and kept the backslash"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<br> 2) ",
+    "cmark": "</li><li>",
+    "reason": "same CommonMark block rules, seen with hard wrap"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "",
+    "cmark": "</li></ul>",
+    "reason": "same CommonMark block rules, seen with hard wrap"
+  },
+  {
+    "document": "02-blocks.md",
+    "hoedown": "<br> - ",
+    "cmark": "</p><ul><li>",
+    "reason": "same CommonMark block rules, seen with hard wrap"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "<br>",
+    "cmark": "",
+    "reason": "CommonMark HTML blocks with hard wrap"
+  },
+  {
+    "document": "10-front-matter-invalid.md",
+    "hoedown": "</p><h2 id=\"toc_0\">",
+    "cmark": "<br> ",
+    "reason": "same, with hard wrap"
+  },
+  {
+    "document": "07-html.md",
+    "hoedown": "&unknownentity;",
+    "cmark": "&amp;unknownentity; �",
+    "reason": "same entity rules"
+  },
+  {
+    "document": "14-math.md",
+    "hoedown": "<br>",
+    "cmark": "",
+    "reason": "hard wrap: hoedown doubled an explicit break"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<strong>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "<strong>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</em>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "</em>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</p>",
+    "cmark": " ",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": " ",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "</ul><ul>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</p>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<ol>",
+    "cmark": "<ol start=\"3\">",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "\\,",
+    "cmark": ",",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;emphasis&quot;&gt;&lt;/a&gt;Emphasis",
+    "cmark": "Emphasis",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;standard-extensions&quot;&gt;&lt;/a&gt;Standard",
+    "cmark": "Standard",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;fenced-code-block&quot;&gt;&lt;/a&gt;Fenced",
+    "cmark": "Fenced",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "name=&quot;markdown-pane&quot;&gt;&lt;/a&gt;The ",
+    "cmark": "",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;rendering-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;general-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;editor-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<br>",
+    "cmark": "",
+    "reason": "hoedown added a second <br> after two-space and backslash breaks"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<br><strong>",
+    "cmark": "",
+    "reason": "hoedown added a second <br> after two-space and backslash breaks"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;markdown-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "name=&quot;rendering-pane&quot;&gt;&lt;/a&gt;The ",
+    "cmark": "",
+    "reason": "TOC entries drop inline HTML"
+  }
+]

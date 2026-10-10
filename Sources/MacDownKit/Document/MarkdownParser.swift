@@ -16,15 +16,19 @@ public struct ParseSettings: Sendable, Equatable {
     public var smartyPants = false
     public var rendersTOC = false
     public var detectsFrontMatter = false
+    /// Which parser renders: hoedown, or cmark-gfm through the document
+    /// model (the hidden `markdownEngine` setting).
+    public var engine = MarkdownEngine.cmarkGfm
 
     public init(extensionFlags: UInt32 = 0, rendererFlags: UInt32 = 0,
                 smartyPants: Bool = false, rendersTOC: Bool = false,
-                detectsFrontMatter: Bool = false) {
+                detectsFrontMatter: Bool = false, engine: MarkdownEngine = .cmarkGfm) {
         self.extensionFlags = extensionFlags
         self.rendererFlags = rendererFlags
         self.smartyPants = smartyPants
         self.rendersTOC = rendersTOC
         self.detectsFrontMatter = detectsFrontMatter
+        self.engine = engine
     }
 }
 
@@ -163,48 +167,4 @@ private let languageAddition: @convention(c) (
     // Walk dependencies to include all required scripts.
     collector.add(lang)
     return mapped
-}
-
-final class LanguageCollector {
-    private(set) var languages: [String] = []
-
-    func add(_ lang: String) {
-        // Move language to root of dependencies.
-        languages.removeAll { $0 == lang }
-        languages.insert(lang, at: 0)
-
-        // Add dependencies of this language.
-        let require = (PrismLanguages.languages[lang] as? [String: Any])?["require"]
-        if let require = require as? String {
-            add(require)
-        } else if let require = require as? [String] {
-            require.forEach(add)
-        } else if let require {
-            NSLog("Unknown Prism language requirement %@ dropped for unknown format",
-                  String(describing: require))
-        }
-    }
-}
-
-/// Language metadata read from `syntax_highlighting.json` and Prism's
-/// `components.js`.
-enum PrismLanguages {
-    static let aliases: [String: String] = {
-        guard let url = MPPaths.resourceBundle.url(
-            forResource: "syntax_highlighting", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let info = try? JSONSerialization.jsonObject(with: data)
-                as? [String: Any]
-        else { return [:] }
-        return info["aliases"] as? [String: String] ?? [:]
-    }()
-
-    nonisolated(unsafe) static let languages: [String: Any] = {
-        guard let url = MPPaths.resourceBundle.url(
-            forResource: "components", withExtension: "js", subdirectory: "Prism")
-        else { return [:] }
-        let code = MPPaths.readFile(at: url)
-        let components = MPGetObjectFromJavaScript(code, "components") as? [String: Any]
-        return components?["languages"] as? [String: Any] ?? [:]
-    }()
 }

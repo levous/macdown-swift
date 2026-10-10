@@ -1,0 +1,2 @@
+# Keep the CRLF corpus document byte-exact.
+Tests/MacDownKitTests/Resources/Corpus/18-crlf.md -text

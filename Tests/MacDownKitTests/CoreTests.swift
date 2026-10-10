@@ -8,6 +8,7 @@
 import AppKit
 import Foundation
 import Testing
+import CHoedown
 @testable import MacDownKit
 
 private func fixture(_ name: String, _ ext: String) -> URL {
@@ -101,6 +102,27 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let none = "# No front matter".frontMatter()
         #expect(none.object == nil)
         #expect(none.offset == 0)
+    }
+
+    /// A document that opens with a thematic break isn't front matter, now
+    /// that front matter is always detected: the closing delimiter must be a
+    /// line of its own, and the YAML must be a mapping.
+    @Test func leadingRuleIsNotFrontMatter() {
+        for text in [
+            "---\n\n# Title\n\nText with `---` in code.\n",
+            "---\n\n# Title\n\nA paragraph.\n\n---\n\nMore.\n",
+            "---\nJust a sentence.\n---\n",
+            "---\n- a list\n---\n",
+        ] {
+            let result = text.frontMatter()
+            #expect(result.object == nil, "\(text.debugDescription)")
+            #expect(result.offset == 0)
+        }
+        // A closing delimiter with trailing spaces, CRLF, or the "..." form.
+        for text in ["---\ntitle: A\n---  \nBody", "---\r\ntitle: A\r\n---\r\nBody",
+                     "---\ntitle: A\n...\nBody"] {
+            #expect(text.frontMatter().object?["title"] == .string("A"), "\(text.debugDescription)")
+        }
     }
 }
 
@@ -227,7 +249,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defer { defaults.removePersistentDomain(forName: suite) }
         // The removed Underline setting, still saved on for existing users,
         // no longer turns `_text_` into underline.
-        defaults.set(true, forKey: "extensionUnderline")
+        defaults.set(true, forKey: .extensionUnderline)
         let preferences = Preferences(defaults: defaults)
         preferences.extensionHighlight = true
         let html = MarkdownParser.parse(
@@ -245,7 +267,6 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let preferences = Preferences(defaults: defaults)
 
         // Fresh install defaults.
-        #expect(preferences.extensionTables)
         #expect(preferences.editorStyleName == "Tomorrow+")
         #expect(preferences.htmlTemplateName == "Default")
         #expect(preferences.htmlSyntaxHighlighting)
@@ -257,24 +278,140 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let reloaded = Preferences(defaults: defaults)
         #expect(reloaded.editorBaseFont == font)
     }
+
+    @Test func standardMarkdownIsAlwaysOn() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        // An existing install whose saved values predate these becoming
+        // standard: the values are ignored.
+        defaults.set("1", forKey: .firstVersionInstalled)
+        for key: PreferenceSettingKey in [.extensionTables, .extensionFencedCode, .extensionFootnotes,
+                                          .extensionStrikethough, .extensionIntraEmphasis] {
+            defaults.set(false, forKey: key)
+        }
+        defaults.set(true, forKey: .extensionQuote)
+        let flags = Preferences(defaults: defaults).extensionFlags
+        for flag in [HOEDOWN_EXT_TABLES, HOEDOWN_EXT_FENCED_CODE, HOEDOWN_EXT_FOOTNOTES,
+                     HOEDOWN_EXT_STRIKETHROUGH] {
+            #expect(flags & flag.rawValue != 0, "\(flag) is off")
+        }
+        // Intra-word emphasis on (no NO_INTRA_EMPHASIS); Quote is dropped.
+        #expect(flags & HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue == 0)
+        #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
+    }
+
+    /// The hidden engine switch for the swift-markdown migration (FR-32).
+    @Test func markdownEngine() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        // cmark-gfm ("cmarkGfm") is the default; hoedown stays selectable.
+        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
+        defaults.set("hoedown", forKey: .markdownEngine)
+        #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
+        defaults.set("bogus", forKey: .markdownEngine)
+        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
+        let preferences = Preferences(defaults: defaults)
+        preferences.markdownEngine = .hoedown
+        #expect(defaults.string(forKey: .markdownEngine) == "hoedown")
+    }
+
+    /// New installs follow common Markdown editing conventions.
+    @Test func freshInstallEditingDefaults() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = Preferences(defaults: defaults)
+        #expect(preferences.editorUnorderedListMarkerType == UnorderedListMarkerType.minusSign.rawValue)
+        #expect(preferences.editorEnsuresNewlineAtEndOfFile)
+        #expect(preferences.editorConvertTabs)
+    }
+
+    @Test func existingInstallKeepsEditingSettings() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("1", forKey: .firstVersionInstalled)
+        defaults.set(UnorderedListMarkerType.asterisk.rawValue, forKey: .editorUnorderedListMarkerType)
+        let preferences = Preferences(defaults: defaults)
+        #expect(preferences.editorUnorderedListMarkerType == UnorderedListMarkerType.asterisk.rawValue)
+        #expect(!preferences.editorEnsuresNewlineAtEndOfFile)
+        #expect(!preferences.editorConvertTabs)
+    }
+
+    /// Keys are the original app's user defaults keys: each case's name,
+    /// and for text checking "editor" plus the capitalized NSTextView key
+    /// path, as MacDown stored them.
+    @Test func preferenceKeysKeepTheOriginalNames() {
+        for key in PreferenceSettingKey.allCases {
+            #expect(key.rawValue == String(describing: key))
+        }
+        for setting in PreferenceSettingKey.textChecking {
+            let path = setting.textViewKeyPath
+            #expect(setting.key.rawValue == "editor" + path.prefix(1).uppercased() + path.dropFirst())
+        }
+    }
+
+    /// Settings that became standard are no longer read, but their saved
+    /// values stay in user defaults (FR-36), so a downgrade still finds them.
+    @Test func removedSettingsKeepTheirSavedValues() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let keys = PreferenceSettingKey.retired
+        defaults.set("1", forKey: .firstVersionInstalled)
+        for key in keys { defaults.set(true, forKey: key) }
+        let preferences = Preferences(defaults: defaults)
+        preferences.extensionHighlight = true    // Saving other settings.
+        for key in keys {
+            #expect(defaults.object(forKey: key) as? Bool == true, "\(key) removed")
+        }
+    }
+
+    @Test func taskListsAndFrontMatterAreAlwaysOn() throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("1", forKey: .firstVersionInstalled)
+        defaults.set(false, forKey: .htmlTaskList)
+        defaults.set(false, forKey: .htmlDetectFrontMatter)
+        let settings = Preferences(defaults: defaults).renderSettings
+        #expect(settings.parse.rendererFlags & UInt32(HOEDOWN_HTML_USE_TASK_LIST) != 0)
+        #expect(settings.page.taskList)    // The checkbox script.
+        #expect(settings.parse.detectsFrontMatter)
+
+        let html = MarkdownParser.parse("---\ntitle: Notes\n---\n\n- [x] done\n",
+                                        settings: settings.parse).body
+        #expect(html.contains("<table>") && html.contains("Notes"))
+        #expect(html.contains(#"type="checkbox""#))
+    }
 }
 
 @Suite struct RendererTests {
-    func parse(_ text: String, ext: UInt32 = 0x7 | (1 << 4), renderer: UInt32 = 0,
-               toc: Bool = false, frontMatter: Bool = false) -> ParseResult {
-        MarkdownParser.parse(text, settings: ParseSettings(
-            extensionFlags: ext, rendererFlags: renderer,
-            rendersTOC: toc, detectsFrontMatter: frontMatter))
+    func parse(_ engine: MarkdownEngine, _ text: String, ext: UInt32 = 0x7 | (1 << 4),
+               renderer: UInt32 = 0, toc: Bool = false, frontMatter: Bool = false) -> ParseResult {
+        let settings = ParseSettings(extensionFlags: ext, rendererFlags: renderer,
+                                     rendersTOC: toc, detectsFrontMatter: frontMatter)
+        switch engine {
+        case .hoedown:
+            return MarkdownParser.parse(text, settings: settings)
+        case .cmarkGfm:
+            let model = MarkdownDocumentModel(text, options: .init(settings))
+            return ParseResult(body: model.body, languages: model.languages)
+        }
     }
 
-    @Test func basic() {
-        let result = parse("# Hello\n\n*world*")
+    @Test(arguments: MarkdownEngine.allCases)
+    func basic(_ engine: MarkdownEngine) {
+        let result = parse(engine, "# Hello\n\n*world*")
         #expect(result.body.contains("<h1 id=\"toc_0\">Hello</h1>"))
         #expect(result.body.contains("<em>world</em>"))
     }
 
-    @Test func fencedCodeMapsAliasesAndCollectsLanguages() {
-        let result = parse("```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
+    @Test(arguments: MarkdownEngine.allCases)
+    func fencedCodeMapsAliasesAndCollectsLanguages(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
         #expect(result.body.contains("<code class=\"language-javascript\">var a = 1;</code>"))
         #expect(result.body.contains("<div><pre><code class=\"language-cpp\">"))
         #expect(result.languages.contains("javascript"))
@@ -285,48 +422,96 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(c < cpp)
     }
 
-    @Test func noLanguage() {
-        let result = parse("```\nplain\n```\n")
+    /// Standard Markdown renders with nothing in user defaults, on a fresh
+    /// install and on an existing one with no saved settings.
+    @MainActor @Test(arguments: [false, true])
+    func standardFormattingWithEmptyDefaults(existingInstall: Bool) throws {
+        let suite = "MacDownTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        if existingInstall { defaults.set("1", forKey: .firstVersionInstalled) }
+        let settings = Preferences(defaults: defaults).renderSettings.parse
+        let text = """
+            ---
+            title: Standard
+            ---
+
+            | a | b |
+            |---|---|
+            | 1 | 2 |
+
+            ```swift
+            let x = 1
+            ```
+
+            ~~gone~~ and a note[^n] and "as typed".
+
+            - [x] done
+
+            [^n]: The note.
+            """
+        // Both engines.
+        for html in [MarkdownParser.parse(text, settings: settings).body,
+                     MarkdownDocumentModel(text, options: .init(settings)).body] {
+            for element in ["<td>Standard</td>", "<table>", "<th>a</th>", "<td>1</td>",
+                            #"<code class="language-swift">"#, "<del>gone</del>",
+                            #"<div class="footnotes">"#, #"type="checkbox""#,
+                            "&quot;as typed&quot;"] {
+                #expect(html.contains(element), "missing \(element)")
+            }
+            #expect(!html.contains("<q>"))
+        }
+    }
+
+    @Test(arguments: MarkdownEngine.allCases)
+    func noLanguage(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```\nplain\n```\n")
         #expect(result.body.contains("<code class=\"language-none\">plain</code>"))
     }
 
-    @Test func taskList() {
-        let result = parse("- [ ] todo\n- [x] done\n", renderer: 1 << 4)
+    @Test(arguments: MarkdownEngine.allCases)
+    func taskList(_ engine: MarkdownEngine) {
+        let result = parse(engine, "- [ ] todo\n- [x] done\n", renderer: 1 << 4)
         #expect(result.body.contains("<li class=\"task-list-item\"><input type=\"checkbox\"> todo"))
         #expect(result.body.contains("<input type=\"checkbox\" checked> done"))
     }
 
-    @Test func lineNumbersAndInformation() {
-        let result = parse("```python:example.py\nprint(1)\n```\n",
+    @Test(arguments: MarkdownEngine.allCases)
+    func lineNumbersAndInformation(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```python:example.py\nprint(1)\n```\n",
                            renderer: (1 << 5) | (1 << 6))
         #expect(result.body.contains(
             "<pre class=\"line-numbers\" data-information=\"example.py\"><code class=\"language-python\">"))
     }
 
-    @Test func tableOfContents() {
-        let result = parse("[TOC]\n\n# One\n\n## Two\n", toc: true)
+    @Test(arguments: MarkdownEngine.allCases)
+    func tableOfContents(_ engine: MarkdownEngine) {
+        let result = parse(engine, "[TOC]\n\n# One\n\n## Two\n", toc: true)
         #expect(result.body.contains("<ul class=\"toc\">"))
         #expect(result.body.contains("<a href=\"#toc_1\">Two</a>"))
         #expect(!result.body.contains("[TOC]"))
     }
 
-    @Test func frontMatter() {
-        let result = parse("---\ntitle: Test\n---\nBody", frontMatter: true)
+    @Test(arguments: MarkdownEngine.allCases)
+    func frontMatter(_ engine: MarkdownEngine) {
+        let result = parse(engine, "---\ntitle: Test\n---\nBody", frontMatter: true)
         #expect(result.body.hasPrefix(
             "<table><thead><tr><th>title</th></tr></thead><tbody><tr><td>Test</td></tr></tbody></table>\n"))
         #expect(result.body.contains("<p>Body</p>"))
     }
 
-    @Test func unicode() {
-        let result = parse("# 中文 😀\n")
+    @Test(arguments: MarkdownEngine.allCases)
+    func unicode(_ engine: MarkdownEngine) {
+        let result = parse(engine, "# 中文 😀\n")
         #expect(result.body.contains("中文 😀"))
     }
 
-    @Test func previewPage() {
+    @Test(arguments: MarkdownEngine.allCases)
+    func previewPage(_ engine: MarkdownEngine) {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
         settings.lineNumbers = true
-        let result = parse("```swift\nlet a = 1\n```\n")
+        let result = parse(engine, "```swift\nlet a = 1\n```\n")
         let html = PageBuilder.previewHTML(title: "Doc", result: result,
                                            settings: settings)
         #expect(html.contains("<title>Doc</title>"))
@@ -336,10 +521,11 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(html.contains("prism.css"))
     }
 
-    @Test func exportPageIsSelfContained() {
+    @Test(arguments: MarkdownEngine.allCases)
+    func exportPageIsSelfContained(_ engine: MarkdownEngine) {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
-        let result = parse("```swift\nlet a = 1\n```\n")
+        let result = parse(engine, "```swift\nlet a = 1\n```\n")
         let html = PageBuilder.exportHTML(title: nil, result: result,
                                           settings: settings, withStyles: false,
                                           withHighlighting: true)

@@ -53,7 +53,7 @@ extension LiveDocumentTests {
         controller.markdown = "# Second\n"
         #expect(await waitUntil { await previewHeading(controller) == "Second" })
         #expect(controller.markdown == "# Second\n")
-        #expect(controller.html.contains("<h1 id=\"toc_0\">Second</h1>"))
+        #expect(controller.html.contains("id=\"toc_0\">Second</h1>"))
     }
 
     @Test func togglesPanes() {

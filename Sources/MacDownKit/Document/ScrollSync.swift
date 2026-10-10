@@ -4,9 +4,12 @@
 //
 //  Scroll synchronization between the editor and the preview.
 //
-//  Both panes report "anchors": headers and stand-alone images, in document
-//  order. Anchors are paired by index, so both sides must apply the same
-//  rules (see `ScrollAnchors.scan` and `PreviewController.fetchMetrics`).
+//  Both panes report "anchors". With the cmark-gfm engine the preview marks
+//  every block with its source line, and anchors are those lines (at the
+//  block's top), paired by line number. With hoedown they are headers and
+//  stand-alone images, in document order, paired by index, so both sides
+//  must apply the same rules (see `ScrollAnchors.scan` and
+//  `PreviewController.fetchMetrics`).
 //  Pairs give a piecewise linear map between editor and preview content
 //  positions. Each pane is aligned at a focus line, which sits at the middle
 //  of the visible area, except within the first and last screen of the
@@ -19,6 +22,8 @@ import Foundation
 public enum ScrollAnchorKind: Sendable, Equatable {
     case header
     case image
+    /// A 1-based source line (the new engine's `data-source-line`).
+    case line(Int)
 }
 
 public struct ScrollAnchor: Sendable, Equatable {
@@ -250,7 +255,21 @@ public struct ScrollMap: Sendable, Equatable {
                 editorEnd: CGFloat, previewEnd: CGFloat) {
         var editor = editor
         var preview = preview
-        if editor.map(\.kind) != preview.map(\.kind) {
+        if case .line = preview.first?.kind {
+            // Pair by line number, in preview order.
+            var editorByLine: [Int: CGFloat] = [:]
+            for anchor in editor {
+                if case .line(let line) = anchor.kind, editorByLine[line] == nil {
+                    editorByLine[line] = anchor.position
+                }
+            }
+            let paired = preview.compactMap { anchor -> (ScrollAnchor, ScrollAnchor)? in
+                guard case .line(let line) = anchor.kind, let y = editorByLine[line] else { return nil }
+                return (ScrollAnchor(anchor.kind, y), anchor)
+            }
+            editor = paired.map(\.0)
+            preview = paired.map(\.1)
+        } else if editor.map(\.kind) != preview.map(\.kind) {
             // Something the rules didn't anticipate; headers are the most
             // reliable, so try them alone before giving up on anchors.
             editor = editor.filter { $0.kind == .header }

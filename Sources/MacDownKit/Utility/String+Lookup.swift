@@ -67,7 +67,9 @@ extension String {
     /// - Returns: The parsed YAML object (if any) and the UTF-16 length of
     ///   the front matter block, which should be skipped when rendering.
     public func frontMatter() -> (object: YAMLValue?, offset: Int) {
-        let pattern = "^-{3}[\r\n]+(.*?[\r\n]+)((?:-{3})|(?:\\.{3}))"
+        // The closing delimiter is a line of its own, so `---` in the text
+        // (a code span, say) doesn't end the block.
+        let pattern = "^-{3}[\r\n]+(.*?[\r\n]+)((?:-{3})|(?:\\.{3}))[ \t]*(?=[\r\n]|$)"
         guard let regex = try? NSRegularExpression(
             pattern: pattern, options: .dotMatchesLineSeparators),
               let result = regex.firstMatch(
@@ -75,7 +77,10 @@ extension String {
         else { return (nil, 0) }
 
         let yaml = ns.substring(with: result.range(at: 1))
-        guard let node = try? Yams.compose(yaml: yaml) else { return (nil, 0) }
+        // Front matter is a mapping; anything else (text between two
+        // thematic breaks, say) is Markdown.
+        guard let node = try? Yams.compose(yaml: yaml), node.mapping != nil
+        else { return (nil, 0) }
         return (YAMLValue(node: node), result.range(at: 0).length)
     }
 }

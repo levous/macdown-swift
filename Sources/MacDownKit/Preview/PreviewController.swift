@@ -259,11 +259,24 @@ public final class PreviewController: NSObject {
     }
 
     public func fetchMetrics() async -> PreviewMetrics {
-        // Mirrors ScrollAnchors.scan: top-level headers, and images in
-        // top-level paragraphs that contain nothing else.
+        // The new engine marks blocks with their source line: report each
+        // one's top. Otherwise mirror ScrollAnchors.scan: top-level headers,
+        // and images in top-level paragraphs that contain nothing else.
         let script = """
             (function () {
               var anchors = [];
+              var lines = document.querySelectorAll("[data-source-line]");
+              if (lines.length > 0) {
+                Array.prototype.forEach.call(lines, function (node) {
+                  anchors.push(["l", node.getBoundingClientRect().top + window.scrollY,
+                                parseInt(node.getAttribute("data-source-line"), 10)]);
+                });
+                return JSON.stringify({
+                  anchors: anchors,
+                  contentHeight: document.documentElement.scrollHeight,
+                  visibleHeight: window.innerHeight
+                });
+              }
               function add(kind, node) {
                 var rect = node.getBoundingClientRect();
                 anchors.push([kind, rect.top + window.scrollY + rect.height / 2]);
@@ -299,8 +312,12 @@ public final class PreviewController: NSObject {
         else { return PreviewMetrics() }
         var metrics = PreviewMetrics()
         metrics.anchors = (object["anchors"] as? [[Any]] ?? []).compactMap {
-            guard $0.count == 2, let kind = $0[0] as? String,
+            guard $0.count >= 2, let kind = $0[0] as? String,
                   let y = $0[1] as? NSNumber else { return nil }
+            if kind == "l" {
+                guard $0.count == 3, let line = $0[2] as? NSNumber else { return nil }
+                return ScrollAnchor(.line(line.intValue), CGFloat(y.doubleValue))
+            }
             return ScrollAnchor(kind == "h" ? .header : .image, CGFloat(y.doubleValue))
         }
         metrics.contentHeight = CGFloat((object["contentHeight"] as? NSNumber)?

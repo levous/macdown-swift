@@ -8,35 +8,86 @@ import CPegMarkdown
 import Testing
 @testable import MacDownKit
 
+/// Highlight spans from either engine: PEG, or the swift-markdown model.
+func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
+    switch engine {
+    case .hoedown: HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue))
+    case .cmarkGfm: MarkdownDocumentModel(text, options: .init()).highlights
+    }
+}
+
 @Suite struct HighlighterTests {
-    @Test func parsesElements() {
-        let elements = HighlightElements.parse("# Title\n\n*em* and **strong**\n",
-                                               extensions: 0)
+    @Test(arguments: MarkdownEngine.allCases)
+    func parsesElements(_ engine: MarkdownEngine) {
+        let elements = highlightElements("# Title\n\n*em* and **strong**\n", engine: engine)
         #expect(elements.spans[Int(pmh_H1.rawValue)].count == 1)
         #expect(elements.spans[Int(pmh_EMPH.rawValue)].count == 1)
         #expect(elements.spans[Int(pmh_STRONG.rawValue)].count == 1)
     }
 
-    @Test func convertsSurrogatePairOffsets() {
-        let elements = HighlightElements.parse("😀 *em*\n", extensions: 0)
+    @Test(arguments: MarkdownEngine.allCases)
+    func convertsSurrogatePairOffsets(_ engine: MarkdownEngine) {
+        let elements = highlightElements("😀 *em*\n", engine: engine)
         let span = elements.spans[Int(pmh_EMPH.rawValue)].first
         // "😀" is two UTF-16 units; "*em*" starts at UTF-16 offset 3.
         #expect(span?.pos == 3)
         #expect(span?.end == 7)
     }
 
-    @MainActor @Test func appliesStylesToTextView() async throws {
+    @MainActor @Test(arguments: MarkdownEngine.allCases)
+    func appliesStylesToTextView(_ engine: MarkdownEngine) async throws {
         let (_, textView) = EditorTextView.makeScrollableEditor()
         textView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         textView.string = "# Title\n\n*em*\n"
         let highlighter = MarkdownHighlighter(textView: textView)
         let errors = highlighter.applyStyles(fromStylesheet: "H1\nforeground: ff0000\n")
         #expect(errors.isEmpty)
+        highlighter.usesExternalElements = engine == .cmarkGfm
         highlighter.activate()
         try await Task.sleep(for: .milliseconds(500))
+        if engine == .cmarkGfm {
+            // As after a parse: spans arrive once the text is laid out.
+            highlighter.update(highlightElements(textView.string, engine: engine))
+        }
         let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
                                                     effectiveRange: nil) as? NSColor
-        #expect(color?.redComponent == 1.0)
+        #expect(color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0)
+    }
+}
+
+@MainActor @Suite struct ThemeApplicationTests {
+    @Test func appliesABundledTheme() throws {
+        let url = try #require(MPPaths.resourceBundle.url(forResource: "Solarized (Dark)",
+                                                          withExtension: "style",
+                                                          subdirectory: "Themes"))
+        let stylesheet = try String(contentsOf: url, encoding: .utf8)
+        let theme = ThemeStyle(parsing: stylesheet)
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        textView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
+        textView.string = "# Title\n"
+        let highlighter = MarkdownHighlighter(textView: textView)
+        #expect(highlighter.applyStyles(fromStylesheet: stylesheet).isEmpty)
+
+        guard case .backgroundColor(let background)? = theme.editor
+            .first(where: { if case .backgroundColor = $0.value { true } else { false } })?.value
+        else { Issue.record("no editor background"); return }
+        #expect(textView.backgroundColor == HighlightingStyle.color(background))
+        let h1 = try #require(highlighter.styles.first { $0.elementType == Int(pmh_H1.rawValue) })
+        let rule = try #require(theme.elements.first { $0.element == "H1" })
+        let foreground = rule.attributes.compactMap { attribute -> ThemeStyle.Color? in
+            if case .foregroundColor(let c) = attribute.value { c } else { nil }
+        }.first
+        #expect(h1.attributesToAdd[.foregroundColor] as? NSColor
+                == foreground.map(HighlightingStyle.color))
+    }
+
+    @Test func reportsStylesheetErrors() {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let highlighter = MarkdownHighlighter(textView: textView)
+        #expect(highlighter.applyStyles(fromStylesheet: "H1\ncolor: 12\nfont-style: wavy\n") == [
+            "(Line 2): Value '12' is not a valid color value: it should be a hexadecimal number, 6 or 8 characters long.",
+            "(Line 3): Value 'wavy' is invalid for attribute 'font-style'",
+        ])
     }
 }
 
@@ -161,4 +212,18 @@ import Testing
         #expect(tv.unindentForSpaces(before: 8))
         #expect(tv.string == "    x")
     }
+}
+
+extension LiveDocumentTests {
+@MainActor @Suite struct EditorHighlightingSetupTests {
+    /// Footnotes are standard, so the editor always parses them (the old
+    /// `extensionFootnotes` setting had this inverted).
+    @Test func highlighterAlwaysParsesFootnotes() {
+        let controller = DocumentController(document: MarkdownDocument(text: "a[^1]\n\n[^1]: b\n"),
+                                            fileURL: nil)
+        defer { controller.tearDown() }
+        controller.setupEditor(nil)
+        #expect(controller.highlighter.extensions == Int32(pmh_EXT_NOTES.rawValue))
+    }
+}
 }

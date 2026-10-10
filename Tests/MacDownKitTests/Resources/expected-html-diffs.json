@@ -1,0 +1,14 @@
+[
+  {
+    "id": "intraword-underscore-emphasis",
+    "reason": "CommonMark: _ doesn't emphasize inside a word (snake_case_name); hoedown does. Decision 3.",
+    "find": "([A-Za-z0-9])<em>([^<\\s]+)</em>(?=[A-Za-z0-9])",
+    "replace": "$1_$2_"
+  },
+  {
+    "id": "intraword-underscore-strong",
+    "reason": "CommonMark: __ doesn't make text strong inside a word (foo__bar__baz); hoedown does. Decision 3.",
+    "find": "([A-Za-z0-9])<strong>([^<\\s]+)</strong>(?=[A-Za-z0-9])",
+    "replace": "$1__$2__"
+  }
+]

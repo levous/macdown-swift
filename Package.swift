@@ -21,6 +21,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
+        // The Markdown parser (docs/intents/swift-markdown-migration.md,
+        // Decision 10), pinned exactly: the diff harnesses compare its output.
+        .package(url: "https://github.com/swiftlang/swift-cmark.git", exact: "0.9.0"),
     ],
     targets: [
         // Hoedown 3.0.7 plus MacDown's renderer patches (task lists, code block
@@ -54,6 +57,8 @@ let package = Package(
                 "CPegMarkdown",
                 "MacDownShared",
                 .product(name: "Yams", package: "Yams"),
+                .product(name: "cmark-gfm", package: "swift-cmark"),
+                .product(name: "cmark-gfm-extensions", package: "swift-cmark"),
             ],
             path: "Sources/MacDownKit",
             resources: [
@@ -76,7 +81,11 @@ let package = Package(
         ),
         .testTarget(
             name: "MacDownKitTests",
-            dependencies: ["MacDownKit"],
+            dependencies: [
+                "MacDownKit",
+                .product(name: "cmark-gfm", package: "swift-cmark"),
+                .product(name: "cmark-gfm-extensions", package: "swift-cmark"),
+            ],
             path: "Tests/MacDownKitTests",
             resources: [.copy("Resources")]
         ),

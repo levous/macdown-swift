@@ -66,19 +66,13 @@ struct MarkdownSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Block formatting:") {
-                Toggle("Table", isOn: $preferences.extensionTables)
-                Toggle("Fenced code block", isOn: $preferences.extensionFencedCode)
-                Toggle("Footnote", isOn: $preferences.extensionFootnotes)
-            }
+            // Standard Markdown (tables, fenced code, footnotes,
+            // strikethrough, task lists) is always on; these are extensions.
             Section("Inline formatting:") {
-                Toggle("Intra-word emphasis", isOn: $preferences.extensionIntraEmphasis)
-                Toggle("Strikethrough", isOn: $preferences.extensionStrikethough)
-                Toggle("Quote", isOn: $preferences.extensionQuote)
                 Toggle("Highlight", isOn: $preferences.extensionHighlight)
                 Toggle("Superscript", isOn: $preferences.extensionSuperscript)
                 Toggle("Autolink", isOn: $preferences.extensionAutolink)
-                Toggle("Smartypants", isOn: $preferences.extensionSmartyPants)
+                Toggle("Smart punctuation", isOn: $preferences.extensionSmartyPants)
             }
         }
         .padding(20)
@@ -146,7 +140,8 @@ struct EditorSettingsView: View {
                         loadThemes()
                         NotificationCenter.default.post(
                             name: .didRequestEditorSetup, object: nil,
-                            userInfo: ["key": "editorStyleName"])
+                            userInfo: [Notification.preferenceKeyUserInfoKey:
+                                        PreferenceSettingKey.editorStyleName])
                     }
                 }
             }
@@ -320,8 +315,6 @@ struct RenderingSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             Section {
-                Toggle("Task list syntax", isOn: $preferences.htmlTaskList)
-                Toggle("Detect Jekyll front-matter", isOn: $preferences.htmlDetectFrontMatter)
                 Toggle("Detect table of contents token", isOn: $preferences.htmlRendersTOC)
                 Toggle("Render newline literally", isOn: $preferences.htmlHardWrap)
                 Toggle("Scale preview based on editor font size",

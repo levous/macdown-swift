@@ -14,7 +14,9 @@ import AppKit
 final class WindowCloseGuard: NSObject, NSWindowDelegate {
     /// SwiftUI's delegate. NSWindow.delegate is weak, so this keeps it alive
     /// while the guard stands in for it.
-    private(set) var original: NSWindowDelegate?
+    // Set on the main thread; also read by NSObject's (nonisolated)
+    // forwarding methods, which AppKit calls there too.
+    nonisolated(unsafe) private(set) var original: NSWindowDelegate?
     /// Decides whether the window may close now. Returning false cancels
     /// this close; the decision can close the window later with
     /// `closeWithoutAsking(_:)`.

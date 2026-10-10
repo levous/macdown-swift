@@ -87,7 +87,7 @@ struct HighlightingStyle {
     var fontSize: CGFloat?
     var fontTraitsToAdd: NSFontTraitMask = []
 
-    static func color(_ argb: pmh_attr_argb_color) -> NSColor {
+    static func color(_ argb: ThemeStyle.Color) -> NSColor {
         NSColor(deviceRed: CGFloat(argb.red) / 255.0,
                 green: CGFloat(argb.green) / 255.0,
                 blue: CGFloat(argb.blue) / 255.0,
@@ -102,34 +102,33 @@ struct HighlightingStyle {
         fontTraitsToAdd = traits
     }
 
-    init(attributes: UnsafeMutablePointer<pmh_style_attribute>, baseFont: NSFont?) {
-        elementType = Int(attributes.pointee.lang_element_type.rawValue)
+    /// A theme rule's style. Element types are indexes in
+    /// `ThemeStyle.elementNames`, which follows PEG Markdown Highlight's order.
+    init?(_ rule: ThemeStyle.ElementStyle, baseFont: NSFont?) {
+        guard let type = ThemeStyle.elementNames.firstIndex(of: rule.element) else { return nil }
+        elementType = type
         var fontSize: CGFloat = 0
         var relative = false
-        var cursor: UnsafeMutablePointer<pmh_style_attribute>? = attributes
-        while let cur = cursor {
-            let value = cur.pointee.value.pointee
-            switch cur.pointee.type {
-            case pmh_attr_type_foreground_color:
-                attributesToAdd[.foregroundColor] = Self.color(value.argb_color.pointee)
-            case pmh_attr_type_background_color:
-                attributesToAdd[.backgroundColor] = Self.color(value.argb_color.pointee)
-            case pmh_attr_type_font_style:
-                let styles = value.font_styles.pointee
-                if styles.italic { fontTraitsToAdd.insert(.italicFontMask) }
-                if styles.bold { fontTraitsToAdd.insert(.boldFontMask) }
-                if styles.underlined {
+        for attribute in rule.attributes {
+            switch attribute.value {
+            case .foregroundColor(let color):
+                attributesToAdd[.foregroundColor] = Self.color(color)
+            case .backgroundColor(let color):
+                attributesToAdd[.backgroundColor] = Self.color(color)
+            case .fontStyle(let italic, let bold, let underlined):
+                if italic { fontTraitsToAdd.insert(.italicFontMask) }
+                if bold { fontTraitsToAdd.insert(.boldFontMask) }
+                if underlined {
                     attributesToAdd[.underlineStyle] = NSUnderlineStyle.single.rawValue
                 }
-            case pmh_attr_type_font_size_pt:
-                fontSize = CGFloat(value.font_size.pointee.size_pt)
-                relative = value.font_size.pointee.is_relative
-            case pmh_attr_type_font_family:
-                fontName = String(cString: value.font_family)
-            default:
+            case .fontSize(let points, let isRelative):
+                fontSize = CGFloat(points)
+                relative = isRelative
+            case .fontFamily(let name):
+                fontName = name
+            case .caretColor, .other:
                 break
             }
-            cursor = cur.pointee.next
         }
         if fontSize != 0 {
             var actual = relative ? (baseFont?.pointSize ?? 0) + fontSize : fontSize
@@ -188,6 +187,9 @@ public final class MarkdownHighlighter {
     public var resetTypingAttributes = true
     public var makeLinksClickable = false
     public private(set) var isActive = false
+    /// Spans come from elsewhere (the swift-markdown document model, via
+    /// `update(_:)`) instead of the highlighter's own PEG parse.
+    public var usesExternalElements = false
 
     var styles: [HighlightingStyle] = HighlightingStyle.defaultStyles() {
         didSet { applyStyleDependencies() }
@@ -210,7 +212,7 @@ public final class MarkdownHighlighter {
     // MARK: - Parsing
 
     func requestParsing() {
-        guard let textView else { return }
+        guard let textView, !usesExternalElements else { return }
         parseGeneration += 1
         let generation = parseGeneration
         let markdown = textView.string
@@ -228,6 +230,13 @@ public final class MarkdownHighlighter {
 
     public func parseAndHighlightNow() {
         requestParsing()
+    }
+
+    /// Highlights with spans parsed elsewhere, for the current text.
+    func update(_ elements: HighlightElements) {
+        parseGeneration += 1    // Any PEG parse in flight is stale.
+        cachedElements = elements
+        if isActive { applyVisibleRangeHighlighting() }
     }
 
     public func highlightNow() {
@@ -406,80 +415,46 @@ public final class MarkdownHighlighter {
     /// - Returns: Error messages from parsing the stylesheet.
     @discardableResult
     public func applyStyles(fromStylesheet stylesheet: String) -> [String] {
-        final class ErrorBox { var messages: [String] = [] }
-        let box = ErrorBox()
-        let callback: @convention(c) (UnsafeMutablePointer<CChar>?, Int32,
-                                      UnsafeMutableRawPointer?) -> Void = {
-            message, line, context in
-            guard let context else { return }
-            let box = Unmanaged<ErrorBox>.fromOpaque(context).takeUnretainedValue()
-            let text = message.map { String(cString: $0) } ?? "<broken error message>"
-            box.messages.append("(Line \(line)): \(text)")
-        }
-        let unmanaged = Unmanaged.passRetained(box)
-        defer { unmanaged.release() }
-
-        let collection = stylesheet.withCString { cString in
-            pmh_parse_styles(UnsafeMutablePointer(mutating: cString), callback,
-                             unmanaged.toOpaque())
-        }
-        guard let collection else { return box.messages }
-        defer { pmh_free_style_collection(collection) }
-
+        let theme = ThemeStyle(parsing: stylesheet)
         let baseFont = (defaultTypingAttributes[.font] as? NSFont) ?? textView?.font
-
-        var newStyles: [HighlightingStyle] = []
-        for i in 0..<Int(pmh_NUM_LANG_TYPES) {
-            guard let attrs = collection.pointee.element_styles[i] else { continue }
-            newStyles.append(HighlightingStyle(attributes: attrs, baseFont: baseFont))
-        }
-        styles = newStyles
+        styles = theme.elements.compactMap { HighlightingStyle($0, baseFont: baseFont) }
 
         if let textView {
             clearHighlighting()
 
-            var cursor = collection.pointee.editor_styles
-            while let cur = cursor {
-                let value = cur.pointee.value.pointee
-                switch cur.pointee.type {
-                case pmh_attr_type_background_color:
-                    textView.backgroundColor = HighlightingStyle.color(value.argb_color.pointee)
-                case pmh_attr_type_foreground_color:
-                    textView.textColor = HighlightingStyle.color(value.argb_color.pointee)
-                case pmh_attr_type_caret_color:
-                    textView.insertionPointColor =
-                        HighlightingStyle.color(value.argb_color.pointee)
+            for attribute in theme.editor {
+                switch attribute.value {
+                case .backgroundColor(let color):
+                    textView.backgroundColor = HighlightingStyle.color(color)
+                case .foregroundColor(let color):
+                    textView.textColor = HighlightingStyle.color(color)
+                case .caretColor(let color):
+                    textView.insertionPointColor = HighlightingStyle.color(color)
                 default:
                     break
                 }
-                cursor = cur.pointee.next
             }
 
             var selection = Self.defaultSelectedTextAttributes
-            cursor = collection.pointee.editor_selection_styles
-            while let cur = cursor {
-                let value = cur.pointee.value.pointee
-                switch cur.pointee.type {
-                case pmh_attr_type_background_color:
-                    selection[.backgroundColor] =
-                        HighlightingStyle.color(value.argb_color.pointee)
-                case pmh_attr_type_foreground_color:
-                    selection[.foregroundColor] =
-                        HighlightingStyle.color(value.argb_color.pointee)
-                case pmh_attr_type_font_style:
-                    if value.font_styles.pointee.underlined {
+            for attribute in theme.selection {
+                switch attribute.value {
+                case .backgroundColor(let color):
+                    selection[.backgroundColor] = HighlightingStyle.color(color)
+                case .foregroundColor(let color):
+                    selection[.foregroundColor] = HighlightingStyle.color(color)
+                case .fontStyle(_, _, let underlined):
+                    if underlined {
                         selection[.underlineStyle] = NSUnderlineStyle.single.rawValue
                     }
                 default:
                     break
                 }
-                cursor = cur.pointee.next
             }
             textView.selectedTextAttributes = selection
             readClearTextStylesFromTextView()
         }
         highlightNow()
-        return box.messages
+        return theme.errors.map(\.description)
     }
 
     // MARK: - Activation
