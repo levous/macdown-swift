@@ -142,6 +142,19 @@ import Testing
         #expect(on == MarkdownParser.parse(text, settings: settings).body)
     }
 
+    /// Smart punctuation (FR-17): curly quotes, dashes and ellipses with
+    /// the setting on, never in code. cmark writes the characters where
+    /// hoedown wrote entities, so compare with entities decoded.
+    @Test func smartPunctuation() {
+        let text = "\"Double,\" 'single,' it's, en -- dash, em --- dash... `\"code\" --`\n\n```\n\"block\" --\n```\n"
+        var settings = CorpusTests.settings
+        #expect(MarkdownDocumentModel(text, options: .init(settings)).body.contains("&quot;Double,&quot;"))
+        settings.smartyPants = true
+        let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
+        #expect(cmark.contains("“Double,” ‘single,’ it’s, en – dash, em — dash…"))
+        #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(MarkdownParser.parse(text, settings: settings).body))
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")
