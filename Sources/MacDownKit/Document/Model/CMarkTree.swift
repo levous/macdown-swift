@@ -21,7 +21,6 @@ final class CMarkTree {
         var autolink = false
     }
 
-    let root: CMarkNode
     private let document: UnsafeMutablePointer<cmark_node>
 
     init(_ text: String, options: Options = .init()) {
@@ -37,10 +36,16 @@ final class CMarkTree {
         }
         cmark_parser_feed(parser, text, text.utf8.count)
         document = cmark_parser_finish(parser)
-        root = CMarkNode(document)
     }
 
     deinit { cmark_node_free(document) }
+
+    /// Runs `body` with the root node. Nodes point into the tree, so they're
+    /// only valid inside `body`, which keeps the tree alive (ARC could free
+    /// it after the last use of `self` otherwise).
+    func withRoot<T>(_ body: (CMarkNode) throws -> T) rethrows -> T {
+        try withExtendedLifetime(self) { try body(CMarkNode(document)) }
+    }
 }
 
 struct CMarkNode {
@@ -127,7 +132,12 @@ struct CMarkNode {
     var title: String? { cmark_node_get_title(pointer).map { String(cString: $0) } }
     var headingLevel: Int { Int(cmark_node_get_heading_level(pointer)) }
     var fenceInfo: String? { cmark_node_get_fence_info(pointer).map { String(cString: $0) } }
-    var isFenced: Bool { cmark_node_get_fenced(pointer, nil, nil, nil) != 0 }
+    var isFenced: Bool {
+        // It writes the fence's length, offset and character through these.
+        var length: Int32 = 0, offset: Int32 = 0
+        var character: CChar = 0
+        return cmark_node_get_fenced(pointer, &length, &offset, &character) != 0
+    }
     var isOrderedList: Bool { cmark_node_get_list_type(pointer) == CMARK_ORDERED_LIST }
     var listStart: Int { Int(cmark_node_get_list_start(pointer)) }
     var isTight: Bool { cmark_node_get_list_tight(pointer) != 0 }

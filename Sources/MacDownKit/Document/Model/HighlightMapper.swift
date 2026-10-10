@@ -2,26 +2,26 @@
 //  HighlightMapper.swift
 //  MacDownKit
 //
-//  Editor highlighting from the swift-markdown tree (FR-21, FR-22): the
-//  spans PEG Markdown Highlight produced, keyed by the same element types,
-//  so the bundled themes apply unchanged. Spans follow PEG's extents:
-//  headers cover their line(s) and line break, emphasis, code, links and
-//  images include their markup, fenced code is CODE and indented code
-//  VERBATIM, and a block quote colors only its `>` markers.
+//  Editor highlighting from the cmark-gfm tree (FR-21, FR-22): the spans
+//  PEG Markdown Highlight produced, keyed by the same element types, so the
+//  bundled themes apply unchanged. Spans follow PEG's extents: headers cover
+//  their line(s) and line break, emphasis, code, links and images include
+//  their markup, fenced code is CODE and indented code VERBATIM, and a block
+//  quote colors only its `>` markers. Footnotes are NOTE (FR-27).
 //
 //  What the tree doesn't keep comes from the source: reference definitions
-//  (cmark consumes them), entities (cmark decodes them) and footnotes
-//  (swift-markdown leaves them as text; finding F1).
+//  (cmark consumes them) and entities (cmark decodes them). The same walk
+//  collects the model's blocks.
 //
 
 import Foundation
-import Markdown
 
-struct HighlightMapper: MarkupWalker {
+struct HighlightMapper {
     private let text: String
     private let source: [UInt16]
     private let lineIndex: LineIndex
     private(set) var spans: [[HighlightSpan]]
+    private(set) var blocks: [MarkdownDocumentModel.Block] = []
 
     // Collected while walking, for the source scans.
     /// Lines covered by a leaf block.
@@ -46,18 +46,19 @@ struct HighlightMapper: MarkupWalker {
         for range in math { add("MATH", range) }
     }
 
-    /// The spans of a parsed document, sorted by position within each type.
-    static func spans(of document: Document, source: String, lineIndex: LineIndex,
-                      math: [NSRange] = [], options: MarkdownDocumentModel.Options) -> HighlightElements {
+    /// The spans (sorted by position within each type) and blocks of a tree.
+    static func map(_ tree: CMarkTree, source: String, lineIndex: LineIndex,
+                    math: [NSRange] = [], options: MarkdownDocumentModel.Options)
+        -> (highlights: HighlightElements, blocks: [MarkdownDocumentModel.Block]) {
         var mapper = HighlightMapper(source: source, lineIndex: lineIndex, math: math,
                                      options: options)
-        mapper.visit(document)
+        tree.withRoot { mapper.walk($0) }
         mapper.scanReferences()
         mapper.scanEntities()
-        mapper.scanFootnotes()
         if options.highlight { mapper.scan(ExtendedSyntax.highlight, as: "HIGHLIGHT") }
         if options.superscript { mapper.scan(ExtendedSyntax.superscript, as: "SUPERSCRIPT") }
-        return HighlightElements(spans: mapper.spans.map { $0.sorted { $0.pos < $1.pos } })
+        return (HighlightElements(spans: mapper.spans.map { $0.sorted { $0.pos < $1.pos } }),
+                mapper.blocks)
     }
 
     // MARK: - Helpers
@@ -69,10 +70,10 @@ struct HighlightMapper: MarkupWalker {
                                          address: address))
     }
 
-    private func nsRange(_ markup: Markup) -> NSRange? {
-        guard let range = markup.range else { return nil }
-        return lineIndex.range(from: (range.lowerBound.line, range.lowerBound.column),
-                               to: (range.upperBound.line, range.upperBound.column))
+    private func nsRange(_ node: CMarkNode) -> NSRange? {
+        guard let range = node.range else { return nil }
+        return lineIndex.range(from: (range.start.line, range.start.column),
+                               to: (range.end.line, range.end.column))
     }
 
     /// The UTF-16 offset where a 1-based line starts (the text's end past
@@ -93,115 +94,213 @@ struct HighlightMapper: MarkupWalker {
         return end
     }
 
-    private mutating func leaf(_ markup: Markup) {
-        if let range = markup.range {
-            leafLines.insert(integersIn: range.lowerBound.line...max(range.lowerBound.line,
-                                                                     range.upperBound.line))
+    private mutating func leaf(_ node: CMarkNode) {
+        if let range = node.range {
+            leafLines.insert(integersIn: range.start.line...max(range.start.line, range.end.line))
         }
+    }
+
+    private mutating func block(_ kind: MarkdownDocumentModel.Block.Kind, _ node: CMarkNode) {
+        guard let range = node.range, let nsRange = nsRange(node) else { return }
+        blocks.append(.init(kind: kind, lines: range.start.line...max(range.start.line, range.end.line),
+                            range: nsRange))
     }
 
     private func character(at offset: Int) -> Character? {
         offset < source.count ? Character(Unicode.Scalar(source[offset]) ?? " ") : nil
     }
 
-    // MARK: - Blocks
-
-    mutating func visitParagraph(_ paragraph: Paragraph) {
-        leaf(paragraph)
-        if let range = paragraph.range {
-            paragraphs.append((range.lowerBound.line, range.upperBound.line, range.lowerBound.column))
-        }
-        if let range = nsRange(paragraph) { inlineContainers.append(range) }
-        descendInto(paragraph)
+    private func plainText(_ node: CMarkNode) -> String {
+        (node.kind == .text || node.kind == .code ? node.literal ?? "" : "")
+            + node.children.map(plainText).joined()
     }
 
-    mutating func visitTable(_ table: Table) {
-        leaf(table)
-        if let range = nsRange(table) { inlineContainers.append(range) }
-        descendInto(table)
+    // MARK: - Walk
+
+    private mutating func walkChildren(_ node: CMarkNode) {
+        for child in node.children { walk(child) }
     }
 
-    mutating func visitListItem(_ listItem: ListItem) {
-        // The marker: a bullet, or a number and its delimiter.
-        if let range = nsRange(listItem) {
-            var offset = range.location
-            while character(at: offset) == " " { offset += 1 }
-            if let c = character(at: offset), "-+*".contains(c) {
-                add("LIST_BULLET", NSRange(location: offset, length: 1))
-            } else {
-                var end = offset
-                while let c = character(at: end), c.isASCII, c.isNumber { end += 1 }
-                if end > offset, let c = character(at: end), c == "." || c == ")" {
-                    add("LIST_ENUMERATOR", NSRange(location: offset, length: end + 1 - offset))
-                }
+    private mutating func walk(_ node: CMarkNode) {
+        switch node.kind {
+        case .paragraph:
+            block(.paragraph, node)
+            leaf(node)
+            if let range = node.range {
+                paragraphs.append((range.start.line, range.end.line, range.start.column))
             }
-        }
-        descendInto(listItem)
-    }
+            if let range = nsRange(node) { inlineContainers.append(range) }
+            walkChildren(node)
 
-    mutating func visitHeading(_ heading: Heading) {
-        leaf(heading)
-        if let range = nsRange(heading) { inlineContainers.append(range) }
-        // The header's line(s) and the line break after them.
-        if let range = nsRange(heading) {
-            add("H\(heading.level)", NSRange(location: range.location,
-                                              length: throughLineBreak(NSMaxRange(range)) - range.location))
-        }
-        descendInto(heading)
-    }
+        case .table:
+            block(.table, node)
+            leaf(node)
+            if let range = nsRange(node) { inlineContainers.append(range) }
+            walkChildren(node)
 
-    mutating func visitCodeBlock(_ codeBlock: CodeBlock) {
-        leaf(codeBlock)
-        guard let range = nsRange(codeBlock) else { return }
-        var start = range.location
-        while let c = character(at: start), c == " " { start += 1 }
-        if character(at: start) == "`" || character(at: start) == "~" {
-            // Fenced: without the line break after the closing fence.
+        case .list:
+            block(.list, node)
+            walkChildren(node)
+
+        case .item, .taskItem:
+            block(.listItem, node)
+            listMarker(node)
+            walkChildren(node)
+
+        case .heading:
+            block(.heading(level: node.headingLevel), node)
+            leaf(node)
+            if let range = nsRange(node) {
+                inlineContainers.append(range)
+                // The header's line(s) and the line break after them.
+                add("H\(node.headingLevel)", NSRange(
+                    location: range.location,
+                    length: throughLineBreak(NSMaxRange(range)) - range.location))
+            }
+            walkChildren(node)
+
+        case .codeBlock:
+            block(.codeBlock, node)
+            leaf(node)
+            guard let range = nsRange(node), let lines = node.range else { return }
+            if node.isFenced {
+                // Without the line break after the closing fence.
+                var end = NSMaxRange(range)
+                while end > range.location, let c = character(at: end - 1), c == "\n" || c == "\r" {
+                    end -= 1
+                }
+                add("CODE", NSRange(location: range.location, length: end - range.location))
+            } else {
+                // Indented: whole lines, indentation and line break included.
+                let start = lineStart(lines.start.line)
+                add("VERBATIM", NSRange(location: start,
+                                        length: throughLineBreak(NSMaxRange(range)) - start))
+            }
+
+        case .blockQuote:
+            block(.blockQuote, node)
+            quoteMarkers(node)
+            walkChildren(node)
+
+        case .htmlBlock:
+            block(.htmlBlock, node)
+            leaf(node)
+            guard let range = nsRange(node) else { return }
             var end = NSMaxRange(range)
             while end > range.location, let c = character(at: end - 1), c == "\n" || c == "\r" {
                 end -= 1
             }
-            add("CODE", NSRange(location: range.location, length: end - range.location))
-        } else if let lines = codeBlock.range {
-            // Indented: whole lines, indentation and line break included.
-            let start = lineStart(lines.lowerBound.line)
-            add("VERBATIM", NSRange(location: start,
-                                    length: throughLineBreak(NSMaxRange(range)) - start))
+            let html = NSRange(location: range.location, length: end - range.location)
+            add("HTMLBLOCK", html)
+            addComment(in: html)
+
+        case .thematicBreak:
+            block(.thematicBreak, node)
+            leaf(node)
+            add("HRULE", nsRange(node))
+
+        case .footnoteDefinition:
+            // The `[^label]:` that opens it, before cmark's range (which
+            // starts at the content); the content is ordinary Markdown.
+            if let lines = node.range, let range = nsRange(node) {
+                let lineStart = lineStart(lines.start.line)
+                let prefix = (text as NSString).range(
+                    of: "[^", options: .backwards,
+                    range: NSRange(location: lineStart, length: range.location - lineStart))
+                if prefix.location != NSNotFound {
+                    let close = (text as NSString).range(
+                        of: "]:", range: NSRange(location: prefix.location,
+                                                 length: range.location - prefix.location))
+                    if close.location != NSNotFound {
+                        add("NOTE", NSRange(location: prefix.location,
+                                            length: NSMaxRange(close) - prefix.location))
+                    }
+                }
+            }
+            walkChildren(node)
+
+        case .footnoteReference:
+            if let range = nsRange(node) {
+                add("NOTE", range)
+                opaque.append(range)
+            }
+
+        case .emphasis:
+            add("EMPH", nsRange(node))
+            walkChildren(node)
+
+        case .strong:
+            add("STRONG", nsRange(node))
+            walkChildren(node)
+
+        case .code:
+            add("CODE", nsRange(node))
+            if let range = nsRange(node) { opaque.append(range) }
+
+        case .htmlInline:
+            guard let range = nsRange(node) else { return }
+            add("HTML", range)
+            addComment(in: range)
+            opaque.append(range)
+
+        case .link:
+            link(node)
+
+        case .image:
+            add("IMAGE", nsRange(node))
+
+        default:
+            walkChildren(node)
         }
     }
 
-    mutating func visitBlockQuote(_ blockQuote: BlockQuote) {
-        // Only the `>` markers (and the space after each), line by line;
-        // lazy continuation lines have none.
-        if let range = blockQuote.range {
-            let column = range.lowerBound.column
-            for line in range.lowerBound.line...range.upperBound.line {
-                guard var offset = lineIndex.utf16Offset(line: line, column: column) else { continue }
-                var spaces = 0
-                while spaces < 3, character(at: offset) == " " { offset += 1; spaces += 1 }
-                guard character(at: offset) == ">" else { continue }
-                let length = character(at: offset + 1) == " " ? 2 : 1
-                add("BLOCKQUOTE", NSRange(location: offset, length: length))
+    /// The marker: a bullet, or a number and its delimiter.
+    private mutating func listMarker(_ node: CMarkNode) {
+        guard let range = nsRange(node) else { return }
+        var offset = range.location
+        while character(at: offset) == " " { offset += 1 }
+        if let c = character(at: offset), "-+*".contains(c) {
+            add("LIST_BULLET", NSRange(location: offset, length: 1))
+        } else {
+            var end = offset
+            while let c = character(at: end), c.isASCII, c.isNumber { end += 1 }
+            if end > offset, let c = character(at: end), c == "." || c == ")" {
+                add("LIST_ENUMERATOR", NSRange(location: offset, length: end + 1 - offset))
             }
         }
-        descendInto(blockQuote)
     }
 
-    mutating func visitHTMLBlock(_ html: HTMLBlock) {
-        leaf(html)
-        guard let range = nsRange(html) else { return }
-        var end = NSMaxRange(range)
-        while end > range.location, let c = character(at: end - 1), c == "\n" || c == "\r" {
-            end -= 1
+    /// Only the `>` markers (and the space after each), line by line; lazy
+    /// continuation lines have none.
+    private mutating func quoteMarkers(_ node: CMarkNode) {
+        guard let range = node.range else { return }
+        let column = range.start.column
+        for line in range.start.line...range.end.line {
+            guard var offset = lineIndex.utf16Offset(line: line, column: column) else { continue }
+            var spaces = 0
+            while spaces < 3, character(at: offset) == " " { offset += 1; spaces += 1 }
+            guard character(at: offset) == ">" else { continue }
+            let length = character(at: offset + 1) == " " ? 2 : 1
+            add("BLOCKQUOTE", NSRange(location: offset, length: length))
         }
-        let block = NSRange(location: range.location, length: end - range.location)
-        add("HTMLBLOCK", block)
-        addComment(in: block)
     }
 
-    mutating func visitThematicBreak(_ thematicBreak: ThematicBreak) {
-        leaf(thematicBreak)
-        add("HRULE", nsRange(thematicBreak))
+    private mutating func link(_ node: CMarkNode) {
+        guard let range = nsRange(node) else { walkChildren(node); return }
+        let url = node.url ?? ""
+        let label = plainText(node)
+        // An autolink: <https://…> or <a@b.c>, or a bare URL or email with
+        // the Autolink setting on. Anything else starts with "[".
+        if character(at: range.location) != "[" {
+            // Emails without "mailto:", as PEG gave them; the editor adds it.
+            let isEmail = url.hasPrefix("mailto:") && !label.hasPrefix("mailto:")
+            add(isEmail ? "AUTO_LINK_EMAIL" : "AUTO_LINK_URL", range,
+                address: isEmail ? label : url)
+            opaque.append(range)
+        } else {
+            add("LINK", range, address: url)
+            walkChildren(node)
+        }
     }
 
     /// `<!-- … -->` at the start of a block or inline HTML.
@@ -211,50 +310,6 @@ struct HighlightMapper: MarkupWalker {
         let end = (html as NSString).range(of: "-->", range: NSRange(location: 4, length: (html as NSString).length - 4))
         let length = end.location == NSNotFound ? range.length : NSMaxRange(end)
         add("COMMENT", NSRange(location: range.location, length: length))
-    }
-
-    // MARK: - Inlines
-
-    mutating func visitEmphasis(_ emphasis: Emphasis) {
-        add("EMPH", nsRange(emphasis))
-        descendInto(emphasis)
-    }
-
-    mutating func visitStrong(_ strong: Strong) {
-        add("STRONG", nsRange(strong))
-        descendInto(strong)
-    }
-
-    mutating func visitInlineCode(_ inlineCode: InlineCode) {
-        add("CODE", nsRange(inlineCode))
-        if let range = nsRange(inlineCode) { opaque.append(range) }
-    }
-
-    mutating func visitInlineHTML(_ html: InlineHTML) {
-        guard let range = nsRange(html) else { return }
-        add("HTML", range)
-        addComment(in: range)
-        opaque.append(range)
-    }
-
-    mutating func visitLink(_ link: Link) {
-        let range = nsRange(link)
-        if let range, character(at: range.location) == "<" {
-            // A CommonMark autolink, <https://…> or <a@b.c>.
-            // Emails without "mailto:", as PEG gave them; the editor adds it.
-            let isEmail = link.destination?.hasPrefix("mailto:") == true
-                && !link.plainText.hasPrefix("mailto:")
-            add(isEmail ? "AUTO_LINK_EMAIL" : "AUTO_LINK_URL", range,
-                address: isEmail ? link.plainText : link.destination)
-            opaque.append(range)
-        } else {
-            add("LINK", range, address: link.destination)
-            descendInto(link)
-        }
-    }
-
-    mutating func visitImage(_ image: Image) {
-        add("IMAGE", nsRange(image))
     }
 
     // MARK: - Source scans
@@ -312,25 +367,6 @@ struct HighlightMapper: MarkupWalker {
             for match in Self.entity.matches(in: text, range: container)
             where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
                 add("HTML_ENTITY", match.range)
-            }
-        }
-    }
-
-    private static let footnote = try! NSRegularExpression(
-        pattern: #"\[\^[^\]\s]+\](?::)?"#)
-
-    /// Footnote references, `[^label]`, and the `[^label]:` that starts a
-    /// definition line (NOTE, FR-27).
-    private mutating func scanFootnotes() {
-        for container in inlineContainers {
-            for match in Self.footnote.matches(in: text, range: container)
-            where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
-                var range = match.range
-                let isDefinition = range.location == 0 || source[range.location - 1] == 0x0A
-                if source[NSMaxRange(range) - 1] == 0x3A, !isDefinition {    // ":" after a reference
-                    range.length -= 1
-                }
-                add("NOTE", range)
             }
         }
     }

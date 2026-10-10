@@ -3,15 +3,14 @@
 //  MacDownKit
 //
 //  One parse of a document with swift-markdown, shared by the preview, the
-//  editor highlighting and scroll sync (FR-1 to FR-3). `Markdown.Document`
-//  isn't Sendable (finding F6), so the model is built where the parse runs
-//  (a detached task) and keeps only what the visitors produce from the
-//  tree. Only this folder imports Markdown (TR-2).
+//  editor highlighting and scroll sync (FR-1 to FR-3). The cmark-gfm tree
+//  (Decision 10) isn't Sendable, so the model is built where the parse runs
+//  (a detached task) and keeps only what's produced from the tree. Only this
+//  folder uses the cmark-gfm API (TR-2).
 //
 
 import CHoedown
 import Foundation
-import Markdown
 
 public struct MarkdownDocumentModel: Sendable {
     public struct Options: Sendable, Equatable {
@@ -20,10 +19,12 @@ public struct MarkdownDocumentModel: Sendable {
         public var smartPunctuation = false
         public var highlight = false
         public var superscript = false
+        public var autolink = false
 
         public init(math: Bool = false, inlineDollar: Bool = false,
                     smartPunctuation: Bool = false, highlight: Bool = false,
-                    superscript: Bool = false) {
+                    superscript: Bool = false, autolink: Bool = false) {
+            self.autolink = autolink
             self.math = math
             self.inlineDollar = inlineDollar
             self.smartPunctuation = smartPunctuation
@@ -37,6 +38,7 @@ public struct MarkdownDocumentModel: Sendable {
             smartPunctuation = settings.smartyPants
             highlight = settings.extensionFlags & HOEDOWN_EXT_HIGHLIGHT.rawValue != 0
             superscript = settings.extensionFlags & HOEDOWN_EXT_SUPERSCRIPT.rawValue != 0
+            autolink = settings.extensionFlags & HOEDOWN_EXT_AUTOLINK.rawValue != 0
         }
     }
 
@@ -66,8 +68,9 @@ public struct MarkdownDocumentModel: Sendable {
     let highlights: HighlightElements
 
     public init(_ source: String, options: Options) {
-        let protected = ProtectedSource(source, math: options.math,
-                                        inlineDollar: options.inlineDollar)
+        let (protected, tree) = ProtectedSource.parsed(
+            source, math: options.math, inlineDollar: options.inlineDollar,
+            options: .init(smartPunctuation: options.smartPunctuation, autolink: options.autolink))
         let lineIndex = LineIndex(source)
         self.source = source
         self.lineIndex = lineIndex
@@ -79,39 +82,7 @@ public struct MarkdownDocumentModel: Sendable {
             return NSRange(location: lower, length: upper - lower)
         }
 
-        let document = Document(parsing: protected.protected,
-                                options: options.smartPunctuation ? [] : .disableSmartOpts)
-        var blocks: [Block] = []
-        func walk(_ markup: Markup) {
-            if let kind = Self.kind(of: markup), let range = markup.range,
-               let nsRange = lineIndex.range(
-                   from: (range.lowerBound.line, range.lowerBound.column),
-                   to: (range.upperBound.line, range.upperBound.column)) {
-                blocks.append(Block(kind: kind,
-                                    lines: range.lowerBound.line...max(range.lowerBound.line,
-                                                                       range.upperBound.line),
-                                    range: nsRange))
-            }
-            markup.children.forEach(walk)
-        }
-        walk(document)
-        self.blocks = blocks
-        highlights = HighlightMapper.spans(of: document, source: source, lineIndex: lineIndex,
-                                           math: math, options: options)
-    }
-
-    private static func kind(of markup: Markup) -> Block.Kind? {
-        switch markup {
-        case let heading as Heading: .heading(level: heading.level)
-        case is Paragraph: .paragraph
-        case is BlockQuote: .blockQuote
-        case is UnorderedList, is OrderedList: .list
-        case is ListItem: .listItem
-        case is CodeBlock: .codeBlock
-        case is HTMLBlock: .htmlBlock
-        case is ThematicBreak: .thematicBreak
-        case is Table: .table
-        default: nil
-        }
+        (highlights, blocks) = HighlightMapper.map(tree, source: source, lineIndex: lineIndex,
+                                                    math: math, options: options)
     }
 }

@@ -114,10 +114,12 @@ import Testing
         #expect(s["HTMLBLOCK"] == ["<!-- block -->"])
     }
 
-    /// Footnotes (FR-27): PEG defined NOTE but never produced it.
+    /// Footnotes (FR-27): PEG defined NOTE but never produced it. As in
+    /// GFM, a reference without a definition is plain text.
     @Test func footnotes() {
-        let s = spans("A note[^1] and[^long-label].\n\n[^1]: The note.\n\n`[^code]` and [link](x) and [^ spaced].\n")
-        #expect(s["NOTE"] == ["[^1]", "[^long-label]", "[^1]:"])
+        let s = spans("A note[^1] and[^long-label] and[^undefined].\n\n[^1]: The note.\n\n[^long-label]: **Formatted**.\n\n`[^code]` and [^ spaced].\n")
+        #expect(s["NOTE"] == ["[^1]", "[^long-label]", "[^1]:", "[^long-label]:"])
+        #expect(s["STRONG"] == ["**Formatted**"])    // definitions are Markdown
     }
 
     /// New types (FR-23, FR-19): each only with its setting on.

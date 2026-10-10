@@ -32,7 +32,30 @@ public struct ProtectedSource: Sendable {
     public let frontMatter: FrontMatter?
 
     public init(_ source: String, math: Bool, inlineDollar: Bool) {
+        self = Self.protect(source, math: math, inlineDollar: inlineDollar, options: nil).0
+    }
+
+    private init(source: String, protected: String, math: [Range<Int>], frontMatter: FrontMatter?) {
         self.source = source
+        self.protected = protected
+        self.math = math
+        self.frontMatter = frontMatter
+    }
+
+    /// Protects `source` and parses the result with `options`, reusing the
+    /// parse that finds code when no math was found (the text is then
+    /// unchanged), so most edits parse once.
+    static func parsed(_ source: String, math: Bool, inlineDollar: Bool,
+                       options: CMarkTree.Options) -> (ProtectedSource, CMarkTree) {
+        let (result, tree) = protect(source, math: math, inlineDollar: inlineDollar,
+                                     options: options)
+        return (result, tree ?? CMarkTree(result.protected, options: options))
+    }
+
+    /// The protection itself. With `options`, also returns the tree of the
+    /// protected text when its code-finding parse already is one.
+    private static func protect(_ source: String, math: Bool, inlineDollar: Bool,
+                                options: CMarkTree.Options?) -> (ProtectedSource, CMarkTree?) {
         var bytes = Array(source.utf8)
 
         var frontMatter: FrontMatter?
@@ -40,18 +63,22 @@ public struct ProtectedSource: Sendable {
         if let object, utf16Length > 0 {
             let end = String(source.utf16.prefix(utf16Length))!.utf8.count
             frontMatter = FrontMatter(range: 0..<end, object: object)
-            Self.fill(&bytes, 0..<end, with: UInt8(ascii: " "))
+            fill(&bytes, 0..<end, with: UInt8(ascii: " "))
         }
-        self.frontMatter = frontMatter
 
         var spans: [Range<Int>] = []
+        var tree: CMarkTree?
         if math {
-            let skipped = Self.codeAndHTML(in: String(decoding: bytes, as: UTF8.self))
-            spans = Self.findMath(in: bytes, skipping: skipped, inlineDollar: inlineDollar)
-            for span in spans { Self.fill(&bytes, span, with: UInt8(ascii: "x")) }
+            let text = String(decoding: bytes, as: UTF8.self)
+            let codeTree = CMarkTree(text, options: options ?? .init())
+            spans = findMath(in: bytes, skipping: codeAndHTML(in: codeTree, text: text),
+                             inlineDollar: inlineDollar)
+            for span in spans { fill(&bytes, span, with: UInt8(ascii: "x")) }
+            if spans.isEmpty, options != nil { tree = codeTree }
         }
-        self.math = spans
-        protected = String(decoding: bytes, as: UTF8.self)
+        let result = ProtectedSource(source: source, protected: String(decoding: bytes, as: UTF8.self),
+                                     math: spans, frontMatter: frontMatter)
+        return (result, tree)
     }
 
     private static func fill(_ bytes: inout [UInt8], _ range: Range<Int>, with filler: UInt8) {
@@ -62,9 +89,8 @@ public struct ProtectedSource: Sendable {
 
     /// UTF-8 ranges of code spans, code blocks and raw HTML, where math
     /// delimiters mean nothing, as the Markdown parser sees them.
-    private static func codeAndHTML(in text: String) -> [Range<Int>] {
+    private static func codeAndHTML(in tree: CMarkTree, text: String) -> [Range<Int>] {
         let index = LineIndex(text)
-        let tree = CMarkTree(text)
         var ranges: [Range<Int>] = []
         func walk(_ node: CMarkNode) {
             switch node.kind {
@@ -78,7 +104,7 @@ public struct ProtectedSource: Sendable {
                 node.children.forEach(walk)
             }
         }
-        walk(tree.root)
+        tree.withRoot(walk)
         return ranges.sorted { $0.lowerBound < $1.lowerBound }
     }
 

@@ -14,7 +14,6 @@
 
 import CPegMarkdown
 import Foundation
-import Markdown
 import Testing
 import cmark_gfm
 import cmark_gfm_extensions
@@ -62,7 +61,7 @@ import cmark_gfm_extensions
     @Test func tenThousandLines() {
         let text = Corpus.generated(lines: 10_000)
         let index = LineIndex(text)
-        let document = Document(parsing: text, options: .disableSmartOpts)
+        let tree = CMarkTree(text)
         let freshInstall = CorpusTests.settings
 
         let peg = median { _ = HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue)) }
@@ -71,25 +70,21 @@ import cmark_gfm_extensions
             _ = MarkdownDocumentModel(text, options: .init(math: true, inlineDollar: true,
                                                            highlight: true, superscript: true))
         }
-        let parse = median { _ = Document(parsing: text, options: .disableSmartOpts) }
-        var nodes = 0
-        let walk = median { func w(_ m: Markup) { nodes += 1; m.children.forEach(w) }; w(document) }
-        let mapper = median { _ = HighlightMapper.spans(of: document, source: text,
-                                                        lineIndex: index, options: .init()) }
+        let parse = median { _ = CMarkTree(text) }
+        let mapper = median { _ = HighlightMapper.map(tree, source: text, lineIndex: index,
+                                                      options: .init()) }
         let protectMath = median { _ = ProtectedSource(text, math: true, inlineDollar: true) }
         let direct = median { _ = cmarkDirect(text) }
         let hoedown = median { _ = MarkdownParser.parse(text, settings: freshInstall) }
 
         print(String(format: """
             BENCHMARK 10k lines (median ms): PEG %.1f | model %.1f, with math and opt-ins %.1f \
-            | stages: swift-markdown parse %.1f, tree walk %.1f, mapper %.1f, protection with math %.1f \
-            | cmark-gfm direct parse+walk %.1f | hoedown HTML %.1f
-            """, peg, model, modelAll, parse, walk, mapper, protectMath, direct, hoedown))
+            | stages: cmark parse %.1f, mapper %.1f, protection with math %.1f \
+            | bare cmark parse+walk %.1f | hoedown HTML %.1f
+            """, peg, model, modelAll, parse, mapper, protectMath, direct, hoedown))
 
-        // NFR-1 (no worse than PEG) can't be met on swift-markdown's tree:
-        // its parse alone takes longer than PEG. PRD Open Question 2.
-        withKnownIssue("NFR-1 pending PRD Open Question 2") {
-            #expect(model <= peg * 1.1, "model \(model) ms vs PEG \(peg) ms")
-        }
+        // NFR-1: highlighting is no slower than PEG.
+        #expect(model <= peg * 1.1, "model \(model) ms vs PEG \(peg) ms")
+        #expect(modelAll <= peg * 1.1, "with math and opt-ins \(modelAll) ms vs PEG \(peg) ms")
     }
 }
