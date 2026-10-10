@@ -111,6 +111,25 @@ import Testing
                 == "<ul>\n<li>a<br>\nb</li>\n</ul>\n")
     }
 
+    /// Math (FR-14): put back in MathJax's delimiters, content escaped, as
+    /// hoedown did, untouched by Markdown.
+    @Test(arguments: [false, true])
+    func math(inlineDollar: Bool) {
+        var settings = CorpusTests.settings
+        settings.extensionFlags |= HOEDOWN_EXT_MATH.rawValue
+        if inlineDollar { settings.extensionFlags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
+        for text in [
+            "$$\n\\int_0^1 x^2 \\, dx < 1\n$$\n",
+            "Inline \\\\( a_1 * b_2 \\\\) and display \\\\[ c_{*} \\\\].\n",
+            "In text $$x_1 * y_2$$ here.\n",
+            "Dollars $A^T_S = B$ and *emphasis*.\n",
+            "# Header $$h_1$$\n\n| $t_1$ |\n|---|\n",
+        ] {
+            let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
+            #expect(cmark == MarkdownParser.parse(text, settings: settings).body, "\(text.debugDescription)")
+        }
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

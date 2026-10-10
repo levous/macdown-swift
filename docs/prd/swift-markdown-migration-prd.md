@@ -170,7 +170,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 11. FR-11: Task list items always render with MacDown's current task-list markup and classes; there is no setting.
 12. FR-12: When `[TOC]` rendering is on, a paragraph whose only content is `[TOC]` is replaced with a table of contents built from the document's headings, using today's TOC classes and anchor links.
 13. FR-13: When hard wrap is on, soft line breaks render as `<br>`.
-14. FR-14: When MathJax is on, protected math spans are emitted as the original source text, unescaped, so MathJax can typeset them.
+14. FR-14: When MathJax is on, protected math spans are emitted as hoedown did: the content between the delimiters, HTML-escaped and untouched by Markdown, in MathJax 2's delimiters (`\\(…\\)` inline, `\\[…\\]` display; `$$` is display when inline dollars are on or when it stands alone in its paragraph).
 15. FR-15: A valid YAML front matter block at the very top always renders as today's HTML table (Yams) before the body; there is no setting. A leading `---` that isn't valid YAML renders as ordinary Markdown.
 16. FR-16: Footnote references and definitions always render as footnotes.
 17. FR-17: With the Smart punctuation setting on (off by default; today's Smartypants key), prose renders curly quotes, en/em dashes and ellipses, never inside code; natively if swift-markdown supports it, otherwise by our own pass over text nodes. Off, punctuation is left as typed.

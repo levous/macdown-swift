@@ -20,6 +20,17 @@ struct HTMLRenderer {
         var rendersTOC = false
         /// Every line break in a paragraph is a <br>.
         var hardWrap = false
+        /// Protected math, in source order, to put back in place of its
+        /// filler (FR-14).
+        var math: [MathSpan] = []
+    }
+
+    /// A math span: where it starts, how many lines it covers, and the HTML
+    /// for MathJax.
+    struct MathSpan: Equatable {
+        var line: Int
+        var segments: Int
+        var html: String
     }
 
     private let options: Options
@@ -36,6 +47,10 @@ struct HTMLRenderer {
     private var headers: [(level: Int, html: String)] = []
     /// In the table of contents, links show only their text.
     private var linksAsText = false
+    /// Math put back so far, and the span whose later lines are still to
+    /// come (with how many).
+    private var emittedMath = Set<Int>()
+    private var openMath: (index: Int, remaining: Int)?
 
     init(options: Options) {
         self.options = options
@@ -104,6 +119,7 @@ struct HTMLRenderer {
             if options.rendersTOC {
                 var toc = HTMLRenderer(options: options)
                 toc.linksAsText = true
+                toc.emittedMath = emittedMath
                 toc.inlines(in: node)
                 headers.append((level, toc.output))
             }
@@ -272,8 +288,10 @@ struct HTMLRenderer {
             var content = HTMLRenderer(options: options)
             content.headerCount = headerCount
             content.footnoteNumbers = footnoteNumbers
+            content.emittedMath = emittedMath
             content.blocks(in: node)
             footnoteNumbers = content.footnoteNumbers
+            emittedMath = content.emittedMath
             var html = content.output
             let backLink = "&nbsp;<a href=\"#fnref\(number)\" rev=\"footnote\">&#8617;</a>"
             if let end = html.range(of: "</p>") {
@@ -297,8 +315,9 @@ struct HTMLRenderer {
     private mutating func inline(_ node: CMarkNode) {
         switch node.kind {
         case .text:
-            output += HTMLEscaping.html(node.literal ?? "")
+            text(node)
         case .softBreak:
+            if openMath != nil { return }    // inside multi-line math
             output += options.hardWrap ? "<br>\n" : "\n"
         case .lineBreak:
             output += "<br>\n"
@@ -390,5 +409,47 @@ struct HTMLRenderer {
         output = Self.tocParagraph.stringByReplacingMatches(
             in: output, range: NSRange(output.startIndex..., in: output),
             withTemplate: NSRegularExpression.escapedTemplate(for: toc))
+    }
+
+    // MARK: - Math
+
+    /// Text, with the math filler replaced by the math it stands for. A span
+    /// covering several lines leaves filler on each; the first emits the
+    /// math, the rest (and the line breaks between) are skipped.
+    private mutating func text(_ node: CMarkNode) {
+        let literal = node.literal ?? ""
+        guard !options.math.isEmpty, literal.unicodeScalars.contains(where: ProtectedSource.isMathFiller)
+        else {
+            output += HTMLEscaping.html(literal)
+            return
+        }
+        var plain = String.UnicodeScalarView()
+        var scalars = literal.unicodeScalars[...]
+        while let scalar = scalars.first {
+            guard ProtectedSource.isMathFiller(scalar) else {
+                plain.append(scalar)
+                scalars = scalars.dropFirst()
+                continue
+            }
+            output += HTMLEscaping.html(String(plain))
+            plain.removeAll()
+            scalars = scalars.drop(while: ProtectedSource.isMathFiller)
+            if let open = openMath {
+                openMath = open.remaining > 1 ? (open.index, open.remaining - 1) : nil
+            } else if let index = nextMath(after: node.range?.start.line ?? 0) {
+                emittedMath.insert(index)
+                output += options.math[index].html
+                let segments = options.math[index].segments
+                openMath = segments > 1 ? (index, segments - 1) : nil
+            }
+        }
+        output += HTMLEscaping.html(String(plain))
+    }
+
+    /// The first math span not yet emitted that starts at or after `line`
+    /// (footnote definitions render after the body, out of source order).
+    private func nextMath(after line: Int) -> Int? {
+        options.math.indices.first { !emittedMath.contains($0) && options.math[$0].line >= line }
+            ?? options.math.indices.first { !emittedMath.contains($0) }
     }
 }

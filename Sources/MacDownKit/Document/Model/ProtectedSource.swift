@@ -4,9 +4,11 @@
 //
 //  Hides math and front matter from the Markdown parser without moving any
 //  source position (FR-4, FR-5). Each protected span is replaced by filler of
-//  the same UTF-8 length, keeping its line breaks: math by `x`, so it stays a
-//  run of text the renderer swaps the original back into; front matter by
-//  spaces, so the parser sees only blank lines.
+//  the same UTF-8 length, keeping its line breaks. Math becomes characters
+//  no document uses (Private Use Area, padded with C0/C1 controls), which the
+//  parser takes as ordinary text and the renderer finds again to put the
+//  math back; front matter becomes spaces, so the parser sees only blank
+//  lines.
 //
 //  Math delimiters are MacDown's: `$$…$$`, `\\[…\\]`, `\\(…\\)`, and `$…$`
 //  with inline dollars on. A single `\(` is an ordinary Markdown escape. An
@@ -73,12 +75,39 @@ public struct ProtectedSource: Sendable {
             let codeTree = CMarkTree(text, options: options ?? .init())
             spans = findMath(in: bytes, skipping: codeAndHTML(in: codeTree, text: text),
                              inlineDollar: inlineDollar)
-            for span in spans { fill(&bytes, span, with: UInt8(ascii: "x")) }
+            for span in spans { fillMath(&bytes, span) }
             if spans.isEmpty, options != nil { tree = codeTree }
         }
         let result = ProtectedSource(source: source, protected: String(decoding: bytes, as: UTF8.self),
                                      math: spans, frontMatter: frontMatter)
         return (result, tree)
+    }
+
+    /// Math filler, line by line: U+E000 for every three bytes, then U+0001
+    /// or U+0080 for one or two left over. `isMathFiller` recognizes it.
+    private static func fillMath(_ bytes: inout [UInt8], _ range: Range<Int>) {
+        var start = range.lowerBound
+        func fillSegment(_ end: Int) {
+            var i = start
+            while end - i >= 3 {
+                bytes[i] = 0xEE; bytes[i + 1] = 0x80; bytes[i + 2] = 0x80
+                i += 3
+            }
+            switch end - i {
+            case 2: bytes[i] = 0xC2; bytes[i + 1] = 0x80
+            case 1: bytes[i] = 0x01
+            default: break
+            }
+        }
+        for i in range where bytes[i] == UInt8(ascii: "\n") || bytes[i] == UInt8(ascii: "\r") {
+            fillSegment(i)
+            start = i + 1
+        }
+        fillSegment(range.upperBound)
+    }
+
+    static func isMathFiller(_ scalar: Unicode.Scalar) -> Bool {
+        scalar == "\u{E000}" || scalar == "\u{0001}" || scalar == "\u{0080}"
     }
 
     private static func fill(_ bytes: inout [UInt8], _ range: Range<Int>, with filler: UInt8) {

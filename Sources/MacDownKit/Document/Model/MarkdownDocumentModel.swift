@@ -101,13 +101,66 @@ public struct MarkdownDocumentModel: Sendable {
                                                     math: math, options: options)
         let rendered = HTMLRenderer.render(tree, options: .init(
             lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation,
-            rendersTOC: options.rendersTOC, hardWrap: options.hardWrap))
+            rendersTOC: options.rendersTOC, hardWrap: options.hardWrap,
+            math: Self.mathSpans(protected.math, in: source, lineIndex: lineIndex,
+                                 inlineDollar: options.inlineDollar)))
         languages = rendered.languages
         // Front matter is a table before the body (FR-15), as with hoedown.
         if let table = protected.frontMatter?.object.htmlTable {
             body = table + "\n" + rendered.html
         } else {
             body = rendered.html
+        }
+    }
+
+    /// Each math span as hoedown wrote it for MathJax: `\\[…\\]` for display
+    /// math, `\\(…\\)` inline, the content HTML-escaped. `$$` is display math
+    /// with inline dollars on, or when it's alone in its paragraph.
+    static func mathSpans(_ ranges: [Range<Int>], in source: String, lineIndex: LineIndex,
+                          inlineDollar: Bool) -> [HTMLRenderer.MathSpan] {
+        let bytes = Array(source.utf8)
+        func text(_ range: Range<Int>) -> String { String(decoding: bytes[range], as: UTF8.self) }
+        func isBlank(_ range: Range<Int>) -> Bool {
+            bytes[range].allSatisfy { $0 == 0x20 || $0 == 0x09 || $0 == 0x0D }
+        }
+        func lineBounds(_ offset: Int) -> Range<Int> {
+            var start = offset, end = offset
+            while start > 0, bytes[start - 1] != 0x0A { start -= 1 }
+            while end < bytes.count, bytes[end] != 0x0A { end += 1 }
+            return start..<end
+        }
+        /// Nothing else in its paragraph: blank around it on its lines, and
+        /// blank lines (or the document's ends) before and after.
+        func isAlone(_ range: Range<Int>) -> Bool {
+            let first = lineBounds(range.lowerBound), last = lineBounds(max(range.lowerBound, range.upperBound - 1))
+            guard isBlank(first.lowerBound..<range.lowerBound), isBlank(range.upperBound..<last.upperBound)
+            else { return false }
+            let before = first.lowerBound == 0 || isBlank(lineBounds(first.lowerBound - 1))
+            let after = last.upperBound >= bytes.count - 1 || isBlank(lineBounds(last.upperBound + 1))
+            return before && after
+        }
+        return ranges.map { range in
+            let span = text(range)
+            let display: Bool
+            let delimiter: Int
+            if span.hasPrefix("$$") {
+                display = inlineDollar || isAlone(range)
+                delimiter = 2
+            } else if span.hasPrefix("\\\\[") {
+                display = true
+                delimiter = 3
+            } else if span.hasPrefix("\\\\(") {
+                display = false
+                delimiter = 3
+            } else {
+                display = false
+                delimiter = 1
+            }
+            let content = text(range.lowerBound + delimiter..<range.upperBound - delimiter)
+            let html = (display ? "\\[" : "\\(") + HTMLEscaping.html(content) + (display ? "\\]" : "\\)")
+            let line = lineIndex.lineNumber(utf8: range.lowerBound)
+            let segments = bytes[range].filter { $0 == 0x0A }.count + 1
+            return .init(line: line, segments: segments, html: html)
         }
     }
 }

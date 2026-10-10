@@ -100,7 +100,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
 - [x] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
 - [x] Hard wrap: soft breaks as `<br>` when on (FR-13)
-- [ ] Math pass-through: emit original source text by range, unescaped, when MathJax on (FR-14)
+- [x] Math pass-through when MathJax on (FR-14): hoedown's MathJax delimiters, content escaped (the page's MathJax 2 needs `\(` and `\[`; FR-14 updated)
 - [ ] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)
 - [ ] Smart punctuation when on, never inside code (FR-17), via `CMARK_OPT_SMART`
 - [ ] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
