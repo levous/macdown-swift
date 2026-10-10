@@ -18,6 +18,8 @@ struct HTMLRenderer {
         var blockCodeInformation = false
         /// A paragraph of just `[TOC]` becomes a table of contents.
         var rendersTOC = false
+        /// Every line break in a paragraph is a <br>.
+        var hardWrap = false
     }
 
     private let options: Options
@@ -297,7 +299,7 @@ struct HTMLRenderer {
         case .text:
             output += HTMLEscaping.html(node.literal ?? "")
         case .softBreak:
-            output += "\n"
+            output += options.hardWrap ? "<br>\n" : "\n"
         case .lineBreak:
             output += "<br>\n"
         case .code:

@@ -97,6 +97,20 @@ import Testing
         #expect(!html("[TOC]\n\n# A\n").contains("class=\"toc\""))    // off by default
     }
 
+    /// Hard wrap (FR-13): with the setting on, a soft break is <br>.
+    @Test func hardWrap() {
+        var settings = CorpusTests.settings
+        settings.rendererFlags |= HOEDOWN_HTML_HARD_WRAP.rawValue
+        let text = "one\ntwo\nthree\n"
+        let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
+        #expect(cmark == MarkdownParser.parse(text, settings: settings).body)
+        #expect(!html(text).contains("<br>"))
+        // Also in tight list items, which hoedown skipped (its rule was in
+        // the paragraph renderer).
+        #expect(MarkdownDocumentModel("- a\n  b\n", options: .init(settings)).body
+                == "<ul>\n<li>a<br>\nb</li>\n</ul>\n")
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")
