@@ -186,6 +186,15 @@ import Testing
         #expect(!export.contains("data-source-line"))
     }
 
+    /// Code in a footnote still loads its Prism language, and a header in
+    /// one gets the next toc_N id.
+    @Test func footnoteContent() {
+        let model = MarkdownDocumentModel("# A\n\nNote[^n].\n\n# B\n\n[^n]: Code:\n\n    ### In a note\n\n    ```swift\n    let x = 1\n    ```\n", options: .init())
+        #expect(model.languages.contains("swift"))
+        let ids = model.body.matches(of: /id="toc_(\d+)"/).map { String($0.1) }
+        #expect(Set(ids).count == ids.count, "\(ids)")
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

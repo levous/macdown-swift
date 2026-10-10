@@ -65,11 +65,14 @@ import cmark_gfm_extensions
         let freshInstall = CorpusTests.settings
 
         let peg = median { _ = HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue)) }
-        let model = median { _ = MarkdownDocumentModel(text, options: .init()) }
-        let modelAll = median {
-            _ = MarkdownDocumentModel(text, options: .init(math: true, inlineDollar: true,
-                                                           highlight: true, superscript: true))
-        }
+        // As the app builds it: preview HTML with source lines too.
+        var defaults = MarkdownDocumentModel.Options()
+        defaults.sourceLines = true
+        var allOn = MarkdownDocumentModel.Options(math: true, inlineDollar: true,
+                                                  highlight: true, superscript: true)
+        allOn.sourceLines = true
+        let model = median { _ = MarkdownDocumentModel(text, options: defaults) }
+        let modelAll = median { _ = MarkdownDocumentModel(text, options: allOn) }
         let parse = median { _ = CMarkTree(text) }
         let mapper = median { _ = HighlightMapper.map(tree, source: text, lineIndex: index,
                                                       options: .init()) }

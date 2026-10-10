@@ -55,8 +55,8 @@ struct HighlightMapper {
         tree.withRoot { mapper.walk($0) }
         mapper.scanReferences()
         mapper.scanEntities()
-        if options.highlight { mapper.scan(ExtendedSyntax.highlight, as: "HIGHLIGHT") }
-        if options.superscript { mapper.scan(ExtendedSyntax.superscript, as: "SUPERSCRIPT") }
+        if options.highlight { mapper.scan(ExtendedSyntax.highlight, as: "HIGHLIGHT", needing: "==") }
+        if options.superscript { mapper.scan(ExtendedSyntax.superscript, as: "SUPERSCRIPT", needing: "^") }
         return (HighlightElements(spans: mapper.spans.map { $0.sorted { $0.pos < $1.pos } }),
                 mapper.blocks)
     }
@@ -376,8 +376,10 @@ struct HighlightMapper {
     }
 
     /// Opt-in syntax in plain text, outside code, HTML and math.
-    private mutating func scan(_ pattern: NSRegularExpression, as name: String) {
-        for container in inlineContainers {
+    private mutating func scan(_ pattern: NSRegularExpression, as name: String, needing marker: String) {
+        let ns = text as NSString
+        for container in inlineContainers
+        where ns.range(of: marker, options: .literal, range: container).location != NSNotFound {
             for match in pattern.matches(in: text, range: container)
             where !opaque.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) {
                 add(name, match.range)

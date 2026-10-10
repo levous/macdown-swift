@@ -48,7 +48,7 @@ struct HTMLRenderer {
     private var headerCount = 0
     /// Footnote numbers by definition, in order of first reference.
     private var footnoteNumbers: [Int: Int] = [:]
-    private let languages = LanguageCollector()
+    private var languages = LanguageCollector()
     /// Headers for the table of contents: level and content.
     private var headers: [(level: Int, html: String)] = []
     /// In the table of contents, links show only their text.
@@ -302,9 +302,11 @@ struct HTMLRenderer {
             content.headerCount = headerCount
             content.footnoteNumbers = footnoteNumbers
             content.emittedMath = emittedMath
+            content.languages = languages    // shared, so footnote code loads Prism
             content.blocks(in: node)
             footnoteNumbers = content.footnoteNumbers
             emittedMath = content.emittedMath
+            headerCount = content.headerCount
             var html = content.output
             let backLink = "&nbsp;<a href=\"#fnref\(number)\" rev=\"footnote\">&#8617;</a>"
             if let end = html.range(of: "</p>") {
@@ -464,7 +466,8 @@ struct HTMLRenderer {
     /// Escaped text, with `==mark==` and `^superscript` when they're on.
     /// They're found in one text run, so not around other formatting.
     private mutating func plainText(_ text: String) {
-        guard options.highlight || options.superscript, text.contains("=") || text.contains("^")
+        guard options.highlight || options.superscript,
+              text.utf8.contains(where: { $0 == UInt8(ascii: "=") || $0 == UInt8(ascii: "^") })
         else {
             output += HTMLEscaping.html(text)
             return
