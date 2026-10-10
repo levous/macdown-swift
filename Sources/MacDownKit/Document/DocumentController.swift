@@ -770,7 +770,7 @@ public final class DocumentController: NSObject {
         highlighter.deactivate()
 
         highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
-        highlighter.usesExternalElements = preferences.markdownEngine == .swiftMarkdown
+        highlighter.usesExternalElements = preferences.markdownEngine == .cmarkGfm
 
         if changedKey == nil || [.editorHorizontalInset, .editorVerticalInset,
                                  .editorWidthLimited, .editorMaximumWidth]

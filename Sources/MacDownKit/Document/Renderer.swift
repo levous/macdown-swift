@@ -359,7 +359,7 @@ public final class Renderer {
     private nonisolated static func parse(
         _ markdown: String, _ settings: ParseSettings
     ) -> (ParseResult, MarkdownDocumentModel?) {
-        guard settings.engine == .swiftMarkdown else {
+        guard settings.engine == .cmarkGfm else {
             return (MarkdownParser.parse(markdown, settings: settings), nil)
         }
         // One cmark-gfm parse for the preview and the editor (FR-20, NFR-3).

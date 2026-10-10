@@ -306,12 +306,12 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        // cmark-gfm ("swiftMarkdown") is the default; hoedown stays selectable.
-        #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
+        // cmark-gfm ("cmarkGfm") is the default; hoedown stays selectable.
+        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
         defaults.set("hoedown", forKey: .markdownEngine)
         #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
         defaults.set("bogus", forKey: .markdownEngine)
-        #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
+        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
         let preferences = Preferences(defaults: defaults)
         preferences.markdownEngine = .hoedown
         #expect(defaults.string(forKey: .markdownEngine) == "hoedown")
@@ -396,7 +396,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         switch engine {
         case .hoedown:
             return MarkdownParser.parse(text, settings: settings)
-        case .swiftMarkdown:
+        case .cmarkGfm:
             let model = MarkdownDocumentModel(text, options: .init(settings))
             return ParseResult(body: model.body, languages: model.languages)
         }

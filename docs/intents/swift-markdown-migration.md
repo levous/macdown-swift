@@ -171,7 +171,7 @@ Front matter uses the same trick: blank it to same-length filler instead of cutt
 
 ## Phases
 
-Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown` | `swiftMarkdown`, default `hoedown`) until Phase 5, so both engines can be compared side by side in the app.
+Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown` | `cmarkGfm`, default `hoedown`) until Phase 5, so both engines can be compared side by side in the app.
 
 ### Early step: settings and defaults on hoedown (optional, can ship before Phase 0)
 - Settings ▸ Markdown keeps Highlight, Superscript, Autolink and Smartypants (relabeled "Smart punctuation"), off by default; the other Markdown toggles go. hoedown always runs with tables, fenced code, footnotes, strikethrough and intra-word emphasis on; Quote is off (dropped).
@@ -216,7 +216,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 - **Exit:** the scroll sync tests (`ScrollSyncTests`) pass with source-line anchors; `help.md` and image-heavy documents stay aligned with unequal pane widths, in both scroll directions.
 
 ### Phase 5: Switch and remove
-- Default `markdownEngine` to `swiftMarkdown`, ship a release, keep `hoedown` reachable through the hidden setting for one release.
+- Default `markdownEngine` to `cmarkGfm`, ship a release, keep `hoedown` reachable through the hidden setting for one release.
 - Then remove `Sources/CHoedown`, `Sources/CPegMarkdown`, the hidden setting, `ScrollAnchors`' scanner, and the hoedown and PEG licenses from `Licenses/` (add swift-markdown and cmark's).
 - If the early step didn't ship: apply "Settings afterwards" and the editing defaults.
 - Update docs/MACDOWN-PORT.md ("Differences from the original" lists CommonMark output, always-on features, opt-in settings and dropped syntax; "Regenerating the highlighter parser" removed; layout table), CLAUDE.md (render pipeline, Editor, Tests, the byte-identical output goal), and the bundled `help.md`.
@@ -263,7 +263,7 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 
 ### Phase 0 findings
 
-Answers from the spikes in `Tests/MacDownKitTests/SwiftMarkdownSpikeTests.swift` (swift-markdown 0.9.0, swift-cmark 0.9.0):
+Answers from the spikes in `Tests/MacDownKitTests/cmarkGfmSpikeTests.swift` (swift-markdown 0.9.0, swift-cmark 0.9.0):
 
 - **F1. Footnotes are not exposed** (checked 2026-10-09). swift-markdown never sets `CMARK_OPT_FOOTNOTES` and has no footnote node types; `a[^1]` and `[^1]: note` stay literal `Text` in ordinary paragraphs (the definition isn't swallowed as a link reference definition). cmark-gfm itself, which swift-markdown depends on, parses `footnote_reference` and `footnote_definition` nodes with source positions when given `CMARK_OPT_FOOTNOTES`. How to render them is open question 1.
 - **F2. Bare-URL autolinks are never parsed** (checked 2026-10-09). swift-markdown attaches only the `table`, `strikethrough` and `tasklist` extensions, not GFM's `autolink`, so `https://…`, `www.…` and emails stay text, and there's nothing to turn off. CommonMark `<https://…>` and `<a@b.c>` are always links. The Autolink setting (FR-8a) needs our own pass over text runs when it's on (or cmark-gfm's `autolink` extension, if cmark-gfm is used directly).

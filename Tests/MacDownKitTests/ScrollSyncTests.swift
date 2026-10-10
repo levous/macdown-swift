@@ -206,7 +206,7 @@ extension LiveDocumentTests {
 
     /// Sync scrolling on, a fixed style, and the engine given (hoedown's
     /// header and image anchors, or cmark-gfm's source lines).
-    func withSyncScrolling(engine: MarkdownEngine = .swiftMarkdown,
+    func withSyncScrolling(engine: MarkdownEngine = .cmarkGfm,
                            _ body: () async throws -> Void) async rethrows {
         let preferences = Preferences.shared
         let saved = (preferences.editorSyncScrolling, preferences.htmlStyleName,
@@ -251,7 +251,7 @@ extension LiveDocumentTests {
     @Test func sourceLinesAlignInBothDirections() async throws {
         let preferences = Preferences.shared
         let savedEngine = preferences.markdownEngine
-        preferences.markdownEngine = .swiftMarkdown
+        preferences.markdownEngine = .cmarkGfm
         defer { preferences.markdownEngine = savedEngine }
         try await withSyncScrolling {
             let (controller, window) = makeController()
@@ -301,7 +301,7 @@ extension LiveDocumentTests {
     func documentsStayAligned(_ name: String) async throws {
         let preferences = Preferences.shared
         let savedEngine = preferences.markdownEngine
-        preferences.markdownEngine = .swiftMarkdown
+        preferences.markdownEngine = .cmarkGfm
         defer { preferences.markdownEngine = savedEngine }
         try await withSyncScrolling {
             let document = try #require(try Corpus.all().first { $0.name == name })

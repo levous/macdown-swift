@@ -44,7 +44,7 @@ extension LiveDocumentTests {
 
     /// `#Not a header` isn't one in CommonMark, but PEG colored it; both
     /// color a real header.
-    @Test(arguments: [MarkdownEngine.hoedown, .swiftMarkdown])
+    @Test(arguments: [MarkdownEngine.hoedown, .cmarkGfm])
     func highlightsFromTheEngine(_ engine: MarkdownEngine) async {
         let preferences = Preferences.shared
         let saved = preferences.markdownEngine
@@ -53,7 +53,7 @@ extension LiveDocumentTests {
 
         let (controller, window) = makeController("Plain text.\n\n## Real\n\n#Not a header\n")
         defer { controller.tearDown(); window.close() }
-        #expect(controller.highlighter.usesExternalElements == (engine == .swiftMarkdown))
+        #expect(controller.highlighter.usesExternalElements == (engine == .cmarkGfm))
         #expect(await waitUntil { color(controller, at: "Real") != color(controller, at: "Plain") })
         let notHeader = color(controller, at: "Not a header") != color(controller, at: "Plain")
         #expect(notHeader == (engine == .hoedown))
@@ -65,7 +65,7 @@ extension LiveDocumentTests {
     func editsRehighlight(manualRender: Bool) async {
         let preferences = Preferences.shared
         let saved = (preferences.markdownEngine, preferences.markdownManualRender)
-        preferences.markdownEngine = .swiftMarkdown
+        preferences.markdownEngine = .cmarkGfm
         preferences.markdownManualRender = manualRender
         defer { (preferences.markdownEngine, preferences.markdownManualRender) = saved }
 
@@ -88,7 +88,7 @@ extension LiveDocumentTests {
     @Test func exportsHaveNoSourceLines() async throws {
         let preferences = Preferences.shared
         let saved = preferences.markdownEngine
-        preferences.markdownEngine = .swiftMarkdown
+        preferences.markdownEngine = .cmarkGfm
         defer { preferences.markdownEngine = saved }
 
         let controller = DocumentController(document: MarkdownDocument(text: "# Title\n\nSome text.\n"),

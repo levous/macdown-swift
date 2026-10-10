@@ -12,7 +12,7 @@ import Testing
 func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
     switch engine {
     case .hoedown: HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue))
-    case .swiftMarkdown: MarkdownDocumentModel(text, options: .init()).highlights
+    case .cmarkGfm: MarkdownDocumentModel(text, options: .init()).highlights
     }
 }
 
@@ -42,10 +42,10 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         let highlighter = MarkdownHighlighter(textView: textView)
         let errors = highlighter.applyStyles(fromStylesheet: "H1\nforeground: ff0000\n")
         #expect(errors.isEmpty)
-        highlighter.usesExternalElements = engine == .swiftMarkdown
+        highlighter.usesExternalElements = engine == .cmarkGfm
         highlighter.activate()
         try await Task.sleep(for: .milliseconds(500))
-        if engine == .swiftMarkdown {
+        if engine == .cmarkGfm {
             // As after a parse: spans arrive once the text is laid out.
             highlighter.update(highlightElements(textView.string, engine: engine))
         }

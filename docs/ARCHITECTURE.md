@@ -55,7 +55,7 @@ changes, and implements the formatting, saving and export actions.
    results of superseded parses. Today the HTML comes from `MarkdownParser`
    (hoedown, bridged through C callbacks), which also renders front matter
    (Yams) as a table, substitutes `[TOC]`, and collects code block languages
-   for Prism. With `markdownEngine = swiftMarkdown` the same task also builds
+   for Prism. With `markdownEngine = cmarkGfm` the same task also builds
    the `MarkdownDocumentModel` (see [Markdown engine](#markdown-engine)).
 4. `PageBuilder` (pure functions) builds the full page with `HTMLTemplate` (a
    minimal Handlebars subset) and `Asset` (linked or embedded CSS/JS). The
@@ -133,9 +133,8 @@ and `.ralph/fix_plan.md`.
 
 cmark-gfm is the default. For one release the original engines stay
 selectable through a hidden setting
-(`defaults write io.github.levous.macdown-swift markdownEngine hoedown`;
-`swiftMarkdown`, the historical name, means cmark-gfm); then hoedown and PEG
-Markdown Highlight are removed.
+(`defaults write io.github.levous.macdown-swift markdownEngine hoedown`); 
+then hoedown and PEG Markdown Highlight are removed.
 
 The new model (`Sources/MacDownKit/Document/Model`):
 

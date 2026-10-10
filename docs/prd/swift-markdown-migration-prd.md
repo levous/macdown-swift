@@ -80,7 +80,7 @@ Main parts:
 - **`HighlightMapper`** (a `MarkupWalker`) emits spans named after today's PEG element types (`H1`…`H6`, `EMPH`, `STRONG`, `VERBATIM`, …). Source scans fill the gaps the AST doesn't cover (`REFERENCE`, `HTML_ENTITY`, list markers, comments).
 - **`ThemeStyleParser`**, a Swift port of `pmh_styleparser.c`, reads the existing `.style` files.
 - **Scroll sync by source line.** The preview reports `[source line, y]` pairs. The editor maps lines to y through `LineIndex` and its layout. `ScrollGeometry` and `ScrollMap` stay, and only the anchor source changes.
-- **Staged rollout.** A hidden `markdownEngine` setting (`hoedown` | `swiftMarkdown`) lets both engines run side by side until the switch. After one release with the new default, hoedown and PEG go, and the settings and editing defaults decisions apply (if the early step didn't already apply them).
+- **Staged rollout.** A hidden `markdownEngine` setting (`hoedown` | `cmarkGfm`) lets both engines run side by side until the switch. After one release with the new default, hoedown and PEG go, and the settings and editing defaults decisions apply (if the early step didn't already apply them).
 
 ### Formatting
 
@@ -198,8 +198,8 @@ An optional early step can apply the settings and defaults on hoedown before the
 
 **Rollout and cleanup**
 
-32. FR-32: A hidden `markdownEngine` setting (`hoedown` | `swiftMarkdown`) selects the engine for all four outputs. Default is `hoedown` until Phase 5.
-33. FR-33: In Phase 5 the default becomes `swiftMarkdown` for one release, with `hoedown` still selectable.
+32. FR-32: A hidden `markdownEngine` setting (`hoedown` | `cmarkGfm`) selects the engine for all four outputs. Default is `hoedown` until Phase 5.
+33. FR-33: In Phase 5 the default becomes `cmarkGfm` for one release, with `hoedown` still selectable.
 34. FR-34: After that release, `Sources/CHoedown`, `Sources/CPegMarkdown`, the hidden setting and `ScrollAnchors`' scanner are removed.
 35. FR-35: Settings ▸ Markdown keeps only Highlight, Superscript, Autolink and Smart punctuation (relabeled from Smartypants), off by default, with their existing user defaults keys. Table, Fenced code block, Footnote, Intra-word emphasis, Strikethrough and Quote are removed. Settings ▸ Rendering loses Task list syntax and Detect Jekyll front-matter. Removed settings lose their `Preferences` properties and hoedown flag mapping (always on, except Quote, which is off). (Underline was removed on 2026-10-09.) This may ship early on hoedown.
 35a. FR-35a: On a new install, the editor defaults are: unordered list marker `-`, ensure newline at end of file on, insert spaces instead of tabs on. Existing users' values are unchanged.
@@ -296,7 +296,7 @@ An optional early step can apply the settings and defaults on hoedown before the
 - [ ] `help.md` (including the code-fence case) and an image-heavy document stay aligned with unequal pane widths, scrolling either pane.
 
 **Phase 5: Switch and remove**
-- [ ] One release ships with `swiftMarkdown` as the default and `hoedown` reachable.
+- [ ] One release ships with `cmarkGfm` as the default and `hoedown` reachable.
 - [ ] The following release removes `CHoedown`, `CPegMarkdown`, the hidden setting and the old scanner. `swift build`, `swift test` and the Xcode build pass.
 - [ ] Settings ▸ Markdown shows only Highlight, Superscript, Autolink and Smart punctuation, and Settings ▸ Rendering no longer shows Task list syntax or Detect Jekyll front-matter; opt-in features are off for new users and unchanged for existing users; removed settings' defaults keys are still present.
 - [ ] A fresh install has list marker `-`, newline at end of file and spaces for tabs; an existing install keeps its values.

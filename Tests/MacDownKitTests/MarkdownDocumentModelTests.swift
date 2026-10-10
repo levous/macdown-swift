@@ -85,19 +85,19 @@ import Testing
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = Preferences(defaults: defaults)
-        #expect(preferences.renderSettings.parse.engine == .swiftMarkdown)
+        #expect(preferences.renderSettings.parse.engine == .cmarkGfm)
         preferences.markdownEngine = .hoedown
         #expect(preferences.renderSettings.parse.engine == .hoedown)
     }
 
-    @Test func swiftMarkdownBuildsTheModel() async {
+    @Test func cmarkGfmBuildsTheModel() async {
         let renderer = Renderer()
         var settings = ParseSettings()
         settings.engine = .hoedown
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model == nil)
 
-        settings.engine = .swiftMarkdown
+        settings.engine = .cmarkGfm
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model?.blocks.map(\.kind) == [.heading(level: 1)])
         // The preview's HTML is the model's, with source lines (FR-20).
@@ -117,7 +117,7 @@ import Testing
     @Test func stalePassesAreDiscarded() async {
         let renderer = Renderer()
         var settings = ParseSettings()
-        settings.engine = .swiftMarkdown
+        settings.engine = .cmarkGfm
         var completions = 0
         renderer.parse(Corpus.generated(lines: 5_000), settings: settings) { completions += 1 }
         await withCheckedContinuation { done in

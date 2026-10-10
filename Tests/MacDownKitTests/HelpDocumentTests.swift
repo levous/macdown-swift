@@ -36,7 +36,7 @@ enum HelpDocument {
         let settings = preferences.renderSettings.parse
         let html = switch engine {
         case .hoedown: MarkdownParser.parse(try HelpDocument.text(), settings: settings).body
-        case .swiftMarkdown: MarkdownDocumentModel(try HelpDocument.text(), options: .init(settings)).body
+        case .cmarkGfm: MarkdownDocumentModel(try HelpDocument.text(), options: .init(settings)).body
         }
         return HTMLDiff.decodeEntities(html)
     }
@@ -128,7 +128,7 @@ enum HelpDocument {
         ]
         // PEG Markdown Highlight defines NOTE but never emits it; the new
         // engine colors footnotes.
-        if engine == .swiftMarkdown { types.append(("NOTE", pmh_NOTE)) }
+        if engine == .cmarkGfm { types.append(("NOTE", pmh_NOTE)) }
         for (name, type) in types {
             #expect(!elements.spans[Int(type.rawValue)].isEmpty, "no \(name) spans")
         }

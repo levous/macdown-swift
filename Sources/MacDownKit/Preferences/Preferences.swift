@@ -23,13 +23,13 @@ public extension Notification.Name {
     static let didRequestPreviewRender = Notification.Name("MPDidRequestPreviewRender")
 }
 
-/// The Markdown parser behind the preview and highlighting. `swiftMarkdown`
-/// (the name is historical) is cmark-gfm, the default; `hoedown` is the
+/// The Markdown parser behind the preview and highlighting. 
+/// `cmarkGfm` is cmark-gfm, the default; `hoedown` is the
 /// original's engine, kept selectable for one release before it's removed
 /// (docs/intents/swift-markdown-migration.md, Phase 5). Hidden: set with
 /// `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
 public enum MarkdownEngine: String, CaseIterable, Sendable {
-    case hoedown, swiftMarkdown
+    case hoedown, cmarkGfm
 }
 
 public enum UnorderedListMarkerType: Int, CaseIterable, Sendable {
@@ -124,7 +124,7 @@ public final class Preferences {
     public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, .previewZoomRelativeToBaseFontSize) } }
 
     /// Not shown in Settings (FR-32).
-    public var markdownEngine = MarkdownEngine.swiftMarkdown { didSet { save(markdownEngine.rawValue, .markdownEngine) } }
+    public var markdownEngine = MarkdownEngine.cmarkGfm { didSet { save(markdownEngine.rawValue, .markdownEngine) } }
 
     // MARK: HTML rendering
 
@@ -282,7 +282,7 @@ public final class Preferences {
         editorUnorderedListMarkerType = d.integer(forKey: .editorUnorderedListMarkerType)
         previewZoomRelativeToBaseFontSize = d.bool(forKey: .previewZoomRelativeToBaseFontSize)
 
-        markdownEngine = d.string(forKey: .markdownEngine).flatMap(MarkdownEngine.init) ?? .swiftMarkdown
+        markdownEngine = d.string(forKey: .markdownEngine).flatMap(MarkdownEngine.init) ?? .cmarkGfm
         htmlTemplateName = d.string(forKey: .htmlTemplateName)
         htmlStyleName = d.string(forKey: .htmlStyleName)
         htmlHardWrap = d.bool(forKey: .htmlHardWrap)

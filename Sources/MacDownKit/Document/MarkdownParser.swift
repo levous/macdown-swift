@@ -18,11 +18,11 @@ public struct ParseSettings: Sendable, Equatable {
     public var detectsFrontMatter = false
     /// Which parser renders: hoedown, or cmark-gfm through the document
     /// model (the hidden `markdownEngine` setting).
-    public var engine = MarkdownEngine.swiftMarkdown
+    public var engine = MarkdownEngine.cmarkGfm
 
     public init(extensionFlags: UInt32 = 0, rendererFlags: UInt32 = 0,
                 smartyPants: Bool = false, rendersTOC: Bool = false,
-                detectsFrontMatter: Bool = false, engine: MarkdownEngine = .swiftMarkdown) {
+                detectsFrontMatter: Bool = false, engine: MarkdownEngine = .cmarkGfm) {
         self.extensionFlags = extensionFlags
         self.rendererFlags = rendererFlags
         self.smartyPants = smartyPants
