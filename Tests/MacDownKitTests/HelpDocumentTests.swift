@@ -156,13 +156,15 @@ extension LiveDocumentTests {
         return false
     }
 
-    @Test func previewRunsEveryExample() async throws {
+    @Test(arguments: MarkdownEngine.allCases)
+    func previewRunsEveryExample(_ engine: MarkdownEngine) async throws {
         let p = Preferences.shared
-        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz)
+        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine)
         p.htmlSyntaxHighlighting = true
         p.htmlMermaid = true
         p.htmlGraphviz = true
-        defer { (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz) = saved }
+        p.markdownEngine = engine
+        defer { (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine) = saved }
         let controller = DocumentController(
             document: MarkdownDocument(text: try HelpDocument.text()), fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),

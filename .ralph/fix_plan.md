@@ -109,7 +109,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Tests: `RendererTests` pass on both engines (no expectation needed changing); each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
 - [x] Tests: `==x==`, `^x`, `"x"` plain text by default; `_x_` is `<em>`; each opt-in off and on; TOC, task list, front matter (valid/invalid), footnotes, code-block markup; standard formatting with empty defaults
 - [x] Test: HTML/PDF export contains no `data-source-line`
-- [ ] Live test: Mermaid, Graphviz, MathJax, Prism render in the running app (`LiveDocumentTests`), and a screenshot of the corpus documents in a throwaway build looks right
+- [x] Live test: Mermaid, Graphviz, MathJax, Prism render in the running app (`LiveDocumentTests`), and a screenshot of the corpus documents in a throwaway build looks right
 - [ ] Run the HTML-diff harness hoedown vs `HTMLRenderer` on the corpus (full settings matrix) and review; remaining differences listed in docs/MACDOWN-PORT.md
 
 ### Phase 4: Scroll sync by source line (FR-28 to FR-31)
