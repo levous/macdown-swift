@@ -118,7 +118,11 @@ struct HighlightMapper {
     // MARK: - Walk
 
     private mutating func walkChildren(_ node: CMarkNode) {
-        for child in node.children { walk(child) }
+        var child = node.firstChild
+        while let current = child {
+            walk(current)
+            child = current.next
+        }
     }
 
     private mutating func walk(_ node: CMarkNode) {

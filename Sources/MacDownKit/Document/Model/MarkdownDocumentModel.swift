@@ -20,11 +20,17 @@ public struct MarkdownDocumentModel: Sendable {
         public var highlight = false
         public var superscript = false
         public var autolink = false
+        /// Code block rendering: line numbers, and `lang:info` accessories.
+        public var lineNumbers = false
+        public var blockCodeInformation = false
 
         public init(math: Bool = false, inlineDollar: Bool = false,
                     smartPunctuation: Bool = false, highlight: Bool = false,
-                    superscript: Bool = false, autolink: Bool = false) {
+                    superscript: Bool = false, autolink: Bool = false,
+                    lineNumbers: Bool = false, blockCodeInformation: Bool = false) {
             self.autolink = autolink
+            self.lineNumbers = lineNumbers
+            self.blockCodeInformation = blockCodeInformation
             self.math = math
             self.inlineDollar = inlineDollar
             self.smartPunctuation = smartPunctuation
@@ -39,6 +45,8 @@ public struct MarkdownDocumentModel: Sendable {
             highlight = settings.extensionFlags & HOEDOWN_EXT_HIGHLIGHT.rawValue != 0
             superscript = settings.extensionFlags & HOEDOWN_EXT_SUPERSCRIPT.rawValue != 0
             autolink = settings.extensionFlags & HOEDOWN_EXT_AUTOLINK.rawValue != 0
+            lineNumbers = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) != 0
+            blockCodeInformation = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_INFORMATION) != 0
         }
     }
 
@@ -66,6 +74,9 @@ public struct MarkdownDocumentModel: Sendable {
     public let blocks: [Block]
     /// Editor highlighting, by PEG element type (`ThemeStyle.elementNames`).
     let highlights: HighlightElements
+    /// The preview's HTML body, and the Prism languages its code uses.
+    public let body: String
+    public let languages: [String]
 
     public init(_ source: String, options: Options) {
         let (protected, tree) = ProtectedSource.parsed(
@@ -84,5 +95,7 @@ public struct MarkdownDocumentModel: Sendable {
 
         (highlights, blocks) = HighlightMapper.map(tree, source: source, lineIndex: lineIndex,
                                                     math: math, options: options)
+        (body, languages) = HTMLRenderer.render(tree, options: .init(
+            lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation))
     }
 }

@@ -68,9 +68,30 @@ struct CMarkNode {
     init(_ pointer: UnsafeMutablePointer<cmark_node>) { self.pointer = pointer }
 
     var kind: Kind {
-        let type = cmark_node_get_type(pointer)
-        if type == CMARK_NODE_FOOTNOTE_DEFINITION { return .footnoteDefinition }
-        if type == CMARK_NODE_FOOTNOTE_REFERENCE { return .footnoteReference }
+        // Core types by value; the extensions' types are registered at run
+        // time, so those go by name.
+        switch cmark_node_get_type(pointer) {
+        case CMARK_NODE_DOCUMENT: return .document
+        case CMARK_NODE_BLOCK_QUOTE: return .blockQuote
+        case CMARK_NODE_LIST: return .list
+        case CMARK_NODE_CODE_BLOCK: return .codeBlock
+        case CMARK_NODE_HTML_BLOCK: return .htmlBlock
+        case CMARK_NODE_PARAGRAPH: return .paragraph
+        case CMARK_NODE_HEADING: return .heading
+        case CMARK_NODE_THEMATIC_BREAK: return .thematicBreak
+        case CMARK_NODE_FOOTNOTE_DEFINITION: return .footnoteDefinition
+        case CMARK_NODE_TEXT: return .text
+        case CMARK_NODE_SOFTBREAK: return .softBreak
+        case CMARK_NODE_LINEBREAK: return .lineBreak
+        case CMARK_NODE_CODE: return .code
+        case CMARK_NODE_HTML_INLINE: return .htmlInline
+        case CMARK_NODE_EMPH: return .emphasis
+        case CMARK_NODE_STRONG: return .strong
+        case CMARK_NODE_LINK: return .link
+        case CMARK_NODE_IMAGE: return .image
+        case CMARK_NODE_FOOTNOTE_REFERENCE: return .footnoteReference
+        default: break
+        }
         switch String(cString: cmark_node_get_type_string(pointer)) {
         case "document": return .document
         case "block_quote": return .blockQuote
@@ -125,6 +146,23 @@ struct CMarkNode {
         let end = Position(line: endLine, column: endColumn + ticks)
         guard (start.line, start.column) <= (end.line, end.column) else { return nil }
         return (start, end)
+    }
+
+    var parent: CMarkNode? { cmark_node_parent(pointer).map(CMarkNode.init) }
+    /// A footnote reference's definition. (cmark-gfm replaces the
+    /// reference's literal with a number, so labels can't be matched.)
+    var footnoteDefinition: CMarkNode? { cmark_node_parent_footnote_def(pointer).map(CMarkNode.init) }
+    /// Identity within the tree.
+    var id: Int { Int(bitPattern: pointer) }
+    var firstChild: CMarkNode? { cmark_node_first_child(pointer).map(CMarkNode.init) }
+    var next: CMarkNode? { cmark_node_next(pointer).map(CMarkNode.init) }
+
+    /// Table column alignments: "l", "c", "r", or "" for none.
+    var tableAlignments: [String] {
+        let count = Int(cmark_gfm_extensions_get_table_columns(pointer))
+        guard count > 0, let alignments = cmark_gfm_extensions_get_table_alignments(pointer)
+        else { return [] }
+        return (0..<count).map { alignments[$0] == 0 ? "" : String(UnicodeScalar(alignments[$0])) }
     }
 
     var literal: String? { cmark_node_get_literal(pointer).map { String(cString: $0) } }

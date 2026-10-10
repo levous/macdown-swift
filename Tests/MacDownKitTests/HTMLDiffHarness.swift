@@ -20,6 +20,11 @@ enum HTMLDiff {
 
     static let hoedown: Engine = { MarkdownParser.parse($0, settings: $1).body }
 
+    /// The cmark-gfm renderer, through the document model.
+    static let cmark: Engine = { text, settings in
+        MarkdownDocumentModel(text, options: .init(settings)).body
+    }
+
     /// The settings each document is rendered with: the always-on standard
     /// set, each opt-in feature on its own, and everything on.
     @MainActor static func matrix() -> [(name: String, settings: ParseSettings)] {
@@ -58,6 +63,50 @@ enum HTMLDiff {
     /// each tag, whitespace between tags dropped, other runs collapsed.
     /// A single scan: this runs over every document in every setting.
     static func normalize(_ html: String) -> String {
+        normalizeTags(decodeEntities(html))
+    }
+
+    /// Entities decoded to characters, so `&copy;` (hoedown passes it
+    /// through) and `©` (cmark decodes it) compare equal. `&lt; &gt; &amp;
+    /// &quot;` stay: decoding them would change the markup.
+    static func decodeEntities(_ html: String) -> String {
+        guard html.contains("&") else { return html }
+        var result = ""
+        var rest = Substring(html)
+        while let amp = rest.firstIndex(of: "&") {
+            result += rest[..<amp]
+            let after = rest[amp...]
+            if let semicolon = after.prefix(12).firstIndex(of: ";") {
+                let name = String(after[after.index(after: amp)..<semicolon])
+                if !["lt", "gt", "amp", "quot"].contains(name),
+                   let decoded = Self.decode(name) {
+                    result += decoded
+                    rest = after[after.index(after: semicolon)...]
+                    continue
+                }
+            }
+            result += "&"
+            rest = after.dropFirst()
+        }
+        return result + rest
+    }
+
+    private static func decode(_ name: String) -> String? {
+        if name.hasPrefix("#x") || name.hasPrefix("#X") {
+            return UInt32(name.dropFirst(2), radix: 16).flatMap(Unicode.Scalar.init).map { String($0) }
+        }
+        if name.hasPrefix("#") {
+            return UInt32(name.dropFirst()).flatMap(Unicode.Scalar.init).map { String($0) }
+        }
+        let named = ["nbsp": "\u{A0}", "copy": "©", "reg": "®", "trade": "™", "hellip": "…",
+                     "mdash": "—", "ndash": "–", "ldquo": "“", "rdquo": "”", "lsquo": "‘",
+                     "rsquo": "’", "laquo": "«", "raquo": "»", "middot": "·", "times": "×",
+                     "deg": "°", "euro": "€", "pound": "£", "yen": "¥", "sect": "§",
+                     "para": "¶", "bull": "•", "apos": "'"]
+        return named[name]
+    }
+
+    static func normalizeTags(_ html: String) -> String {
         var output = String.UnicodeScalarView()
         var text = String.UnicodeScalarView()    // since the last tag
         var hasContent = false
@@ -360,6 +409,29 @@ extension LiveDocumentTests {
         // Without the list, the same differences are unexpected.
         #expect(!HTMLDiff.compare(files, left: HTMLDiff.hoedown, right: commonMark)
             .differences.isEmpty)
+    }
+
+    /// hoedown against the cmark-gfm renderer: a report only, until the
+    /// Phase 3 review makes it an assertion.
+    @Test func hoedownAgainstCmarkReport() throws {
+        let corpus = try Corpus.all()
+        let expected = try HTMLDiff.expectedDifferences()
+        let comparison = HTMLDiff.compare(corpus, left: HTMLDiff.hoedown, right: HTMLDiff.cmark,
+                                          expected: expected)
+        let report = HTMLDiff.report(comparison, expected: expected, left: "hoedown",
+                                     right: "cmark", documents: corpus.count,
+                                     settings: HTMLDiff.matrix().count, writes: false)
+        if let directory = ProcessInfo.processInfo.environment["MACDOWN_DIFF_REPORT"] {
+            let url = URL(fileURLWithPath: directory, isDirectory: true)
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            try report.write(to: url.appending(path: "html-diff-cmark.md"), atomically: true, encoding: .utf8)
+        }
+        #expect(!report.isEmpty)
+    }
+
+    @Test func entitiesDecodeForComparison() {
+        #expect(HTMLDiff.normalize("<p>&copy; &#169; &#xA9; ©</p>") == "<p>© © © ©</p>")
+        #expect(HTMLDiff.normalize("<p>&lt;b&gt; &amp; &quot;</p>") == "<p>&lt;b&gt; &amp; &quot;</p>")
     }
 }
 }
