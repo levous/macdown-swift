@@ -249,7 +249,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defer { defaults.removePersistentDomain(forName: suite) }
         // The removed Underline setting, still saved on for existing users,
         // no longer turns `_text_` into underline.
-        defaults.set(true, forKey: "extensionUnderline")
+        defaults.set(true, forKey: .extensionUnderline)
         let preferences = Preferences(defaults: defaults)
         preferences.extensionHighlight = true
         let html = MarkdownParser.parse(
@@ -285,12 +285,12 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defer { defaults.removePersistentDomain(forName: suite) }
         // An existing install whose saved values predate these becoming
         // standard: the values are ignored.
-        defaults.set("1", forKey: "firstVersionInstalled")
-        for key in ["extensionTables", "extensionFencedCode", "extensionFootnotes",
-                    "extensionStrikethough", "extensionIntraEmphasis"] {
+        defaults.set("1", forKey: .firstVersionInstalled)
+        for key: PreferenceSettingKey in [.extensionTables, .extensionFencedCode, .extensionFootnotes,
+                                          .extensionStrikethough, .extensionIntraEmphasis] {
             defaults.set(false, forKey: key)
         }
-        defaults.set(true, forKey: "extensionQuote")
+        defaults.set(true, forKey: .extensionQuote)
         let flags = Preferences(defaults: defaults).extensionFlags
         for flag in [HOEDOWN_EXT_TABLES, HOEDOWN_EXT_FENCED_CODE, HOEDOWN_EXT_FOOTNOTES,
                      HOEDOWN_EXT_STRIKETHROUGH] {
@@ -308,13 +308,13 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defer { defaults.removePersistentDomain(forName: suite) }
         // cmark-gfm ("swiftMarkdown") is the default; hoedown stays selectable.
         #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
-        defaults.set("hoedown", forKey: "markdownEngine")
+        defaults.set("hoedown", forKey: .markdownEngine)
         #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
-        defaults.set("bogus", forKey: "markdownEngine")
+        defaults.set("bogus", forKey: .markdownEngine)
         #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
         let preferences = Preferences(defaults: defaults)
         preferences.markdownEngine = .hoedown
-        #expect(defaults.string(forKey: "markdownEngine") == "hoedown")
+        #expect(defaults.string(forKey: .markdownEngine) == "hoedown")
     }
 
     /// New installs follow common Markdown editing conventions.
@@ -332,12 +332,25 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        defaults.set("1", forKey: "firstVersionInstalled")
-        defaults.set(UnorderedListMarkerType.asterisk.rawValue, forKey: "editorUnorderedListMarkerType")
+        defaults.set("1", forKey: .firstVersionInstalled)
+        defaults.set(UnorderedListMarkerType.asterisk.rawValue, forKey: .editorUnorderedListMarkerType)
         let preferences = Preferences(defaults: defaults)
         #expect(preferences.editorUnorderedListMarkerType == UnorderedListMarkerType.asterisk.rawValue)
         #expect(!preferences.editorEnsuresNewlineAtEndOfFile)
         #expect(!preferences.editorConvertTabs)
+    }
+
+    /// Keys are the original app's user defaults keys: each case's name,
+    /// and for text checking "editor" plus the capitalized NSTextView key
+    /// path, as MacDown stored them.
+    @Test func preferenceKeysKeepTheOriginalNames() {
+        for key in PreferenceSettingKey.allCases {
+            #expect(key.rawValue == String(describing: key))
+        }
+        for setting in PreferenceSettingKey.textChecking {
+            let path = setting.textViewKeyPath
+            #expect(setting.key.rawValue == "editor" + path.prefix(1).uppercased() + path.dropFirst())
+        }
     }
 
     /// Settings that became standard are no longer read, but their saved
@@ -346,10 +359,8 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let keys = ["extensionTables", "extensionFencedCode", "extensionFootnotes",
-                    "extensionStrikethough", "extensionIntraEmphasis", "extensionQuote",
-                    "htmlTaskList", "htmlDetectFrontMatter"]
-        defaults.set("1", forKey: "firstVersionInstalled")
+        let keys = PreferenceSettingKey.retired
+        defaults.set("1", forKey: .firstVersionInstalled)
         for key in keys { defaults.set(true, forKey: key) }
         let preferences = Preferences(defaults: defaults)
         preferences.extensionHighlight = true    // Saving other settings.
@@ -362,9 +373,9 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        defaults.set("1", forKey: "firstVersionInstalled")
-        defaults.set(false, forKey: "htmlTaskList")
-        defaults.set(false, forKey: "htmlDetectFrontMatter")
+        defaults.set("1", forKey: .firstVersionInstalled)
+        defaults.set(false, forKey: .htmlTaskList)
+        defaults.set(false, forKey: .htmlDetectFrontMatter)
         let settings = Preferences(defaults: defaults).renderSettings
         #expect(settings.parse.rendererFlags & UInt32(HOEDOWN_HTML_USE_TASK_LIST) != 0)
         #expect(settings.page.taskList)    // The checkbox script.
@@ -418,7 +429,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        if existingInstall { defaults.set("1", forKey: "firstVersionInstalled") }
+        if existingInstall { defaults.set("1", forKey: .firstVersionInstalled) }
         let settings = Preferences(defaults: defaults).renderSettings.parse
         let text = """
             ---

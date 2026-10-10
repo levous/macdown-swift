@@ -91,30 +91,13 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var isSetUp = false
 
-    /// Text checking settings of the editor persisted to user defaults, with
-    /// their default values.
-    private static let editorKeysToObserve: [(String, Any)] = [
-        ("automaticDashSubstitutionEnabled", false),
-        ("automaticDataDetectionEnabled", false),
-        ("automaticQuoteSubstitutionEnabled", false),
-        ("automaticSpellingCorrectionEnabled", false),
-        ("automaticTextReplacementEnabled", false),
-        ("continuousSpellCheckingEnabled", false),
-        ("enabledTextCheckingTypes", NSTextCheckingAllTypes),
-        ("grammarCheckingEnabled", false),
+    /// Preferences that change the editor's setup (see `setupEditor`).
+    private static let editorPreferencesToObserve: Set<PreferenceSettingKey> = [
+        .editorBaseFontInfo, .editorHorizontalInset, .markdownEngine,
+        .editorVerticalInset, .editorWidthLimited, .editorMaximumWidth,
+        .editorLineSpacing, .editorOnRight, .editorStyleName,
+        .editorShowWordCount, .editorScrollsPastEnd,
     ]
-
-    private static let editorPreferencesToObserve: Set<String> = [
-        "editorBaseFontInfo", "editorHorizontalInset", "markdownEngine",
-        "editorVerticalInset", "editorWidthLimited", "editorMaximumWidth",
-        "editorLineSpacing", "editorOnRight", "editorStyleName",
-        "editorShowWordCount", "editorScrollsPastEnd",
-    ]
-
-    private static func preferenceKey(forEditorKey key: String) -> String {
-        guard let first = key.first else { return "editor" }
-        return "editor" + first.uppercased() + key.dropFirst()
-    }
 
     // MARK: - Init
 
@@ -195,12 +178,12 @@ public final class DocumentController: NSObject {
 
     private func setUpObservers() {
         let center = NotificationCenter.default
-        // Handlers receive the notification's "key" user info value.
+        // Handlers receive the preference the notification is about, if any.
         func observe(_ name: Notification.Name, _ object: Any?,
-                     _ handler: @escaping @MainActor (String?) -> Void) {
+                     _ handler: @escaping @MainActor (PreferenceSettingKey?) -> Void) {
             observers.append(center.addObserver(forName: name, object: object,
                                                 queue: .main) { note in
-                let key = note.userInfo?["key"] as? String
+                let key = note.preferenceKey
                 MainActor.assumeIsolated { handler(key) }
             })
         }
@@ -256,12 +239,11 @@ public final class DocumentController: NSObject {
             self?.inLiveScroll = false
         }
 
-        for (key, _) in Self.editorKeysToObserve {
-            let kvo = KeyValueObserver(object: editor, keyPath: key) {
+        for setting in PreferenceSettingKey.textChecking {
+            let kvo = KeyValueObserver(object: editor, keyPath: setting.textViewKeyPath) {
                 [weak self] value in
                 guard let self, self.highlighter.isActive else { return }
-                UserDefaults.standard.set(value,
-                                          forKey: Self.preferenceKey(forEditorKey: key))
+                UserDefaults.standard.set(value, forKey: setting.key)
             }
             keyObservers.append(kvo)
         }
@@ -740,8 +722,8 @@ public final class DocumentController: NSObject {
         }
     }
 
-    private func preferenceDidChange(_ key: String?) {
-        if key == Preferences.autosavesDocumentsKey || key == nil {
+    private func preferenceDidChange(_ key: PreferenceSettingKey?) {
+        if key == .autosavesDocuments || key == nil {
             // Turning autosaving on saves the draft from then on.
             if autosaves && editor.string != savedText {
                 commitDraft()
@@ -753,7 +735,7 @@ public final class DocumentController: NSObject {
             if highlighter.isActive { setupEditor(key) }
             redrawDivider()
         }
-        if key == "editorShowWordCount" || key == nil {
+        if key == .editorShowWordCount || key == nil {
             showsWordCount = preferences.editorShowWordCount
         }
 
@@ -783,21 +765,21 @@ public final class DocumentController: NSObject {
 
     // MARK: - Editor setup
 
-    public func setupEditor(_ changedKey: String?) {
+    public func setupEditor(_ changedKey: PreferenceSettingKey?) {
         editorAnchorsKey = nil    // Fonts and insets move the text.
         highlighter.deactivate()
 
         highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
         highlighter.usesExternalElements = preferences.markdownEngine == .swiftMarkdown
 
-        if changedKey == nil || ["editorHorizontalInset", "editorVerticalInset",
-                                 "editorWidthLimited", "editorMaximumWidth"]
+        if changedKey == nil || [.editorHorizontalInset, .editorVerticalInset,
+                                 .editorWidthLimited, .editorMaximumWidth]
             .contains(changedKey!) {
             adjustEditorInsets()
         }
 
-        if changedKey == nil || ["editorBaseFontInfo", "editorStyleName",
-                                 "editorLineSpacing"].contains(changedKey!) {
+        if changedKey == nil || [.editorBaseFontInfo, .editorStyleName,
+                                 .editorLineSpacing].contains(changedKey!) {
             let style = NSMutableParagraphStyle()
             style.lineSpacing = preferences.editorLineSpacing
             editor.defaultParagraphStyle = style
@@ -832,31 +814,30 @@ public final class DocumentController: NSObject {
             editorScrollView.backgroundColor = editor.backgroundColor
         }
 
-        if changedKey == "editorBaseFontInfo" {
+        if changedKey == .editorBaseFontInfo {
             scaleWebView()
         }
 
-        if changedKey == nil || changedKey == "editorShowWordCount" {
+        if changedKey == nil || changedKey == .editorShowWordCount {
             showsWordCount = preferences.editorShowWordCount
             if showsWordCount {
                 Task { await updateWordCount() }
             }
         }
 
-        if changedKey == nil || changedKey == "editorScrollsPastEnd" {
+        if changedKey == nil || changedKey == .editorScrollsPastEnd {
             editor.scrollsPastEnd = preferences.editorScrollsPastEnd
         }
 
         if changedKey == nil {
             let defaults = UserDefaults.standard
-            for (key, defaultValue) in Self.editorKeysToObserve {
-                let value = defaults.object(forKey: Self.preferenceKey(forEditorKey: key))
-                    ?? defaultValue
-                editor.setValue(value, forKey: key)
+            for setting in PreferenceSettingKey.textChecking {
+                let value = defaults.object(forKey: setting.key) ?? setting.defaultValue
+                editor.setValue(value, forKey: setting.textViewKeyPath)
             }
         }
 
-        if changedKey == nil || changedKey == "editorOnRight" {
+        if changedKey == nil || changedKey == .editorOnRight {
             let onRight = preferences.editorOnRight
             if onRight != editorOnRight {
                 editorOnRight = onRight

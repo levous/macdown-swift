@@ -69,8 +69,7 @@ public final class MarkdownDocument: ReferenceFileDocument, @unchecked Sendable 
     public func snapshot(contentType: UTType) throws -> String {
         var text = self.text
         // Read user defaults directly; this may be called off the main actor.
-        let ensuresNewline = UserDefaults.standard.bool(
-            forKey: "editorEnsuresNewlineAtEndOfFile")
+        let ensuresNewline = UserDefaults.standard.bool(forKey: .editorEnsuresNewlineAtEndOfFile)
         if ensuresNewline, let last = text.unicodeScalars.last,
            !CharacterSet.newlines.contains(last) {
             text += "\n"

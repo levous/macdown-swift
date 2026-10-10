@@ -53,7 +53,7 @@ The editor edits a draft (its text); `MarkdownDocument.text` is the persisted st
 
 ## App ↔ shell utility
 
-`macdown-cmd` and the app communicate only through the shared user defaults suite and keys in `MacDownShared/Globals.swift` (`filesToOpenOnNextLaunch`, `pipedContentFileToOpenOnNextLaunch`). Changing those keys, or the bundle identifier `io.github.levous.macdown-swift`, requires changing both sides. Preference keys in `Preferences.swift` must keep matching the original app's user defaults keys.
+`macdown-cmd` and the app communicate only through the shared user defaults suite and keys in `MacDownShared/Globals.swift` (`filesToOpenOnNextLaunch`, `pipedContentFileToOpenOnNextLaunch`). Changing those keys, or the bundle identifier `io.github.levous.macdown-swift`, requires changing both sides. Preference keys are the cases of `PreferenceSettingKey` (`Preferences/PreferenceSettingKey.swift`); use them instead of strings (`defaults.bool(forKey: .editorConvertTabs)`, `Notification.preferenceKey`). Raw values must keep matching the original app's user defaults keys.
 
 ## Localization
 

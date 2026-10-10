@@ -140,7 +140,8 @@ struct EditorSettingsView: View {
                         loadThemes()
                         NotificationCenter.default.post(
                             name: .didRequestEditorSetup, object: nil,
-                            userInfo: ["key": "editorStyleName"])
+                            userInfo: [Notification.preferenceKeyUserInfoKey:
+                                        PreferenceSettingKey.editorStyleName])
                     }
                 }
             }

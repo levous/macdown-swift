@@ -107,7 +107,7 @@ struct DocumentContentView: View {
 
 struct WordCountWidget: View {
     let controller: DocumentController
-    @AppStorage("editorWordCountType") private var wordCountType = 0
+    @AppStorage(PreferenceSettingKey.editorWordCountType.rawValue) private var wordCountType = 0
 
     var body: some View {
         Menu {
