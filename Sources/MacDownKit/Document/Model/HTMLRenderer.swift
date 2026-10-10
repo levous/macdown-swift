@@ -26,6 +26,9 @@ struct HTMLRenderer {
         /// `==mark==` and `x^2` in plain text (FR-19, FR-19a).
         var highlight = false
         var superscript = false
+        /// Blocks name their first source line, for scroll sync (preview
+        /// only; FR-18).
+        var sourceLines = false
     }
 
     /// A math span: where it starts, how many lines it covers, and the HTML
@@ -109,7 +112,7 @@ struct HTMLRenderer {
                 inlines(in: node)
             } else {
                 newline()
-                output += "<p>"
+                output += "<p\(line(node))>"
                 inlines(in: node)
                 output += "</p>\n"
             }
@@ -117,7 +120,7 @@ struct HTMLRenderer {
         case .heading:
             newline()
             let level = node.headingLevel
-            output += "<h\(level) id=\"toc_\(headerCount)\">"
+            output += "<h\(level)\(line(node)) id=\"toc_\(headerCount)\">"
             headerCount += 1
             if options.rendersTOC {
                 var toc = HTMLRenderer(options: options)
@@ -131,29 +134,30 @@ struct HTMLRenderer {
 
         case .blockQuote:
             newline()
-            output += "<blockquote>\n"
+            output += "<blockquote\(line(node))>\n"
             contained { $0.blocks(in: node) }
             output += "</blockquote>\n"
 
         case .list:
             newline()
             if node.isOrderedList {
-                output += node.listStart == 1 ? "<ol>\n" : "<ol start=\"\(node.listStart)\">\n"
+                output += node.listStart == 1 ? "<ol\(line(node))>\n"
+                    : "<ol\(line(node)) start=\"\(node.listStart)\">\n"
             } else {
-                output += "<ul>\n"
+                output += "<ul\(line(node))>\n"
             }
             contained { $0.blocks(in: node) }
             output += node.isOrderedList ? "</ol>\n" : "</ul>\n"
 
         case .item:
-            output += "<li>"
+            output += "<li\(line(node))>"
             contained { $0.blocks(in: node) }
             trimTrailingNewlines()
             output += "</li>\n"
 
         case .taskItem:
             // hoedown's patched list item: the checkbox where "[ ]" was.
-            output += "<li class=\"task-list-item\">"
+            output += "<li\(line(node)) class=\"task-list-item\">"
             let checkbox = node.isChecked ? "<input type=\"checkbox\" checked>" : "<input type=\"checkbox\">"
             if let first = node.firstChild, first.kind == .paragraph, !isInTightList(first) {
                 contained { r in
@@ -184,7 +188,7 @@ struct HTMLRenderer {
 
         case .thematicBreak:
             newline()
-            output += "<hr>\n"
+            output += "<hr\(line(node))>\n"
 
         case .table:
             table(node)
@@ -192,6 +196,12 @@ struct HTMLRenderer {
         default:
             blocks(in: node)
         }
+    }
+
+    /// ` data-source-line="N"` with source lines on.
+    private func line(_ node: CMarkNode) -> String {
+        guard options.sourceLines, let range = node.range else { return "" }
+        return " data-source-line=\"\(range.start.line)\""
     }
 
     private func isInTightList(_ paragraph: CMarkNode) -> Bool {
@@ -218,7 +228,7 @@ struct HTMLRenderer {
             language = PrismLanguages.aliases[language] ?? language
             languages.add(language)
         }
-        output += "<div><pre"
+        output += "<div\(line(node))><pre"
         if options.lineNumbers { output += " class=\"line-numbers\"" }
         if !information.isEmpty { output += " data-information=\"\(HTMLEscaping.html(information))\"" }
         output += "><code class=\"language-\(language.isEmpty ? "none" : HTMLEscaping.html(language))\">"
@@ -232,7 +242,7 @@ struct HTMLRenderer {
     private mutating func table(_ node: CMarkNode) {
         newline()
         let alignments = node.tableAlignments
-        output += "<table>\n"
+        output += "<table\(line(node))>\n"
         var row = node.firstChild
         var inBody = false
         while let current = row {

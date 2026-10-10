@@ -166,6 +166,26 @@ import Testing
         #expect(cmark == MarkdownParser.parse(text, settings: settings).body)
     }
 
+    /// Source lines (FR-18): every block in the preview names its first
+    /// source line; exports don't.
+    @Test func sourceLines() {
+        let text = "# Title\n\nPara\ngraph.\n\n> quote\n\n- a\n- b\n\n```\ncode\n```\n\n| t |\n|---|\n| 1 |\n\n---\n"
+        var options = MarkdownDocumentModel.Options()
+        options.sourceLines = true
+        let body = MarkdownDocumentModel(text, options: options).body
+        for tag in [#"<h1 data-source-line="1" id="toc_0">"#, #"<p data-source-line="3">"#,
+                    #"<blockquote data-source-line="6">"#, #"<ul data-source-line="8">"#,
+                    #"<li data-source-line="9">"#, #"<div data-source-line="11">"#,
+                    #"<table data-source-line="15">"#, #"<hr data-source-line="19">"#] {
+            #expect(body.contains(tag), "\(tag)")
+        }
+        #expect(!html(text).contains("data-source-line"))
+        #expect(PageBuilder.withoutSourceLines(body) == html(text))
+        let export = PageBuilder.exportHTML(title: nil, result: ParseResult(body: body, languages: []),
+                                            settings: PageSettings(), withStyles: false, withHighlighting: false)
+        #expect(!export.contains("data-source-line"))
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

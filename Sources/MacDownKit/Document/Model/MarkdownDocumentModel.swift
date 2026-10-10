@@ -25,6 +25,8 @@ public struct MarkdownDocumentModel: Sendable {
         public var blockCodeInformation = false
         public var rendersTOC = false
         public var hardWrap = false
+        /// Blocks carry `data-source-line` (the preview only).
+        public var sourceLines = false
 
         public init(math: Bool = false, inlineDollar: Bool = false,
                     smartPunctuation: Bool = false, highlight: Bool = false,
@@ -104,7 +106,8 @@ public struct MarkdownDocumentModel: Sendable {
             rendersTOC: options.rendersTOC, hardWrap: options.hardWrap,
             math: Self.mathSpans(protected.math, in: source, lineIndex: lineIndex,
                                  inlineDollar: options.inlineDollar),
-            highlight: options.highlight, superscript: options.superscript))
+            highlight: options.highlight, superscript: options.superscript,
+            sourceLines: options.sourceLines))
         languages = rendered.languages
         // Front matter is a table before the body (FR-15), as with hoedown.
         if let table = protected.frontMatter?.object.htmlTable {

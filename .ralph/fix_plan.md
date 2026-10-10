@@ -104,7 +104,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)
 - [x] Smart punctuation when on, never inside code (FR-17), via `CMARK_OPT_SMART`
 - [x] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
-- [ ] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
+- [x] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
 - [ ] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
 - [ ] Tests: `RendererTests` pass on both engines; each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
 - [ ] Tests: `==x==`, `^x`, `"x"` plain text by default; `_x_` is `<em>`; each opt-in off and on; TOC, task list, front matter (valid/invalid), footnotes, code-block markup; standard formatting with empty defaults

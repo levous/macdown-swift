@@ -262,6 +262,17 @@ public enum PageBuilder {
              scriptOption: .fullLink, linkTransform: linkTransform)
     }
 
+    /// HTML without the preview's `data-source-line` attributes (FR-18),
+    /// for export and copying.
+    public static func withoutSourceLines(_ html: String) -> String {
+        guard html.contains(" data-source-line=") else { return html }
+        return sourceLinePattern.stringByReplacingMatches(
+            in: html, range: NSRange(html.startIndex..., in: html), withTemplate: "")
+    }
+
+    private static let sourceLinePattern = try! NSRegularExpression(
+        pattern: #" data-source-line="\d+""#)
+
     /// A self-contained page for export.
     public static func exportHTML(title: String?, result: ParseResult,
                                   settings: PageSettings, withStyles: Bool,
@@ -292,7 +303,7 @@ public enum PageBuilder {
             scriptsOption = .embedded
             scripts += mathJaxScripts()
         }
-        return html(title: title ?? "", body: result.body,
+        return html(title: title ?? "", body: withoutSourceLines(result.body),
                     templateName: settings.templateName,
                     styles: styles, styleOption: stylesOption,
                     scripts: scripts, scriptOption: scriptsOption)

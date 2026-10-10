@@ -1076,7 +1076,7 @@ public final class DocumentController: NSObject {
     private func writeHTMLToPasteboard() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.writeObjects([renderer.currentHTML as NSString])
+        pasteboard.writeObjects([PageBuilder.withoutSourceLines(renderer.currentHTML) as NSString])
     }
 
     public func renderNow() {
