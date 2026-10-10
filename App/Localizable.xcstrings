@@ -11747,6 +11747,7 @@
       }
     },
     "Smart punctuation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
