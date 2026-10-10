@@ -27,7 +27,7 @@ Before I tell you about all the extra syntax and capabilities I have, here are t
 
 Paragraphs are separated by a blank line. Lines next to each other are joined into one paragraph.
 
-To force a line break, end a line with two spaces.
+To force a line break, end a line with two spaces or a backslash (`\`).
 
 * This two-line bullet
 won’t break
@@ -53,7 +53,7 @@ will break
 ***Both***: `***Both***`  
 <u>Underline</u>: `<u>Underline</u>` (Command-U; Markdown has no underline syntax, so I use HTML)
 
-Emphasis works inside words too: `So A*maz*ing` gives So A*maz*ing. That goes for underscores as well, so snake_case_name shows *case* emphasized; escape the underscores (`snake\_case\_name`) to keep them.
+Asterisks work inside words too: `So A*maz*ing` gives So A*maz*ing. Underscores don't, so names like snake_case_name stay as you typed them.
 
 ### Headers (like this one!)
 
@@ -129,28 +129,30 @@ on its own line elsewhere:
 
 ### Lists
 
-* Lists must be preceded by a blank line (or block element)
 * Unordered lists start each item with a `*`
-- `-` works too
-+ and so does `+`
-	* Indent a level to make a nested list
-		1. Ordered lists are supported.
-		2. Start each item (number-period-space) like `1. `
-		42. It doesn’t matter what number you use, I will render them sequentially
-		1. So you might want to start each line with `1.` and let me sort it out
+* Indent a level to make a nested list
+	1. Ordered lists are supported.
+	2. Start each item with a number and a period or parenthesis, like `1. ` or `1) `
+	42. After the first item, it doesn’t matter what number you use: I number them in order
+	1. So you might want to start each line with `1.` and let me sort it out
+
+- `-` and `+` work too, each starting a list of its own
+
+3. An ordered list starts at its first item’s number
 
 Here is the code:
 
 ```
-* Lists must be preceded by a blank line (or block element)
 * Unordered lists start each item with a `*`
-- `-` works too
-+ and so does `+`
-	* Indent a level to make a nested list
-		1. Ordered lists are supported.
-		2. Start each item (number-period-space) like `1. `
-		42. It doesn’t matter what number you use, I will render them sequentially
-		1. So you might want to start each line with `1.` and let me sort it out
+* Indent a level to make a nested list
+	1. Ordered lists are supported.
+	2. Start each item with a number and a period or parenthesis, like `1. ` or `1) `
+	42. After the first item, it doesn’t matter what number you use: I number them in order
+	1. So you might want to start each line with `1.` and let me sort it out
+
+- `-` and `+` work too, each starting a list of its own
+
+3. An ordered list starts at its first item’s number
 ```
 
 When you press Return in a list, I continue it for you (and number the next item). Press Return on an empty item to end the list. **Format ▸ Unordered List** (Command-Shift-U) and **Format ▸ Ordered List** (Command-Shift-O) turn lines into list items; **Shift Right** and **Shift Left** (Command-] and Command-[) change the nesting level.

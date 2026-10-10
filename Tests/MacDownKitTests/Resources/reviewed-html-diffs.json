@@ -354,48 +354,6 @@
     "reason": "math off: the text is Markdown (intra-word underscores, CommonMark escapes like \\,)"
   },
   {
-    "document": "help.md",
-    "hoedown": "<strong>",
-    "cmark": "",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "",
-    "cmark": "<strong>",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "</em>",
-    "cmark": "",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "",
-    "cmark": "</em>",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "",
-    "cmark": "</ul><ul>",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "",
-    "cmark": " ",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "\\,",
-    "cmark": ",",
-    "reason": "***Both*** nests as <em><strong>; a new list when the marker changes; math off: \\, is an escape"
-  },
-  {
     "document": "generated-10k.md",
     "hoedown": "<p>",
     "cmark": "",
@@ -462,54 +420,6 @@
     "reason": "\"$5 and $10\" isn't math (finding F7); hoedown took it"
   },
   {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;emphasis&quot;&gt;&lt;/a&gt;Emphasis",
-    "cmark": "Emphasis",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;standard-extensions&quot;&gt;&lt;/a&gt;Standard",
-    "cmark": "Standard",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a",
-    "cmark": "Fenced",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "name=&quot;fenced-code-block&quot;&gt;&lt;/a&gt;Fenced ",
-    "cmark": "",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;markdown-pane&quot;&gt;&lt;/a&gt;The",
-    "cmark": "The",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;rendering-pane&quot;&gt;&lt;/a&gt;The",
-    "cmark": "The",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;general-pane&quot;&gt;&lt;/a&gt;The",
-    "cmark": "The",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
-    "document": "help.md",
-    "hoedown": "&lt;a name=&quot;editor-pane&quot;&gt;&lt;/a&gt;The",
-    "cmark": "The",
-    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
-  },
-  {
     "document": "01-inline.md",
     "hoedown": "<br>",
     "cmark": "",
@@ -552,12 +462,6 @@
     "reason": "same, with hard wrap"
   },
   {
-    "document": "help.md",
-    "hoedown": "<br>",
-    "cmark": "",
-    "reason": "hoedown added a second <br> after two-space breaks"
-  },
-  {
     "document": "07-html.md",
     "hoedown": "&unknownentity;",
     "cmark": "&amp;unknownentity; �",
@@ -571,8 +475,140 @@
   },
   {
     "document": "help.md",
+    "hoedown": "<strong>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "<strong>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</em>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "</em>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<p>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</p>",
+    "cmark": " ",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": " ",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "",
+    "cmark": "</ul><ul>",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "</p>",
+    "cmark": "",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<ol>",
+    "cmark": "<ol start=\"3\">",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "\\,",
+    "cmark": ",",
+    "reason": "CommonMark: ***Both*** nests as <em><strong>; list tightness, ordered start numbers, and a new list when the marker changes; math off: \\, is an escape"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;emphasis&quot;&gt;&lt;/a&gt;Emphasis",
+    "cmark": "Emphasis",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;standard-extensions&quot;&gt;&lt;/a&gt;Standard",
+    "cmark": "Standard",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
     "hoedown": "&lt;a name=&quot;fenced-code-block&quot;&gt;&lt;/a&gt;Fenced",
     "cmark": "Fenced",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "name=&quot;markdown-pane&quot;&gt;&lt;/a&gt;The ",
+    "cmark": "",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;rendering-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;general-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;editor-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML (hoedown showed the anchors as escaped text)"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<br>",
+    "cmark": "",
+    "reason": "hoedown added a second <br> after two-space and backslash breaks"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "<br><strong>",
+    "cmark": "",
+    "reason": "hoedown added a second <br> after two-space and backslash breaks"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "&lt;a name=&quot;markdown-pane&quot;&gt;&lt;/a&gt;The",
+    "cmark": "The",
+    "reason": "TOC entries drop inline HTML"
+  },
+  {
+    "document": "help.md",
+    "hoedown": "name=&quot;rendering-pane&quot;&gt;&lt;/a&gt;The ",
+    "cmark": "",
     "reason": "TOC entries drop inline HTML"
   }
 ]
