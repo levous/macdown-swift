@@ -155,6 +155,17 @@ import Testing
         #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(MarkdownParser.parse(text, settings: settings).body))
     }
 
+    /// Highlight and superscript (FR-19, FR-19a): in plain text, with their
+    /// settings on.
+    @Test func highlightAndSuperscript() {
+        let text = "==marked== and == spaced == and x^2, 10^(-6), e^(i pi) and a ^ caret. `==no== x^2`\n"
+        var settings = CorpusTests.settings
+        #expect(!MarkdownDocumentModel(text, options: .init(settings)).body.contains("<mark>"))
+        settings.extensionFlags |= HOEDOWN_EXT_HIGHLIGHT.rawValue | HOEDOWN_EXT_SUPERSCRIPT.rawValue
+        let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
+        #expect(cmark == MarkdownParser.parse(text, settings: settings).body)
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

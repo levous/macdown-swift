@@ -103,7 +103,8 @@ public struct MarkdownDocumentModel: Sendable {
             lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation,
             rendersTOC: options.rendersTOC, hardWrap: options.hardWrap,
             math: Self.mathSpans(protected.math, in: source, lineIndex: lineIndex,
-                                 inlineDollar: options.inlineDollar)))
+                                 inlineDollar: options.inlineDollar),
+            highlight: options.highlight, superscript: options.superscript))
         languages = rendered.languages
         // Front matter is a table before the body (FR-15), as with hoedown.
         if let table = protected.frontMatter?.object.htmlTable {

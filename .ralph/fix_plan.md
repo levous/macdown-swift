@@ -103,7 +103,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Math pass-through when MathJax on (FR-14): hoedown's MathJax delimiters, content escaped (the page's MathJax 2 needs `\(` and `\[`; FR-14 updated)
 - [x] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)
 - [x] Smart punctuation when on, never inside code (FR-17), via `CMARK_OPT_SMART`
-- [ ] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
+- [x] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
 - [ ] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
 - [ ] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
 - [ ] Tests: `RendererTests` pass on both engines; each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md

@@ -23,6 +23,9 @@ struct HTMLRenderer {
         /// Protected math, in source order, to put back in place of its
         /// filler (FR-14).
         var math: [MathSpan] = []
+        /// `==mark==` and `x^2` in plain text (FR-19, FR-19a).
+        var highlight = false
+        var superscript = false
     }
 
     /// A math span: where it starts, how many lines it covers, and the HTML
@@ -420,7 +423,7 @@ struct HTMLRenderer {
         let literal = node.literal ?? ""
         guard !options.math.isEmpty, literal.unicodeScalars.contains(where: ProtectedSource.isMathFiller)
         else {
-            output += HTMLEscaping.html(literal)
+            plainText(literal)
             return
         }
         var plain = String.UnicodeScalarView()
@@ -431,7 +434,7 @@ struct HTMLRenderer {
                 scalars = scalars.dropFirst()
                 continue
             }
-            output += HTMLEscaping.html(String(plain))
+            plainText(String(plain))
             plain.removeAll()
             scalars = scalars.drop(while: ProtectedSource.isMathFiller)
             if let open = openMath {
@@ -443,7 +446,38 @@ struct HTMLRenderer {
                 openMath = segments > 1 ? (index, segments - 1) : nil
             }
         }
-        output += HTMLEscaping.html(String(plain))
+        plainText(String(plain))
+    }
+
+    /// Escaped text, with `==mark==` and `^superscript` when they're on.
+    /// They're found in one text run, so not around other formatting.
+    private mutating func plainText(_ text: String) {
+        guard options.highlight || options.superscript, text.contains("=") || text.contains("^")
+        else {
+            output += HTMLEscaping.html(text)
+            return
+        }
+        let ns = text as NSString
+        var matches: [(range: NSRange, tag: String, content: NSRange)] = []
+        if options.highlight {
+            for m in ExtendedSyntax.highlight.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+                matches.append((m.range, "mark", NSRange(location: m.range.location + 2, length: m.range.length - 4)))
+            }
+        }
+        if options.superscript {
+            for m in ExtendedSyntax.superscript.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+                let content = m.range(at: 1).location != NSNotFound ? m.range(at: 1) : m.range(at: 2)
+                matches.append((m.range, "sup", content))
+            }
+        }
+        var position = 0
+        for match in matches.sorted(by: { $0.range.location < $1.range.location })
+        where match.range.location >= position {
+            output += HTMLEscaping.html(ns.substring(with: NSRange(location: position, length: match.range.location - position)))
+            output += "<\(match.tag)>" + HTMLEscaping.html(ns.substring(with: match.content)) + "</\(match.tag)>"
+            position = NSMaxRange(match.range)
+        }
+        output += HTMLEscaping.html(ns.substring(from: position))
     }
 
     /// The first math span not yet emitted that starts at or after `line`
