@@ -74,6 +74,40 @@ fresh, and the original's plist can be copied over to migrate.
   unsaved document for that path). The shell utility does the same for
   nonexistent paths.
 
+## Markdown differences with the new engine
+
+The port is moving from the original's hoedown to cmark-gfm (see
+[ARCHITECTURE.md](ARCHITECTURE.md), "Markdown engine"). It follows
+CommonMark and GitHub Flavored Markdown, so some documents render
+differently from the original. These are the differences found on the test
+corpus; each is reviewed in
+`Tests/MacDownKitTests/Resources/reviewed-html-diffs.json`:
+
+- **Emphasis:** underscores don't emphasize inside words (`snake_case_name`
+  stays as typed), `***text***` nests as emphasis inside strong, and nested
+  emphasis that hoedown missed now works.
+- **Strikethrough:** `~single tildes~` strike through too.
+- **Line breaks:** a backslash at the end of a line is a line break. With
+  "Render newline literally", a line ending in two spaces gets one break,
+  not two, and tight list items break too.
+- **Headers:** a `#` must be followed by a space (`#Not` is text), more than
+  six `#` is a paragraph, and a setext header (`===`/`---` underline) can
+  span several lines.
+- **Lists:** `1)` starts a list, an ordered list keeps its start number,
+  changing the bullet character starts a new list, a list can interrupt a
+  paragraph, and loose and tight lists follow CommonMark.
+- **Task lists:** `[X]` counts as checked, and `[ ]` needs a space after it.
+- **Block quotes:** quotes separated by a blank line are separate quotes.
+- **Code:** a fence inside a code span stays inline.
+- **Links:** a link destination in angle brackets may contain spaces.
+- **Footnotes:** a footnote referenced twice links both times, and the
+  superscript setting no longer turns footnote syntax into superscript.
+- **HTML:** HTML blocks end where CommonMark says; an unknown entity such as
+  `&foo;` shows as typed; `&#0;` is the replacement character.
+- **Math:** amounts like "$5 and $10" aren't math, even with dollar
+  delimiters on.
+- **Table of contents:** entries leave out HTML in headers, such as anchors.
+
 ## How the original maps onto the port
 
 | Objective-C | Swift |

@@ -434,7 +434,7 @@ or (in MathML)
     <mi>B</mi>
 </math>
 
-With *Use dollar sign ($) as inline delimiter* on too, $e^{i\pi} + 1 = 0$ works inline. It’s a separate setting because dollar signs are common in ordinary text, like $1600 in the table above.
+With *Use dollar sign (`$`) as inline delimiter* on too, $e^{i\pi} + 1 = 0$ works inline. It’s a separate setting because dollar signs are common in ordinary text, like $1600 in the table above.
 
 ### Table of Contents
 

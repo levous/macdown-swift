@@ -102,7 +102,9 @@ enum HTMLDiff {
                      "mdash": "—", "ndash": "–", "ldquo": "“", "rdquo": "”", "lsquo": "‘",
                      "rsquo": "’", "laquo": "«", "raquo": "»", "middot": "·", "times": "×",
                      "deg": "°", "euro": "€", "pound": "£", "yen": "¥", "sect": "§",
-                     "para": "¶", "bull": "•", "apos": "'"]
+                     "para": "¶", "bull": "•", "apos": "'", "rarr": "→", "larr": "←",
+                     "uarr": "↑", "darr": "↓", "harr": "↔", "rArr": "⇒", "lArr": "⇐",
+                     "check": "✓", "minus": "−", "plusmn": "±", "frac12": "½"]
         return named[name]
     }
 
@@ -119,8 +121,10 @@ enum HTMLDiff {
         var scalars = html.unicodeScalars[...]
         while let scalar = scalars.first {
             if scalar == "<", let close = scalars.firstIndex(of: ">") {
+                let tag = normalizeTag(String(String.UnicodeScalarView(scalars[...close])))
+                if blockClosers.contains(tag), text.last == " " { text.removeLast() }
                 flushText()
-                output.append(contentsOf: normalizeTag(String(String.UnicodeScalarView(scalars[...close]))).unicodeScalars)
+                output.append(contentsOf: tag.unicodeScalars)
                 scalars = scalars[scalars.index(after: close)...]
                 continue
             }
@@ -135,6 +139,12 @@ enum HTMLDiff {
         flushText()
         return String(output).trimmingCharacters(in: .whitespaces)
     }
+
+    /// Closing tags of blocks, before which whitespace doesn't show.
+    private static let blockClosers: Set<String> = [
+        "</p>", "</li>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>",
+        "</td>", "</th>", "</blockquote>",
+    ]
 
     /// `<name b="2" a='1'>` → `<name a="1" b="2">`. Comments, doctypes and
     /// closing tags are kept as they are.
@@ -411,9 +421,20 @@ extension LiveDocumentTests {
             .differences.isEmpty)
     }
 
-    /// hoedown against the cmark-gfm renderer: a report only, until the
-    /// Phase 3 review makes it an assertion.
-    @Test func hoedownAgainstCmarkReport() throws {
+    /// A difference between hoedown and cmark-gfm that was reviewed and is
+    /// intended (Phase 3 review, 2026-10-09).
+    struct Reviewed: Decodable {
+        let document: String
+        let hoedown: String
+        let cmark: String
+        let reason: String
+    }
+
+    /// hoedown against the cmark-gfm renderer over the corpus and every
+    /// setting. Each remaining difference is reviewed, with its reason, in
+    /// Resources/reviewed-html-diffs.json (and summarized in
+    /// docs/MACDOWN-PORT.md); a new one fails, and so does one that's gone.
+    @Test func hoedownAgainstCmarkReviewed() throws {
         let corpus = try Corpus.all()
         let expected = try HTMLDiff.expectedDifferences()
         let comparison = HTMLDiff.compare(corpus, left: HTMLDiff.hoedown, right: HTMLDiff.cmark,
@@ -426,7 +447,24 @@ extension LiveDocumentTests {
             try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
             try report.write(to: url.appending(path: "html-diff-cmark.md"), atomically: true, encoding: .utf8)
         }
-        #expect(!report.isEmpty)
+        let url = Bundle.module.url(forResource: "reviewed-html-diffs", withExtension: "json",
+                                    subdirectory: "Resources")!
+        let reviewed = try JSONDecoder().decode([Reviewed].self, from: Data(contentsOf: url))
+        func key(_ document: String, _ hoedown: String, _ cmark: String) -> String {
+            document + "\u{1}" + hoedown + "\u{1}" + cmark
+        }
+        let reviewedKeys = Set(reviewed.map { key($0.document, $0.hoedown, $0.cmark) })
+        var found = Set<String>()
+        for difference in comparison.differences {
+            for hunk in difference.hunks {
+                let k = key(difference.document, hunk.left, hunk.right)
+                found.insert(k)
+                #expect(reviewedKeys.contains(k),
+                        "unreviewed: \(difference.document) (\(difference.setting)) hoedown \(hunk.left.debugDescription) cmark \(hunk.right.debugDescription)")
+            }
+        }
+        #expect(reviewedKeys.subtracting(found).isEmpty, "reviewed differences that are gone; remove them")
+        #expect(reviewed.allSatisfy { !$0.reason.isEmpty })
     }
 
     @Test func entitiesDecodeForComparison() {

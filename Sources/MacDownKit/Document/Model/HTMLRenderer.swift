@@ -336,6 +336,8 @@ struct HTMLRenderer {
             output += "<br>\n"
         case .code:
             output += "<code>" + HTMLEscaping.html(node.literal ?? "") + "</code>"
+        case .htmlInline where linksAsText:
+            break    // in the table of contents (anchors would be duplicated)
         case .htmlInline:
             output += node.literal ?? ""
         case .emphasis:
