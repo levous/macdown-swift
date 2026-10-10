@@ -7,6 +7,7 @@
 //
 
 import AppKit
+import PDFKit
 import Testing
 @testable import MacDownKit
 
@@ -76,6 +77,65 @@ extension LiveDocumentTests {
         #expect(await waitUntil {
             controller.editor.string.contains("Added") && color(controller, at: "Added") != plain
         })
+    }
+}
+}
+
+extension LiveDocumentTests {
+/// With the new engine the preview carries data-source-line; HTML and PDF
+/// exports don't (FR-18).
+@MainActor @Suite(.serialized) struct EngineExportTests {
+    @Test func exportsHaveNoSourceLines() async throws {
+        let preferences = Preferences.shared
+        let saved = preferences.markdownEngine
+        preferences.markdownEngine = .swiftMarkdown
+        defer { preferences.markdownEngine = saved }
+
+        let controller = DocumentController(document: MarkdownDocument(text: "# Title\n\nSome text.\n"),
+                                            fileURL: nil)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        let split = NSSplitView(frame: window.contentView!.bounds)
+        split.isVertical = true
+        split.addArrangedSubview(controller.editorScrollView)
+        split.addArrangedSubview(controller.preview.webView)
+        window.contentView = split
+        controller.viewDidAppear()
+        defer { controller.tearDown(); window.close() }
+
+        func count() async -> Int {
+            (try? await controller.preview.webView.evaluateJavaScript(
+                "document.querySelectorAll('[data-source-line]').length")) as? Int ?? 0
+        }
+        let deadline = Date().addingTimeInterval(10)
+        while await count() < 2, Date() < deadline { try? await Task.sleep(for: .milliseconds(100)) }
+        #expect(await count() == 2)    // the header and the paragraph
+
+        let html = PageBuilder.exportHTML(title: "T", result: controller.renderer.result,
+                                          settings: preferences.renderSettings.page,
+                                          withStyles: true, withHighlighting: true)
+        #expect(html.contains("<h1 id=\"toc_0\">Title</h1>"))
+        #expect(!html.contains("data-source-line"))
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macdown-test-\(UUID().uuidString).pdf")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let info = NSPrintInfo.shared.copy() as! NSPrintInfo
+        info.jobDisposition = .save
+        info.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
+        let operation = controller.preview.printOperation(with: info)
+        operation.showsPrintPanel = false
+        operation.showsProgressPanel = false
+        window.orderFront(nil)
+        operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+        let pdfDeadline = Date().addingTimeInterval(20)
+        while ((try? Data(contentsOf: url))?.count ?? 0) < 1000, Date() < pdfDeadline {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        let text = PDFDocument(url: url)?.string ?? ""
+        #expect(text.contains("Title") && text.contains("Some text."))
+        #expect(!text.contains("data-source-line"))
     }
 }
 }
