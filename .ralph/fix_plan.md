@@ -34,7 +34,7 @@ what's missing (see the first task).
 - [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
 - [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
 - [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
-- [x] docs/MACDOWN-PORT.md "Differences from the original": note always-on standard features, dropped Quote, new editing defaults
+- [x] docs/MACDOWN-PORT.md "Differences from the original": note always-on standard features, dropped Quote, new editing defaults (removing "Regenerating the highlighter parser" waits for the hoedown/PEG removal)
 - [x] Front matter detection: require the closing `---`/`...` on its own line and a YAML mapping, so a document that opens with a thematic break isn't swallowed now that detection is always on (found by the corpus, 2026-10-09)
 
 ### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
@@ -127,8 +127,8 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [ ] After that release: remove `Sources/CHoedown`, `Sources/CPegMarkdown`, their `Package.swift` targets/dependencies, the hidden setting, and `ScrollAnchors.scan` (BLOCKED: awaiting the release with cmark-gfm as default)
 - [x] Apply early-step settings/defaults here if the early step didn't ship (not needed: the early step is done)
 - [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses (cmark-gfm.txt added 2026-10-09; the removals are BLOCKED: awaiting the hoedown removal)
-- [ ] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
-- [ ] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
+- [x] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
+- [x] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
 - [ ] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation
 - [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass
 

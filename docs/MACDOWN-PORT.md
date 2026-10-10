@@ -108,13 +108,15 @@ corpus; each is reviewed in
 - **Math:** amounts like "$5 and $10" aren't math, even with dollar
   delimiters on.
 - **Table of contents:** entries leave out HTML in headers, such as anchors.
+- **Highlight and superscript** (`==text==`, `x^2`) work within plain text,
+  not around other formatting: `==*a*==` isn't highlighted.
 
 ## How the original maps onto the port
 
 | Objective-C | Swift |
 |-------------|-------|
 | `MPDocument` (NSDocument + xib) | `MarkdownDocument` (`ReferenceFileDocument`), `DocumentController`, `DocumentView` |
-| `MPRenderer` | `MarkdownParser` (hoedown bridge, background-safe), `PageBuilder`, `Renderer` |
+| `MPRenderer` | `MarkdownDocumentModel` and `HTMLRenderer` (cmark-gfm), `PageBuilder`, `Renderer`; `MarkdownParser` (the hoedown bridge, for one release) |
 | `MPAsset`, handlebars-objc | `Asset`, `HTMLTemplate` (minimal Handlebars subset) |
 | `MPPreferences` (PAPreferences) | `Preferences` (`@Observable`, same user defaults keys) |
 | MASPreferences panes (xibs) | `SettingsView` (SwiftUI `Settings` scene) |
