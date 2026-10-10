@@ -85,7 +85,7 @@ what's missing (see the first task).
 - [x] `ProtectedSource`: code and raw HTML ranges from one cmark parse instead of swift-markdown
 - [x] `MarkdownDocumentModel`: blocks from cmark nodes, in the same walk as highlighting (one walk)
 - [x] `HighlightMapper` on cmark nodes: same spans and extents (all existing tests pass); NOTE from footnote nodes; AUTO_LINK_URL/EMAIL also for extension autolinks when Autolink is on; update the reviewed PEG diff list
-- [ ] Remove swift-markdown: dependency, imports, swift-markdown spike tests (findings stay recorded in the intent); `LineIndexTests` corpus check uses cmark positions
+- [x] Remove swift-markdown: dependency, imports, swift-markdown spike tests (findings stay recorded in the intent); `LineIndexTests` corpus check uses cmark positions
 - [ ] Benchmark: NFR-1 met on 10k lines (remove the known issue); record numbers in F8
 
 ### Phase 3: Renderer (FR-7 to FR-20, TR-4, TR-5)

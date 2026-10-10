@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Markdown
 import Testing
 @testable import MacDownKit
 
@@ -63,11 +62,11 @@ import Testing
         let result = protect(source)
         expectOffsetsUnchanged(result)
         var emphasis = 0
-        func walk(_ markup: Markup) {
-            if markup is Emphasis { emphasis += 1 }
-            markup.children.forEach(walk)
+        func walk(_ node: CMarkNode) {
+            if node.kind == .emphasis { emphasis += 1 }
+            node.children.forEach(walk)
         }
-        walk(Document(parsing: result.protected))
+        CMarkTree(result.protected).withRoot(walk)
         #expect(emphasis == 3)    // *a*, *b*, _c_; nothing inside the math
         #expect(result.math.count == 3)
     }
@@ -88,9 +87,9 @@ import Testing
         #expect(frontMatter.range == 0..<33)
         #expect(frontMatter.object["title"] == .string("Notes"))
         // Only blank lines are left for the parser: the body is the first block.
-        let document = Document(parsing: result.protected)
-        #expect(document.childCount == 1)
-        #expect((document.child(at: 0) as? Heading)?.range?.lowerBound.line == 6)
+        let blocks = CMarkTree(result.protected).withRoot { $0.children.map { ($0.kind, $0.range?.start.line) } }
+        #expect(blocks.count == 1)
+        #expect(blocks.first?.0 == .heading && blocks.first?.1 == 6)
     }
 
     @Test func otherLeadingDashesAreUntouched() {

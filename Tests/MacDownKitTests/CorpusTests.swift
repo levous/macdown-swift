@@ -10,7 +10,6 @@
 //
 
 import Foundation
-import Markdown
 import Testing
 @testable import MacDownKit
 
@@ -100,8 +99,7 @@ enum Corpus {
     @Test(arguments: try Corpus.all())
     func everyDocumentParsesWithBothEngines(_ document: Corpus.Document) {
         #expect(!render(document.text).isEmpty)
-        let parsed = Markdown.Document(parsing: document.text)
-        #expect(parsed.childCount > 0)
+        #expect(CMarkTree(document.text).withRoot { !$0.children.isEmpty })
     }
 
     @Test func generatedDocumentHasExactlyTheRequestedLines() {

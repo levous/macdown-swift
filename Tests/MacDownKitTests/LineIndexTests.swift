@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Markdown
 import Testing
 @testable import MacDownKit
 
@@ -55,14 +54,16 @@ import Testing
     /// Every block of every corpus document maps to the source text it came
     /// from: the converted range holds the block's first line.
     @Test(arguments: try Corpus.all())
-    func swiftMarkdownRangesMapToTheSource(_ document: Corpus.Document) {
+    func cmarkRangesMapToTheSource(_ document: Corpus.Document) {
         let index = LineIndex(document.text)
         let source = document.text as NSString
         var checked = 0
-        func walk(_ markup: Markup) {
-            if markup is BlockMarkup, !(markup is Markdown.Document), let range = markup.range,
-               let nsRange = index.range(from: (range.lowerBound.line, range.lowerBound.column),
-                                         to: (range.upperBound.line, range.upperBound.column)) {
+        let blocks: [CMarkNode.Kind] = [.blockQuote, .list, .item, .taskItem, .codeBlock, .htmlBlock,
+                                        .paragraph, .heading, .thematicBreak, .table]
+        func walk(_ node: CMarkNode) {
+            if blocks.contains(node.kind), let range = node.range,
+               let nsRange = index.range(from: (range.start.line, range.start.column),
+                                         to: (range.end.line, range.end.column)) {
                 #expect(NSMaxRange(nsRange) <= source.length)
                 // The block starts where its source line does (after any
                 // container markers, so compare from the range start).
@@ -70,16 +71,17 @@ import Testing
                 #expect(nsRange.location >= lineRange.location)
                 checked += 1
             }
-            if let heading = markup as? Heading, let range = heading.range,
-               let nsRange = index.range(from: (range.lowerBound.line, range.lowerBound.column),
-                                         to: (range.upperBound.line, range.upperBound.column)) {
+            if node.kind == .heading, let range = node.range,
+               let nsRange = index.range(from: (range.start.line, range.start.column),
+                                         to: (range.end.line, range.end.column)) {
                 let text = source.substring(with: nsRange)
                 #expect(text.hasPrefix("#") || text.contains("\n"), "\(text.debugDescription)")
-                #expect(text.contains(heading.plainText.prefix(3)), "\(text.debugDescription)")
+                let first = node.children.first { $0.kind == .text }?.literal ?? ""
+                #expect(text.contains(first.prefix(3)), "\(text.debugDescription)")
             }
-            markup.children.forEach(walk)
+            node.children.forEach(walk)
         }
-        walk(Markdown.Document(parsing: document.text))
+        CMarkTree(document.text).withRoot(walk)
         #expect(checked > 0)
     }
 }
