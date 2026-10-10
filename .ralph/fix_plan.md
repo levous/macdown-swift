@@ -130,7 +130,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
 - [x] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
 - [x] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation (also line breaks, emphasis and lists for CommonMark)
-- [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass
+- [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass (BLOCKED: the gate after the hoedown removal; passes today without it)
 
 ### Future (out of scope; do not implement)
 - Outline/heading folding, click-to-locate, incremental re-parse, AST export for CLI
