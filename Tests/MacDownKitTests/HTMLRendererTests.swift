@@ -82,3 +82,13 @@ import Testing
         #expect(html("A[^n] A[^n].\n\n[^n]: En.\n").components(separatedBy: "href=\"#fn1\"").count == 3)
     }
 }
+
+/// Both engines collect the same Prism languages (FR-10).
+@MainActor @Suite struct PrismLanguageTests {
+    @Test(arguments: try Corpus.all())
+    func sameLanguagesAsHoedown(_ document: Corpus.Document) {
+        let hoedown = MarkdownParser.parse(document.text, settings: CorpusTests.settings).languages
+        let cmark = MarkdownDocumentModel(document.text, options: .init(CorpusTests.settings)).languages
+        #expect(Set(cmark) == Set(hoedown), "\(document.name)")
+    }
+}

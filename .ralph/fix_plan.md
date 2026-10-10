@@ -94,7 +94,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] `HTMLRenderer` (pure, walks cmark-gfm nodes inside the parse task): CommonMark core blocks and inlines
 - [x] GFM tables, strikethrough, fenced code always on
 - [x] Code blocks: `<div><pre class="line-numbers" data-information><code class="language-…">`, line-numbers class only when setting on; port `hoedown_html_patch.c` code-block info (FR-9)
-- [ ] Prism language list with `languageAddition` alias mapping moved out of `MarkdownParser.swift` (FR-10)
+- [x] Prism language list with `languageAddition` alias mapping moved out of `MarkdownParser.swift` (FR-10)
 - [ ] Task lists with MacDown's current markup/classes, always on (FR-11)
 - [ ] Footnotes always on (FR-16), from cmark-gfm footnote nodes (`CMARK_OPT_FOOTNOTES`), with today's footnote markup
 - [ ] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
