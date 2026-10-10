@@ -72,14 +72,19 @@ final class DocumentResponder: NSResponder {
         controller?.duplicate()
     }
 
-    private static let actions: Set<Selector> = [
+    private nonisolated static let actions: Set<Selector> = [
         #selector(saveDocument(_:)), #selector(saveDocumentAs(_:)),
         #selector(duplicateDocument(_:)),
     ]
 
     override func responds(to selector: Selector!) -> Bool {
-        // Without a controller, let the actions reach the document.
-        if Self.actions.contains(selector) { return controller != nil }
+        // Without a controller, let the actions reach the document. AppKit
+        // validates menu actions on the main thread (NSObject's method isn't
+        // isolated).
+        if Self.actions.contains(selector) {
+            guard Thread.isMainThread else { return false }
+            return MainActor.assumeIsolated { controller != nil }
+        }
         return super.responds(to: selector)
     }
 }
