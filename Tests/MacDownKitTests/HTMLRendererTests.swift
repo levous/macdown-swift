@@ -66,6 +66,23 @@ import Testing
         #expect(html(text) == hoedown(text))
     }
 
+    /// Front matter (FR-15): a valid YAML block is a table before the body;
+    /// otherwise it's Markdown. Same as hoedown.
+    @Test(arguments: ["09-front-matter.md", "11-leading-rule.md"])
+    func frontMatter(_ name: String) throws {
+        let text = try #require(try Corpus.files().first { $0.name == name }).text
+        #expect(HTMLDiff.normalize(html(text)) == HTMLDiff.normalize(hoedown(text)))
+    }
+
+    /// Invalid front matter is Markdown; in CommonMark a setext header can
+    /// span lines, so both lines are the <h2> (hoedown took only the last).
+    @Test func invalidFrontMatter() throws {
+        let text = try #require(try Corpus.files().first { $0.name == "10-front-matter-invalid.md" }).text
+        let body = html(text)
+        #expect(!body.contains("<table>"))
+        #expect(body.hasPrefix("<hr>\n\n<h2 id=\"toc_0\">title: &quot;unterminated\ntags: [one, two</h2>"))
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

@@ -95,7 +95,14 @@ public struct MarkdownDocumentModel: Sendable {
 
         (highlights, blocks) = HighlightMapper.map(tree, source: source, lineIndex: lineIndex,
                                                     math: math, options: options)
-        (body, languages) = HTMLRenderer.render(tree, options: .init(
+        let rendered = HTMLRenderer.render(tree, options: .init(
             lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation))
+        languages = rendered.languages
+        // Front matter is a table before the body (FR-15), as with hoedown.
+        if let table = protected.frontMatter?.object.htmlTable {
+            body = table + "\n" + rendered.html
+        } else {
+            body = rendered.html
+        }
     }
 }
