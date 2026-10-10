@@ -130,6 +130,18 @@ import Testing
         }
     }
 
+    /// Autolink (FR-8a): bare URLs and emails only with the setting on;
+    /// <url> always.
+    @Test func autolinks() {
+        let text = "See https://example.org/page?q=1, www.example.org and hello@example.org; <https://x.org>.\n"
+        var settings = CorpusTests.settings
+        let off = MarkdownDocumentModel(text, options: .init(settings)).body
+        #expect(off.components(separatedBy: "<a href").count == 2)    // just <https://x.org>
+        settings.extensionFlags |= HOEDOWN_EXT_AUTOLINK.rawValue
+        let on = MarkdownDocumentModel(text, options: .init(settings)).body
+        #expect(on == MarkdownParser.parse(text, settings: settings).body)
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")
