@@ -23,23 +23,31 @@ enum HelpDocument {
 }
 
 @MainActor @Suite struct HelpDocumentRenderingTests {
-    /// Renders the help with preferences in a throwaway suite.
-    func render(_ configure: (Preferences) -> Void = { _ in }) throws -> String {
+    /// Renders the help with preferences in a throwaway suite, with either
+    /// engine. Entities are decoded so hoedown's `&ldquo;` and cmark-gfm's
+    /// `“` compare alike.
+    func render(_ engine: MarkdownEngine,
+                _ configure: (Preferences) -> Void = { _ in }) throws -> String {
         let suite = "MacDownHelpTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = Preferences(defaults: defaults)    // fresh-install defaults
         configure(preferences)
-        return MarkdownParser.parse(try HelpDocument.text(),
-                                    settings: preferences.renderSettings.parse).body
+        let settings = preferences.renderSettings.parse
+        let html = switch engine {
+        case .hoedown: MarkdownParser.parse(try HelpDocument.text(), settings: settings).body
+        case .swiftMarkdown: MarkdownDocumentModel(try HelpDocument.text(), options: .init(settings)).body
+        }
+        return HTMLDiff.decodeEntities(html)
     }
 
-    @Test func standardMarkdownRendersWithDefaultSettings() throws {
-        let html = try render()
+    @Test(arguments: MarkdownEngine.allCases)
+    func standardMarkdownRendersWithDefaultSettings(_ engine: MarkdownEngine) throws {
+        let html = try render(engine)
         for element in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6", "<strong>", "<em>",
                         "<u>Underline</u>", "<code>Inline code</code>", "<pre>",
                         "<blockquote>", "<ol>", "<ul>", "<hr>", "<table>",
-                        "<kbd>Command</kbd>", "H<sub>2</sub>O", "&copy;",
+                        "<kbd>Command</kbd>", "H<sub>2</sub>O", "©",
                         "<del>struck through</del>", "task-list-item", "So A<em>maz</em>ing",
                         #"<a name="standard-extensions"></a>"#,
                         "<!-- This is an HTML comment."] {
@@ -66,19 +74,21 @@ enum HelpDocument {
     // The live examples in "Inline Formatting" use their own text: the table
     // above them shows each result as literal HTML.
 
-    @Test func extendedSyntaxStaysPlainUntilTurnedOn() throws {
-        let html = try render()
-        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "&hellip;", #"<a href="https://example.org">"#, "<q>"] {
+    @Test(arguments: MarkdownEngine.allCases)
+    func extendedSyntaxStaysPlainUntilTurnedOn(_ engine: MarkdownEngine) throws {
+        let html = try render(engine)
+        for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", #"<a href="https://example.org">"#, "<q>"] {
             #expect(!html.contains(element), "\(element) without its setting")
         }
         for text in ["==highlighted==", "y^3", "https://example.org", "<p>[TOC]</p>",
-                     "&quot;Curly quotes,&quot;"] {
+                     "&quot;Curly quotes,&quot;", "an ellipsis..."] {
             #expect(html.contains(text), "\(text) should show as typed")
         }
     }
 
-    @Test func everyOptionRendersItsExample() throws {
-        let html = try render { p in
+    @Test(arguments: MarkdownEngine.allCases)
+    func everyOptionRendersItsExample(_ engine: MarkdownEngine) throws {
+        let html = try render(engine) { p in
             p.extensionHighlight = true
             p.extensionSuperscript = true
             p.extensionAutolink = true
@@ -88,10 +98,10 @@ enum HelpDocument {
             p.htmlMathJaxInlineDollar = true
         }
         for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", "10<sup>-6</sup>",
-                        "&ldquo;Curly quotes,&rdquo;",
+                        "“Curly quotes,”",
                         #"<a href="https://example.org">https://example.org</a>"#,
                         #"<a href="mailto:hello@example.org">"#,
-                        "&ndash;", "&mdash;", "&hellip;"] {
+                        "–", "—", "…"] {
             #expect(html.contains(element), "missing \(element)")
         }
         // [TOC] became a table of contents.
