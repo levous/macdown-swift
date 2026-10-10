@@ -106,7 +106,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
 - [x] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
 - [x] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
-- [ ] Tests: `RendererTests` pass on both engines; each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
+- [x] Tests: `RendererTests` pass on both engines (no expectation needed changing); each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
 - [ ] Tests: `==x==`, `^x`, `"x"` plain text by default; `_x_` is `<em>`; each opt-in off and on; TOC, task list, front matter (valid/invalid), footnotes, code-block markup; standard formatting with empty defaults
 - [ ] Test: HTML/PDF export contains no `data-source-line`
 - [ ] Live test: Mermaid, Graphviz, MathJax, Prism render in the running app (`LiveDocumentTests`), and a screenshot of the corpus documents in a throwaway build looks right

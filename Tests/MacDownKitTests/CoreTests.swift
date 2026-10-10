@@ -377,21 +377,29 @@ private func fixture(_ name: String, _ ext: String) -> URL {
 }
 
 @Suite struct RendererTests {
-    func parse(_ text: String, ext: UInt32 = 0x7 | (1 << 4), renderer: UInt32 = 0,
-               toc: Bool = false, frontMatter: Bool = false) -> ParseResult {
-        MarkdownParser.parse(text, settings: ParseSettings(
-            extensionFlags: ext, rendererFlags: renderer,
-            rendersTOC: toc, detectsFrontMatter: frontMatter))
+    func parse(_ engine: MarkdownEngine, _ text: String, ext: UInt32 = 0x7 | (1 << 4),
+               renderer: UInt32 = 0, toc: Bool = false, frontMatter: Bool = false) -> ParseResult {
+        let settings = ParseSettings(extensionFlags: ext, rendererFlags: renderer,
+                                     rendersTOC: toc, detectsFrontMatter: frontMatter)
+        switch engine {
+        case .hoedown:
+            return MarkdownParser.parse(text, settings: settings)
+        case .swiftMarkdown:
+            let model = MarkdownDocumentModel(text, options: .init(settings))
+            return ParseResult(body: model.body, languages: model.languages)
+        }
     }
 
-    @Test func basic() {
-        let result = parse("# Hello\n\n*world*")
+    @Test(arguments: MarkdownEngine.allCases)
+    func basic(_ engine: MarkdownEngine) {
+        let result = parse(engine, "# Hello\n\n*world*")
         #expect(result.body.contains("<h1 id=\"toc_0\">Hello</h1>"))
         #expect(result.body.contains("<em>world</em>"))
     }
 
-    @Test func fencedCodeMapsAliasesAndCollectsLanguages() {
-        let result = parse("```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
+    @Test(arguments: MarkdownEngine.allCases)
+    func fencedCodeMapsAliasesAndCollectsLanguages(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
         #expect(result.body.contains("<code class=\"language-javascript\">var a = 1;</code>"))
         #expect(result.body.contains("<div><pre><code class=\"language-cpp\">"))
         #expect(result.languages.contains("javascript"))
@@ -430,58 +438,68 @@ private func fixture(_ name: String, _ ext: String) -> URL {
 
             [^n]: The note.
             """
-        let html = MarkdownParser.parse(text, settings: settings).body
-        for element in ["<td>Standard</td>", "<table>", "<th>a</th>", "<td>1</td>",
-                        #"<code class="language-swift">"#, "<del>gone</del>",
-                        #"<div class="footnotes">"#, #"type="checkbox""#,
-                        "&quot;as typed&quot;"] {
-            #expect(html.contains(element), "missing \(element)")
+        // Both engines.
+        for html in [MarkdownParser.parse(text, settings: settings).body,
+                     MarkdownDocumentModel(text, options: .init(settings)).body] {
+            for element in ["<td>Standard</td>", "<table>", "<th>a</th>", "<td>1</td>",
+                            #"<code class="language-swift">"#, "<del>gone</del>",
+                            #"<div class="footnotes">"#, #"type="checkbox""#,
+                            "&quot;as typed&quot;"] {
+                #expect(html.contains(element), "missing \(element)")
+            }
+            #expect(!html.contains("<q>"))
         }
-        #expect(!html.contains("<q>"))
     }
 
-    @Test func noLanguage() {
-        let result = parse("```\nplain\n```\n")
+    @Test(arguments: MarkdownEngine.allCases)
+    func noLanguage(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```\nplain\n```\n")
         #expect(result.body.contains("<code class=\"language-none\">plain</code>"))
     }
 
-    @Test func taskList() {
-        let result = parse("- [ ] todo\n- [x] done\n", renderer: 1 << 4)
+    @Test(arguments: MarkdownEngine.allCases)
+    func taskList(_ engine: MarkdownEngine) {
+        let result = parse(engine, "- [ ] todo\n- [x] done\n", renderer: 1 << 4)
         #expect(result.body.contains("<li class=\"task-list-item\"><input type=\"checkbox\"> todo"))
         #expect(result.body.contains("<input type=\"checkbox\" checked> done"))
     }
 
-    @Test func lineNumbersAndInformation() {
-        let result = parse("```python:example.py\nprint(1)\n```\n",
+    @Test(arguments: MarkdownEngine.allCases)
+    func lineNumbersAndInformation(_ engine: MarkdownEngine) {
+        let result = parse(engine, "```python:example.py\nprint(1)\n```\n",
                            renderer: (1 << 5) | (1 << 6))
         #expect(result.body.contains(
             "<pre class=\"line-numbers\" data-information=\"example.py\"><code class=\"language-python\">"))
     }
 
-    @Test func tableOfContents() {
-        let result = parse("[TOC]\n\n# One\n\n## Two\n", toc: true)
+    @Test(arguments: MarkdownEngine.allCases)
+    func tableOfContents(_ engine: MarkdownEngine) {
+        let result = parse(engine, "[TOC]\n\n# One\n\n## Two\n", toc: true)
         #expect(result.body.contains("<ul class=\"toc\">"))
         #expect(result.body.contains("<a href=\"#toc_1\">Two</a>"))
         #expect(!result.body.contains("[TOC]"))
     }
 
-    @Test func frontMatter() {
-        let result = parse("---\ntitle: Test\n---\nBody", frontMatter: true)
+    @Test(arguments: MarkdownEngine.allCases)
+    func frontMatter(_ engine: MarkdownEngine) {
+        let result = parse(engine, "---\ntitle: Test\n---\nBody", frontMatter: true)
         #expect(result.body.hasPrefix(
             "<table><thead><tr><th>title</th></tr></thead><tbody><tr><td>Test</td></tr></tbody></table>\n"))
         #expect(result.body.contains("<p>Body</p>"))
     }
 
-    @Test func unicode() {
-        let result = parse("# 中文 😀\n")
+    @Test(arguments: MarkdownEngine.allCases)
+    func unicode(_ engine: MarkdownEngine) {
+        let result = parse(engine, "# 中文 😀\n")
         #expect(result.body.contains("中文 😀"))
     }
 
-    @Test func previewPage() {
+    @Test(arguments: MarkdownEngine.allCases)
+    func previewPage(_ engine: MarkdownEngine) {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
         settings.lineNumbers = true
-        let result = parse("```swift\nlet a = 1\n```\n")
+        let result = parse(engine, "```swift\nlet a = 1\n```\n")
         let html = PageBuilder.previewHTML(title: "Doc", result: result,
                                            settings: settings)
         #expect(html.contains("<title>Doc</title>"))
@@ -491,10 +509,11 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(html.contains("prism.css"))
     }
 
-    @Test func exportPageIsSelfContained() {
+    @Test(arguments: MarkdownEngine.allCases)
+    func exportPageIsSelfContained(_ engine: MarkdownEngine) {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
-        let result = parse("```swift\nlet a = 1\n```\n")
+        let result = parse(engine, "```swift\nlet a = 1\n```\n")
         let html = PageBuilder.exportHTML(title: nil, result: result,
                                           settings: settings, withStyles: false,
                                           withHighlighting: true)
