@@ -80,6 +80,9 @@ import Testing
         // A footnote referenced twice links both times; hoedown left the
         // second as text.
         #expect(html("A[^n] A[^n].\n\n[^n]: En.\n").components(separatedBy: "href=\"#fn1\"").count == 3)
+        // GFM task lists: [X] is checked, and the box needs a space after it.
+        #expect(html("- [X] capital\n").contains("<input type=\"checkbox\" checked> capital"))
+        #expect(html("- [ ]no space\n") == "<ul>\n<li>[ ]no space</li>\n</ul>\n")
     }
 }
 
