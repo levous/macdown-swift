@@ -126,7 +126,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Default `markdownEngine` to `swiftMarkdown`, `hoedown` still selectable (ship one release; human release gate). **Default switched 2026-10-09; shipping the release is the user's step**
 - [ ] After that release: remove `Sources/CHoedown`, `Sources/CPegMarkdown`, their `Package.swift` targets/dependencies, the hidden setting, and `ScrollAnchors.scan` (BLOCKED: awaiting the release with cmark-gfm as default)
 - [x] Apply early-step settings/defaults here if the early step didn't ship (not needed: the early step is done)
-- [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses
+- [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses (cmark-gfm.txt added 2026-10-09; the removals are BLOCKED: awaiting the hoedown removal)
 - [ ] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
 - [ ] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
 - [ ] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation
