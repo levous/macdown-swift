@@ -80,7 +80,8 @@ public final class DocumentController: NSObject {
     /// What `editorAnchors` were computed for, to skip recomputing them.
     @ObservationIgnored private var editorLayoutSyncScheduled = false
     @ObservationIgnored private var editorAnchorsKey: (text: String, width: CGFloat,
-                                                       frontMatter: Bool, fencedCode: Bool)?
+                                                       frontMatter: Bool, fencedCode: Bool,
+                                                       lines: [Int])?
     @ObservationIgnored private(set) var previewMetrics = PreviewMetrics()
     /// The pane the user scrolled last; the other one follows it.
     @ObservationIgnored private var scrollLeader = ScrollLeader.editor
@@ -964,20 +965,36 @@ public final class DocumentController: NSObject {
         guard let layoutManager = editor.layoutManager,
               let container = editor.textContainer
         else { return }
+        // The preview's source lines, when the new engine marks them.
+        let lines = previewMetrics.anchors.compactMap { anchor -> Int? in
+            if case .line(let line) = anchor.kind { line } else { nil }
+        }
         let key = (text: editor.string, width: container.size.width,
-                   frontMatter: true,
-                   fencedCode: true)
-        if let old = editorAnchorsKey, old == key { return }
+                   frontMatter: true, fencedCode: true, lines: lines)
+        if let old = editorAnchorsKey, old.text == key.text, old.width == key.width,
+           old.lines == key.lines { return }
         editorAnchorsKey = key
         let origin = editor.textContainerOrigin.y
         layoutManager.ensureLayout(for: container)
-        let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
-                                               fencedCode: key.fencedCode)
-        editorAnchors = sourceAnchors.map { anchor in
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
-                                                      actualCharacterRange: nil)
-            let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
-            return ScrollAnchor(anchor.kind, origin + rect.midY)
+        if !lines.isEmpty {
+            // The top of each of those lines in the editor.
+            let index = LineIndex(key.text)
+            let length = (key.text as NSString).length
+            editorAnchors = Set(lines).sorted().compactMap { line in
+                guard let offset = index.utf16Offset(line: line, column: 1) else { return nil }
+                let glyph = layoutManager.glyphIndexForCharacter(at: min(offset, max(0, length - 1)))
+                let rect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
+                return ScrollAnchor(.line(line), origin + rect.minY)
+            }
+        } else {
+            let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
+                                                   fencedCode: key.fencedCode)
+            editorAnchors = sourceAnchors.map { anchor in
+                let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
+                                                          actualCharacterRange: nil)
+                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
+                return ScrollAnchor(anchor.kind, origin + rect.midY)
+            }
         }
         editorTextEnd = origin + layoutManager.usedRect(for: container).maxY
     }

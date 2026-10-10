@@ -113,9 +113,9 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Run the HTML-diff harness hoedown vs `HTMLRenderer` on the corpus (full settings matrix) and review; remaining differences listed in docs/MACDOWN-PORT.md
 
 ### Phase 4: Scroll sync by source line (FR-28 to FR-31)
-- [ ] `PreviewController.fetchMetrics` JS: report `[sourceLine, y]` pairs from `[data-source-line]` elements instead of `h`/`i` kinds
-- [ ] `DocumentController`: pass the model's source-line data to scroll sync via the Phase 2 model hand-off
-- [ ] `SourceAnchors`: editor maps source line to y via `LineIndex` and the text layout
+- [x] `PreviewController.fetchMetrics` JS: report `[sourceLine, y]` pairs from `[data-source-line]` elements instead of `h`/`i` kinds
+- [x] `DocumentController`: pass the model's source-line data to scroll sync via the Phase 2 model hand-off (not needed: the editor computes the preview's lines from its own text)
+- [x] `SourceAnchors`: editor maps source line to y via `LineIndex` and the text layout
 - [ ] Replace `ScrollAnchors.scan` and kind matching with a source-line map feeding the existing `ScrollMap`; keep `ScrollGeometry` and `ScrollMap`
 - [ ] Update `ScrollAnchorsTests` / `ScrollSyncIntegrationTests` for source-line anchors
 - [ ] Verify `help.md` (code-fence case) and an image-heavy document stay aligned with unequal pane widths, both scroll directions

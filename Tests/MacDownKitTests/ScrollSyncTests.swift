@@ -88,6 +88,19 @@ import Testing
                 == preview.maxOffset)
     }
 
+    /// Source-line anchors (the new engine) pair by line number; lines one
+    /// side lacks are skipped.
+    @Test func linesPairByNumber() {
+        let map = ScrollMap(editor: [ScrollAnchor(.line(1), 0), ScrollAnchor(.line(5), 200),
+                                     ScrollAnchor(.line(9), 400)],
+                            preview: [ScrollAnchor(.line(1), 10), ScrollAnchor(.line(3), 300),
+                                      ScrollAnchor(.line(9), 1500), ScrollAnchor(.line(5), 2000)],
+                            editorEnd: 1000, previewEnd: 3000)
+        // Line 3 has no editor anchor; line 5 after 9 isn't increasing.
+        #expect(map.pairs.map(\.editor) == [0, 400, 1000])
+        #expect(map.pairs.map(\.preview) == [0, 1500, 3000])
+    }
+
     @Test func mismatchedAnchorsFallBack() {
         // Image anchors disagree; headers still pair up.
         let map = ScrollMap(editor: [ScrollAnchor(.image, 100), ScrollAnchor(.header, 300)],
@@ -201,6 +214,54 @@ extension LiveDocumentTests {
             preferences.htmlStyleName = saved.1
         }
         try await body()
+    }
+
+    /// With the new engine, both panes anchor on source lines: every block
+    /// the preview marks, at its top, and the same line's top in the editor.
+    @Test func sourceLinesAlignInBothDirections() async throws {
+        let preferences = Preferences.shared
+        let savedEngine = preferences.markdownEngine
+        preferences.markdownEngine = .swiftMarkdown
+        defer { preferences.markdownEngine = savedEngine }
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 10 })
+            let previewLines = controller.previewMetrics.anchors.compactMap {
+                if case .line(let n) = $0.kind { n } else { nil }
+            }
+            #expect(previewLines.count == controller.previewMetrics.anchors.count)
+            let editorLines = Set(controller.editorAnchors.compactMap {
+                if case .line(let n) = $0.kind { n } else { nil }
+            })
+            #expect(editorLines == Set(previewLines))
+
+            // A line in the middle: editor top at the center → preview top at center.
+            let index = previewLines.count / 2
+            let line = previewLines[index]
+            let editorY = try #require(controller.editorAnchors.first { $0.kind == .line(line) }).position
+            let previewY = controller.previewMetrics.anchors[index].position
+            let editorHeight = controller.editorScrollView.contentView.bounds.height
+            let previewHeight = controller.previewMetrics.visibleHeight
+            let clipView = controller.editorScrollView.contentView
+            clipView.scroll(to: NSPoint(x: 0, y: editorY - editorHeight / 2))
+            controller.editorScrollView.reflectScrolledClipView(clipView)
+            #expect(await waitUntil {
+                abs(await previewScrollY(controller) - (previewY - previewHeight / 2)) < 2
+            })
+
+            // And back: another line centered in the preview → centered in
+            // the editor.
+            try await Task.sleep(for: .milliseconds(400))
+            let index2 = previewLines.count / 3
+            let line2 = previewLines[index2]
+            let previewY2 = controller.previewMetrics.anchors[index2].position
+            let editorY2 = try #require(controller.editorAnchors.first { $0.kind == .line(line2) }).position
+            let target = previewY2 - previewHeight / 2
+            _ = try await controller.preview.webView.evaluateJavaScript("window.scrollTo(0, \(target)); 0")
+            controller.preview.pageDidScroll(to: target)
+            #expect(await waitUntil { abs(clipView.bounds.minY - (editorY2 - editorHeight / 2)) < 2 })
+        }
     }
 
     @Test func anchorsMatchAndAlignAtCenter() async throws {
