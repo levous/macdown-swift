@@ -116,9 +116,9 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] `PreviewController.fetchMetrics` JS: report `[sourceLine, y]` pairs from `[data-source-line]` elements instead of `h`/`i` kinds
 - [x] `DocumentController`: pass the model's source-line data to scroll sync via the Phase 2 model hand-off (not needed: the editor computes the preview's lines from its own text)
 - [x] `SourceAnchors`: editor maps source line to y via `LineIndex` and the text layout
-- [ ] Replace `ScrollAnchors.scan` and kind matching with a source-line map feeding the existing `ScrollMap`; keep `ScrollGeometry` and `ScrollMap`
-- [ ] Update `ScrollAnchorsTests` / `ScrollSyncIntegrationTests` for source-line anchors
-- [ ] Verify `help.md` (code-fence case) and an image-heavy document stay aligned with unequal pane widths, both scroll directions
+- [x] Replace `ScrollAnchors.scan` and kind matching with a source-line map feeding the existing `ScrollMap`; keep `ScrollGeometry` and `ScrollMap` (with the new engine; `scan` stays for hoedown until Phase 5 removes it)
+- [x] Update `ScrollAnchorsTests` / `ScrollSyncIntegrationTests` for source-line anchors
+- [x] Verify `help.md` (code-fence case) and an image-heavy document stay aligned with unequal pane widths, both scroll directions
 
 ## Low Priority
 

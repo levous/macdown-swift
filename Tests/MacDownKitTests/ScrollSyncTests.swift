@@ -264,6 +264,78 @@ extension LiveDocumentTests {
         }
     }
 
+    /// Phase 4 check: help.md (with its fence-in-code-span case) and the
+    /// image-heavy corpus document stay aligned with unequal pane widths,
+    /// in both directions, at several points.
+    @Test(arguments: ["help.md", "19-images.md"])
+    func documentsStayAligned(_ name: String) async throws {
+        let preferences = Preferences.shared
+        let savedEngine = preferences.markdownEngine
+        preferences.markdownEngine = .swiftMarkdown
+        defer { preferences.markdownEngine = savedEngine }
+        try await withSyncScrolling {
+            let document = try #require(try Corpus.all().first { $0.name == name })
+            let controller = DocumentController(
+                document: MarkdownDocument(text: document.text),
+                fileURL: document.baseURL?.appending(path: name))
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+                                  styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            let split = NSSplitView(frame: window.contentView!.bounds)
+            split.isVertical = true
+            split.addArrangedSubview(controller.editorScrollView)
+            split.addArrangedSubview(controller.preview.webView)
+            window.contentView = split
+            split.adjustSubviews()
+            split.setPosition(300, ofDividerAt: 0)
+            controller.viewDidAppear()
+            defer { controller.tearDown(); window.close() }
+
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 5 })
+            // Let images load and lay out, then re-measure.
+            #expect(await waitUntil(timeout: 15) {
+                (try? await controller.preview.webView.evaluateJavaScript(
+                    "Array.from(document.images).every(i => i.complete)")) as? Bool == true
+            })
+            controller.preview.pageLayoutDidChange()
+            try await Task.sleep(for: .milliseconds(500))
+
+            let anchors = controller.previewMetrics.anchors
+            let editorHeight = controller.editorScrollView.contentView.bounds.height
+            let previewHeight = controller.previewMetrics.visibleHeight
+            let clipView = controller.editorScrollView.contentView
+            for fraction in [0.3, 0.5, 0.7] {
+                let index = Int(Double(anchors.count) * fraction)
+                guard case .line(let line) = anchors[index].kind,
+                      let editorY = controller.editorAnchors.first(where: { $0.kind == .line(line) })?.position
+                else { Issue.record("no line anchor at \(fraction)"); continue }
+                let previewY = anchors[index].position
+                clipView.scroll(to: NSPoint(x: 0, y: editorY - editorHeight / 2))
+                controller.editorScrollView.reflectScrolledClipView(clipView)
+                #expect(await waitUntil {
+                    abs(await previewScrollY(controller) - (previewY - previewHeight / 2)) < 2
+                }, "editor → preview at line \(line)")
+                try await Task.sleep(for: .milliseconds(400))
+                // The page scrolls by whole pixels.
+                let target = (previewY - previewHeight / 2).rounded()
+                _ = try await controller.preview.webView.evaluateJavaScript("window.scrollTo(0, \(target)); 0")
+                controller.preview.pageDidScroll(to: target)
+                // The line at the editor's focus: its middle, or nearer the
+                // top or bottom within the editor's first or last screen.
+                let editorGeometry = ScrollGeometry(
+                    contentHeight: controller.editorScrollView.documentView?.bounds.height ?? 0,
+                    visibleHeight: editorHeight)
+                // Within half an editor line: where a short preview block
+                // faces a long wrapped one, a pixel of the page is many in
+                // the editor.
+                #expect(await waitUntil {
+                    abs(clipView.bounds.minY - editorGeometry.offset(forFocus: editorY)) < 12
+                }, "preview → editor at line \(line)")
+                try await Task.sleep(for: .milliseconds(400))
+            }
+        }
+    }
+
     @Test func anchorsMatchAndAlignAtCenter() async throws {
         try await withSyncScrolling {
             let (controller, window) = makeController()
