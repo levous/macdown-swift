@@ -131,9 +131,11 @@ sync. The plan, requirements and progress are in
 [docs/prd/swift-markdown-migration-prd.md](prd/swift-markdown-migration-prd.md)
 and `.ralph/fix_plan.md`.
 
-While the move is in progress, a hidden setting selects the engine
-(`defaults write io.github.levous.macdown-swift markdownEngine swiftMarkdown`);
-hoedown and PEG stay the default until the new renderer ships.
+cmark-gfm is the default. For one release the original engines stay
+selectable through a hidden setting
+(`defaults write io.github.levous.macdown-swift markdownEngine hoedown`;
+`swiftMarkdown`, the historical name, means cmark-gfm); then hoedown and PEG
+Markdown Highlight are removed.
 
 The new model (`Sources/MacDownKit/Document/Model`):
 

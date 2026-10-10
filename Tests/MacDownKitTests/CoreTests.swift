@@ -306,14 +306,15 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
-        defaults.set("swiftMarkdown", forKey: "markdownEngine")
+        // cmark-gfm ("swiftMarkdown") is the default; hoedown stays selectable.
         #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
-        defaults.set("bogus", forKey: "markdownEngine")
+        defaults.set("hoedown", forKey: "markdownEngine")
         #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
+        defaults.set("bogus", forKey: "markdownEngine")
+        #expect(Preferences(defaults: defaults).markdownEngine == .swiftMarkdown)
         let preferences = Preferences(defaults: defaults)
-        preferences.markdownEngine = .swiftMarkdown
-        #expect(defaults.string(forKey: "markdownEngine") == "swiftMarkdown")
+        preferences.markdownEngine = .hoedown
+        #expect(defaults.string(forKey: "markdownEngine") == "hoedown")
     }
 
     /// New installs follow common Markdown editing conventions.

@@ -85,14 +85,15 @@ import Testing
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = Preferences(defaults: defaults)
-        #expect(preferences.renderSettings.parse.engine == .hoedown)
-        preferences.markdownEngine = .swiftMarkdown
         #expect(preferences.renderSettings.parse.engine == .swiftMarkdown)
+        preferences.markdownEngine = .hoedown
+        #expect(preferences.renderSettings.parse.engine == .hoedown)
     }
 
     @Test func swiftMarkdownBuildsTheModel() async {
         let renderer = Renderer()
         var settings = ParseSettings()
+        settings.engine = .hoedown
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model == nil)
 

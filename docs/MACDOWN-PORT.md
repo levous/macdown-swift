@@ -59,10 +59,11 @@ fresh, and the original's plist can be copied over to migrate.
   `forest` theme, and syntax errors are shown under the diagram's source.
 - **MathJax** loads directly from its CDN (math always needed an Internet
   connection).
-- **Markdown engine:** the original's two parsers are being replaced by one,
+- **Markdown engine:** the original's two parsers are replaced by one,
   [cmark-gfm](https://github.com/swiftlang/swift-cmark), which follows
-  CommonMark and GitHub Flavored Markdown; until it ships, rendering uses the
-  original's engine. Where the results differ is listed here when it ships.
+  CommonMark and GitHub Flavored Markdown; where the results differ is listed
+  below. For one release the original's engine can be turned back on with
+  `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;
@@ -76,7 +77,7 @@ fresh, and the original's plist can be copied over to migrate.
 
 ## Markdown differences with the new engine
 
-The port is moving from the original's hoedown to cmark-gfm (see
+The port renders with cmark-gfm instead of the original's hoedown (see
 [ARCHITECTURE.md](ARCHITECTURE.md), "Markdown engine"). It follows
 CommonMark and GitHub Flavored Markdown, so some documents render
 differently from the original. These are the differences found on the test

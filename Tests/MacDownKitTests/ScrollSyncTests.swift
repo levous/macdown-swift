@@ -204,16 +204,46 @@ extension LiveDocumentTests {
             "window.scrollY") as? NSNumber)?.doubleValue ?? -1)
     }
 
-    func withSyncScrolling(_ body: () async throws -> Void) async rethrows {
+    /// Sync scrolling on, a fixed style, and the engine given (hoedown's
+    /// header and image anchors, or cmark-gfm's source lines).
+    func withSyncScrolling(engine: MarkdownEngine = .swiftMarkdown,
+                           _ body: () async throws -> Void) async rethrows {
         let preferences = Preferences.shared
-        let saved = (preferences.editorSyncScrolling, preferences.htmlStyleName)
+        let saved = (preferences.editorSyncScrolling, preferences.htmlStyleName,
+                     preferences.markdownEngine)
         preferences.editorSyncScrolling = true
         preferences.htmlStyleName = "GitHub2"
+        preferences.markdownEngine = engine
         defer {
             preferences.editorSyncScrolling = saved.0
             preferences.htmlStyleName = saved.1
+            preferences.markdownEngine = saved.2
         }
         try await body()
+    }
+
+    /// An anchor in the middle of the document for source lines (there are
+    /// many, and early ones sit in the first screen, where the focus
+    /// tapers), or hoedown's anchor `hoedown`.
+    func middleIndex(_ controller: DocumentController, hoedown: Int) -> Int {
+        if case .line = controller.previewMetrics.anchors.first?.kind {
+            return controller.previewMetrics.anchors.count / 2
+        }
+        return hoedown
+    }
+
+    /// The editor and preview positions of the preview's `index`th anchor:
+    /// by index for hoedown's anchors, by line for source lines.
+    func anchorPair(_ controller: DocumentController, _ index: Int) -> (editor: CGFloat, preview: CGFloat)? {
+        let preview = controller.previewMetrics.anchors
+        guard index < preview.count else { return nil }
+        if case .line = preview[index].kind {
+            guard let editor = controller.editorAnchors.first(where: { $0.kind == preview[index].kind })
+            else { return nil }
+            return (editor.position, preview[index].position)
+        }
+        guard index < controller.editorAnchors.count else { return nil }
+        return (controller.editorAnchors[index].position, preview[index].position)
     }
 
     /// With the new engine, both panes anchor on source lines: every block
@@ -337,7 +367,7 @@ extension LiveDocumentTests {
     }
 
     @Test func anchorsMatchAndAlignAtCenter() async throws {
-        try await withSyncScrolling {
+        try await withSyncScrolling(engine: .hoedown) {
             let (controller, window) = makeController()
             defer { controller.tearDown(); window.close() }
 
@@ -387,8 +417,9 @@ extension LiveDocumentTests {
         }
     }
 
-    @Test func resizingKeepsAlignment() async throws {
-        try await withSyncScrolling {
+    @Test(arguments: MarkdownEngine.allCases)
+    func resizingKeepsAlignment(_ engine: MarkdownEngine) async throws {
+        try await withSyncScrolling(engine: engine) {
             let (controller, window) = makeController()
             defer { controller.tearDown(); window.close() }
             let ok4 = await waitUntil { controller.previewMetrics.anchors.count > 0 }
@@ -413,10 +444,10 @@ extension LiveDocumentTests {
             let editorHeight = controller.editorScrollView.contentView.bounds.height
             let previewHeight = controller.previewMetrics.visibleHeight
             let clipView = controller.editorScrollView.contentView
-            clipView.scroll(to: NSPoint(
-                x: 0, y: controller.editorAnchors[4].position - editorHeight / 2))
+            let pair = try #require(anchorPair(controller, middleIndex(controller, hoedown: 4)))
+            clipView.scroll(to: NSPoint(x: 0, y: pair.editor - editorHeight / 2))
             controller.editorScrollView.reflectScrolledClipView(clipView)
-            let expected = controller.previewMetrics.anchors[4].position - previewHeight / 2
+            let expected = pair.preview - previewHeight / 2
             let ok6 = await waitUntil {
                 abs(await previewScrollY(controller) - expected) < 2
             }
@@ -437,14 +468,16 @@ extension LiveDocumentTests {
         #expect(result as? String == "ok")
     }
 
-    @Test func rerenderKeepsPositionWhenPreviewLeads() async throws {
-        try await withSyncScrolling {
+    @Test(arguments: MarkdownEngine.allCases)
+    func rerenderKeepsPositionWhenPreviewLeads(_ engine: MarkdownEngine) async throws {
+        try await withSyncScrolling(engine: engine) {
             let (controller, window) = makeController()
             defer { controller.tearDown(); window.close() }
             let ok1 = await waitUntil { controller.previewMetrics.anchors.count > 0 }
             #expect(ok1)
             let previewHeight = controller.previewMetrics.visibleHeight
-            let previewY = controller.previewMetrics.anchors[6].position - previewHeight / 2
+            let previewY = controller.previewMetrics.anchors[middleIndex(controller, hoedown: 6)].position
+                - previewHeight / 2
             // Past the window in which scrolling is attributed to the sync.
             try await Task.sleep(for: .milliseconds(400))
             _ = try await controller.preview.webView.evaluateJavaScript(
@@ -465,8 +498,10 @@ extension LiveDocumentTests {
     }
 
     /// The bundled help, a long document that exercises most of Markdown.
+    /// hoedown's header and image anchors over the bundled help (the new
+    /// engine's lines are checked by documentsStayAligned).
     @Test func helpDocumentAnchorsMatch() async throws {
-        try await withSyncScrolling {
+        try await withSyncScrolling(engine: .hoedown) {
         let url = try #require(MPPaths.resourceBundle.url(forResource: "help",
                                                           withExtension: "md"))
         let (controller, window) = makeController(try String(contentsOf: url, encoding: .utf8))
