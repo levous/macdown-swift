@@ -16,8 +16,8 @@ public struct ParseSettings: Sendable, Equatable {
     public var smartyPants = false
     public var rendersTOC = false
     public var detectsFrontMatter = false
-    /// Which parser also builds the document model (the hidden
-    /// `markdownEngine` setting). The HTML is hoedown's until Phase 3.
+    /// Which parser renders: hoedown, or cmark-gfm through the document
+    /// model (the hidden `markdownEngine` setting).
     public var engine = MarkdownEngine.hoedown
 
     public init(extensionFlags: UInt32 = 0, rendererFlags: UInt32 = 0,

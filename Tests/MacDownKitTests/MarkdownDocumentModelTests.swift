@@ -99,7 +99,9 @@ import Testing
         settings.engine = .swiftMarkdown
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model?.blocks.map(\.kind) == [.heading(level: 1)])
-        #expect(renderer.result.body.contains("<h1"))    // HTML is still hoedown's
+        // The preview's HTML is the model's, with source lines (FR-20).
+        #expect(renderer.result.body == renderer.model?.body)
+        #expect(renderer.result.body.contains(#"<h1 data-source-line="1" id="toc_0">A</h1>"#))
 
         await withCheckedContinuation { done in
             renderer.parse("# B\n\nText\n", settings: settings) { done.resume() }

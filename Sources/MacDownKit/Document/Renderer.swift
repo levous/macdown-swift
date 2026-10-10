@@ -359,9 +359,14 @@ public final class Renderer {
     private nonisolated static func parse(
         _ markdown: String, _ settings: ParseSettings
     ) -> (ParseResult, MarkdownDocumentModel?) {
-        let result = MarkdownParser.parse(markdown, settings: settings)
-        guard settings.engine == .swiftMarkdown else { return (result, nil) }
-        return (result, MarkdownDocumentModel(markdown, options: .init(settings)))
+        guard settings.engine == .swiftMarkdown else {
+            return (MarkdownParser.parse(markdown, settings: settings), nil)
+        }
+        // One cmark-gfm parse for the preview and the editor (FR-20, NFR-3).
+        var options = MarkdownDocumentModel.Options(settings)
+        options.sourceLines = true
+        let model = MarkdownDocumentModel(markdown, options: options)
+        return (ParseResult(body: model.body, languages: model.languages), model)
     }
 
     public func markRendered(with settings: PageSettings) {
