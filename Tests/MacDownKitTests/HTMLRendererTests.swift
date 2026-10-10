@@ -83,6 +83,20 @@ import Testing
         #expect(body.hasPrefix("<hr>\n\n<h2 id=\"toc_0\">title: &quot;unterminated\ntags: [one, two</h2>"))
     }
 
+    /// [TOC] (FR-12) with the setting on: hoedown's nested lists, the
+    /// outer one classed "toc", linking to the toc_N header ids.
+    @Test func tableOfContents() throws {
+        var settings = CorpusTests.settings
+        settings.rendersTOC = true
+        for text in [try #require(try Corpus.files().first { $0.name == "13-toc.md" }).text,
+                     "## Start\n\n[TOC]\n\n# Higher [link](x) *em*\n\n### Deep\n"] {
+            let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
+            #expect(cmark.contains("<ul class=\"toc\">"))
+            #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(MarkdownParser.parse(text, settings: settings).body))
+        }
+        #expect(!html("[TOC]\n\n# A\n").contains("class=\"toc\""))    // off by default
+    }
+
     @Test func codeBlockOptions() {
         #expect(html("```swift:x.swift\nlet x\n```\n", .init(lineNumbers: true, blockCodeInformation: true)) ==
             "<div><pre class=\"line-numbers\" data-information=\"x.swift\"><code class=\"language-swift\">let x</code></pre></div>\n")

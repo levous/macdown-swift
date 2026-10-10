@@ -98,7 +98,7 @@ Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
 - [x] Task lists with MacDown's current markup/classes, always on (FR-11)
 - [x] Footnotes always on (FR-16), from cmark-gfm footnote nodes (`CMARK_OPT_FOOTNOTES`), with today's footnote markup
 - [x] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
-- [ ] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
+- [x] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
 - [ ] Hard wrap: soft breaks as `<br>` when on (FR-13)
 - [ ] Math pass-through: emit original source text by range, unescaped, when MathJax on (FR-14)
 - [ ] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)

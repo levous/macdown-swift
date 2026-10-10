@@ -16,6 +16,8 @@ struct HTMLRenderer {
         var lineNumbers = false
         /// `lang:info` fence strings put `info` in `data-information`.
         var blockCodeInformation = false
+        /// A paragraph of just `[TOC]` becomes a table of contents.
+        var rendersTOC = false
     }
 
     private let options: Options
@@ -28,6 +30,10 @@ struct HTMLRenderer {
     /// Footnote numbers by definition, in order of first reference.
     private var footnoteNumbers: [Int: Int] = [:]
     private let languages = LanguageCollector()
+    /// Headers for the table of contents: level and content.
+    private var headers: [(level: Int, html: String)] = []
+    /// In the table of contents, links show only their text.
+    private var linksAsText = false
 
     init(options: Options) {
         self.options = options
@@ -37,6 +43,7 @@ struct HTMLRenderer {
     static func render(_ tree: CMarkTree, options: Options) -> (html: String, languages: [String]) {
         var renderer = HTMLRenderer(options: options)
         tree.withRoot { renderer.renderDocument($0) }
+        if options.rendersTOC { renderer.insertTableOfContents() }
         return (renderer.output, renderer.languages.languages)
     }
 
@@ -92,6 +99,12 @@ struct HTMLRenderer {
             let level = node.headingLevel
             output += "<h\(level) id=\"toc_\(headerCount)\">"
             headerCount += 1
+            if options.rendersTOC {
+                var toc = HTMLRenderer(options: options)
+                toc.linksAsText = true
+                toc.inlines(in: node)
+                headers.append((level, toc.output))
+            }
             inlines(in: node)
             output += "</h\(level)>\n"
 
@@ -297,6 +310,8 @@ struct HTMLRenderer {
             output += "<strong>"; inlines(in: node); output += "</strong>"
         case .strikethrough:
             output += "<del>"; inlines(in: node); output += "</del>"
+        case .link where linksAsText:
+            inlines(in: node)
         case .link:
             output += "<a href=\"" + HTMLEscaping.href(node.url ?? "")
             if let title = node.title, !title.isEmpty {
@@ -333,5 +348,45 @@ struct HTMLRenderer {
             child = c.next
         }
         return text
+    }
+
+    // MARK: - Table of contents
+
+    private static let tocParagraph = try! NSRegularExpression(
+        pattern: "<p.*?>\\s*\\[TOC\\]\\s*</p>", options: .caseInsensitive)
+
+    /// hoedown's TOC (with MacDown's "toc" class on the outer list) in place
+    /// of every `[TOC]` paragraph, as MarkdownParser did.
+    private mutating func insertTableOfContents() {
+        guard output.contains("TOC]") else { return }
+        var toc = ""
+        var current = 0, offset = 0
+        for (index, header) in headers.enumerated() {
+            if current == 0 { offset = header.level - 1 }
+            let level = header.level - offset
+            if level > current {
+                while level > current {
+                    toc += current == 0 ? "<ul class=\"toc\">\n<li>\n" : "<ul>\n<li>\n"
+                    current += 1
+                }
+            } else if level < current {
+                toc += "</li>\n"
+                while level < current {
+                    toc += "</ul>\n</li>\n"
+                    current -= 1
+                }
+                toc += "<li>\n"
+            } else {
+                toc += "</li>\n<li>\n"
+            }
+            toc += "<a href=\"#toc_\(index)\">" + header.html + "</a>\n"
+        }
+        while current > 0 {
+            toc += "</li>\n</ul>\n"
+            current -= 1
+        }
+        output = Self.tocParagraph.stringByReplacingMatches(
+            in: output, range: NSRange(output.startIndex..., in: output),
+            withTemplate: NSRegularExpression.escapedTemplate(for: toc))
     }
 }

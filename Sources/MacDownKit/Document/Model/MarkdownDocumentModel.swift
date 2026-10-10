@@ -23,6 +23,7 @@ public struct MarkdownDocumentModel: Sendable {
         /// Code block rendering: line numbers, and `lang:info` accessories.
         public var lineNumbers = false
         public var blockCodeInformation = false
+        public var rendersTOC = false
 
         public init(math: Bool = false, inlineDollar: Bool = false,
                     smartPunctuation: Bool = false, highlight: Bool = false,
@@ -47,6 +48,7 @@ public struct MarkdownDocumentModel: Sendable {
             autolink = settings.extensionFlags & HOEDOWN_EXT_AUTOLINK.rawValue != 0
             lineNumbers = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) != 0
             blockCodeInformation = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_INFORMATION) != 0
+            rendersTOC = settings.rendersTOC
         }
     }
 
@@ -96,7 +98,8 @@ public struct MarkdownDocumentModel: Sendable {
         (highlights, blocks) = HighlightMapper.map(tree, source: source, lineIndex: lineIndex,
                                                     math: math, options: options)
         let rendered = HTMLRenderer.render(tree, options: .init(
-            lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation))
+            lineNumbers: options.lineNumbers, blockCodeInformation: options.blockCodeInformation,
+            rendersTOC: options.rendersTOC))
         languages = rendered.languages
         // Front matter is a table before the body (FR-15), as with hoedown.
         if let table = protected.frontMatter?.object.htmlTable {
