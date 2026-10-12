@@ -55,6 +55,135 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
     }
 }
 
+/// Highlighting what scrolls into view without delay, and the rest of the
+/// document in the background.
+@MainActor @Suite struct IncrementalHighlightingTests {
+    /// Sections of a heading and a few paragraphs, many screens long.
+    static let text = (1...200).map {
+        "# Heading \($0)\n\nSome *emphasis* in paragraph \($0).\n\nMore text.\n"
+    }.joined(separator: "\n")
+
+    func makeHighlighter(_ stylesheet: String = "H1\nforeground: ff0000\n")
+        -> (MarkdownHighlighter, NSScrollView, NSTextView, NSWindow) {
+        let (scrollView, textView) = EditorTextView.makeScrollableEditor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = scrollView
+        window.layoutIfNeeded()
+        textView.string = Self.text
+        let highlighter = MarkdownHighlighter(textView: textView)
+        highlighter.applyStyles(fromStylesheet: stylesheet)
+        highlighter.usesExternalElements = true
+        highlighter.activate()
+        return (highlighter, scrollView, textView, window)
+    }
+
+    func isRed(_ textView: NSTextView, at location: Int) -> Bool {
+        let color = textView.textStorage?.attribute(.foregroundColor, at: location,
+                                                    effectiveRange: nil) as? NSColor
+        return color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0
+    }
+
+    func location(of string: String) -> Int {
+        (Self.text as NSString).range(of: string).location
+    }
+
+    func waitForIdlePass(_ highlighter: MarkdownHighlighter, length: Int) async throws {
+        for _ in 0..<500 where highlighter.highlightedRanges.count < length {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
+
+    @Test func highlightsTextScrolledIntoViewRightAway() {
+        let (highlighter, scrollView, textView, window) = makeHighlighter()
+        defer { withExtendedLifetime(window) {} }
+        highlighter.idleStartDate = .distantFuture    // No idle pass.
+        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        let far = location(of: "# Heading 150\n") + 2
+        #expect(!isRed(textView, at: far))
+
+        textView.scrollRangeToVisible(NSRange(location: far, length: 1))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
+        #expect(isRed(textView, at: far))
+        // So is the text a screen past the visible area.
+        #expect(isRed(textView, at: location(of: "# Heading 155\n") + 2))
+        #expect(!isRed(textView, at: location(of: "# Heading 199\n") + 2))
+    }
+
+    @Test func highlightsTheRestWhenIdle() async throws {
+        let (highlighter, _, textView, window) = makeHighlighter()
+        defer { withExtendedLifetime(window) {} }
+        var finished = 0
+        highlighter.onIdlePassFinished = { finished += 1 }
+        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        let length = (Self.text as NSString).length
+        #expect(highlighter.highlightedRanges.count < length / 4)
+        try await waitForIdlePass(highlighter, length: length)
+        #expect(highlighter.highlightedRanges.count == length)
+        #expect(isRed(textView, at: location(of: "# Heading 200\n") + 2))
+        #expect(finished == 1)
+        #expect(!highlighter.isInIdlePass)
+    }
+
+    @Test func editsInvalidateWhatWasHighlighted() {
+        let (highlighter, _, textView, window) = makeHighlighter()
+        defer { withExtendedLifetime(window) {} }
+        highlighter.idleStartDate = .distantFuture
+        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        #expect(!highlighter.highlightedRanges.isEmpty)
+        // Directly, as typing would also scroll, and so highlight what's
+        // visible again.
+        textView.textStorage?.replaceCharacters(in: NSRange(location: 0, length: 0), with: "x")
+        #expect(highlighter.highlightedRanges.isEmpty)
+    }
+
+    @Test func hiddenEditorLeavesHighlightingToTheIdlePass() async throws {
+        let (highlighter, scrollView, _, window) = makeHighlighter()
+        defer { withExtendedLifetime(window) {} }
+        scrollView.removeFromSuperview()
+        scrollView.frame = .zero
+        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        #expect(highlighter.highlightedRanges.isEmpty)
+        let length = (Self.text as NSString).length
+        try await waitForIdlePass(highlighter, length: length)
+        #expect(highlighter.highlightedRanges.count == length)
+    }
+
+    @Test func keepsVisibleTextInPlaceWhenTextAboveChangesSize() async throws {
+        let (highlighter, scrollView, textView, window) =
+            makeHighlighter("H1\nforeground: ff0000\nfont-size: 40px\n")
+        defer { withExtendedLifetime(window) {} }
+        let target = location(of: "# Heading 120\n")
+        textView.scrollRangeToVisible(NSRange(location: target, length: 1))
+        let layoutManager = try #require(textView.layoutManager)
+        func top() -> CGFloat {
+            let glyph = layoutManager.glyphIndexForCharacter(at: target)
+            return layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil).minY
+                - scrollView.contentView.bounds.minY
+        }
+        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        let before = top()
+        try await waitForIdlePass(highlighter, length: (Self.text as NSString).length)
+        // The headings above grew, yet the line stays where it was on screen.
+        #expect(isRed(textView, at: location(of: "# Heading 1\n") + 2))
+        #expect(abs(top() - before) < 1)
+    }
+
+    @Test func idleChunksStartAtTheVisibleTextAndEndOnParagraphs() {
+        let string = "aaaa\nbbbb\ncccc\n" as NSString
+        var missing = IndexSet(integersIn: 0..<string.length)
+        missing.remove(integersIn: 5..<10)
+        // From the visible text on first, ending at a line end.
+        #expect(MarkdownHighlighter.nextChunk(of: missing, after: 7, in: string)
+                == NSRange(location: 10, length: 5))
+        missing.remove(integersIn: 10..<15)
+        // Then backwards from it.
+        #expect(MarkdownHighlighter.nextChunk(of: missing, after: 7, in: string)
+                == NSRange(location: 0, length: 5))
+        #expect(MarkdownHighlighter.nextChunk(of: IndexSet(), after: 0, in: string) == nil)
+    }
+}
+
 @MainActor @Suite struct ThemeApplicationTests {
     @Test func appliesABundledTheme() throws {
         let url = try #require(MPPaths.resourceBundle.url(forResource: "Solarized (Dark)",

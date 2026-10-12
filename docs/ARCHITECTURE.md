@@ -92,13 +92,25 @@ helpers (list and quote continuation, auto-pairing, toggling markup,
 indenting) are in `NSTextView+Autocomplete.swift`, called from
 `DocumentController`'s text view delegate methods.
 
-`MarkdownHighlighter` styles only the visible range, from spans keyed by PEG
+`MarkdownHighlighter` styles text from spans keyed by PEG
 Markdown Highlight's element types (`H1`, `EMPH`, `CODE`, …) so the original
 `.style` themes apply unchanged. Themes are parsed by `ThemeStyle`, a Swift
 port of the C style parser. Spans come either from the PEG C parser (today's
 default) or, with the new engine, from `HighlightMapper` via the shared
 document model, which adds `NOTE` (footnotes), `MATH`, `HIGHLIGHT` and
 `SUPERSCRIPT`.
+
+New spans are applied straight away to the visible text and a screen above
+and below it. When the editor scrolls, the highlighter styles whatever of
+that range isn't styled yet in the same pass, before it's drawn. It keeps
+track of the styled ranges in `highlightedRanges`, cleared on every text
+edit or new spans. The rest of the document is styled by an idle pass, a few
+milliseconds per main queue turn, nearest the visible text first. It starts
+0.5 s after the last edit, so typing restyles only around the visible text.
+`DocumentController` skips its scroll-sync re-measurement for the idle pass's
+storage edits and runs it once, from `onIdlePassFinished`. Styling text above
+the visible area keeps the visible text in place, because themes can change
+heading font sizes.
 
 ## Saving
 
@@ -163,6 +175,19 @@ The new model (`Sources/MacDownKit/Document/Model`):
 
 Dated, newest first. The migration intent has the full list for the engine
 work.
+
+**Highlight before drawing, then the rest when idle (2026-10-12).** The
+editor used to style the visible range 100 ms after scrolling stopped, so a
+continuous scroll showed unstyled text. Now newly visible text, with a
+screen of overscan, is styled synchronously in the scroll notification, and
+an idle pass styles the rest of the document. Measured on a 256,000-character
+document (release build, Tomorrow+ theme, a real `DocumentController`): a
+scroll step costs 0.06 ms on average and at most 2 ms; restyling after a
+parse (the visible text and the overscan) about 4 ms; and the whole document
+is styled about 0.2 s after it opens. The idle pass adds no main-thread stalls
+beyond those opening already causes (parsing, loading the preview). It ends
+with one scroll-sync re-measurement, a full editor layout (about 36 ms at that
+size), which the old code paid at every scroll stop. See [markedit-vs-macdown-swift.md](markedit-vs-macdown-swift.md).
 
 **Smooth, live scroll sync (2026-10-12).** The preview followed the editor
 with an instant `window.scrollTo` per editor frame, sent across processes, so
