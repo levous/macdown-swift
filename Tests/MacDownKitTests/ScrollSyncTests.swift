@@ -515,5 +515,72 @@ extension LiveDocumentTests {
         #expect(controller.editorAnchors.map(\.kind) == preview)
         }
     }
+
+    // MARK: - Smooth scrolling
+
+    func evaluate(_ controller: DocumentController, _ script: String) async -> Any? {
+        try? await controller.preview.webView.evaluateJavaScript(script)
+    }
+
+    @Test func easingClosesTheDistanceAndEnds() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.preview.isReady && !controller.preview.isLoading })
+
+            // One 60 Hz frame covers part of the way, never overshooting.
+            let first = await evaluate(controller, "MacDownScroll.step(0, 1000, 16.7)") as? Double ?? 0
+            #expect(first > 100 && first < 400)
+            #expect(await evaluate(controller, "MacDownScroll.step(1000, 0, 16.7)") as? Double
+                    == 1000 - first)
+            // A pixel at least, and the target once within a pixel.
+            #expect(await evaluate(controller, "MacDownScroll.step(0, 2, 1)") as? Double == 1)
+            #expect(await evaluate(controller, "MacDownScroll.step(99.5, 100, 16.7)") as? Double
+                    == 100)
+            // Frame by frame, the page arrives within a few hundred ms.
+            let frames = await evaluate(controller, """
+                var y = 0, n = 0;
+                while (y !== 3000 && n < 1000) { y = MacDownScroll.step(y, 3000, 16.7); n++; }
+                n
+                """) as? Int ?? 0
+            #expect(frames > 5 && frames < 40, "\(frames) frames")
+        }
+    }
+
+    @Test func animatedScrollArrivesWithoutAnimationFrames() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.preview.isReady && !controller.preview.isLoading })
+            // Test windows aren't drawn, like hidden ones; the page jumps
+            // to the target rather than waiting for frames.
+            controller.preview.scroll(to: 400, animated: true)
+            #expect(await waitUntil { await previewScrollY(controller) == 400 })
+            // Instant scrolling cancels a glide in progress.
+            controller.preview.scroll(to: 900, animated: true)
+            controller.preview.scroll(to: 200)
+            #expect(await waitUntil { await previewScrollY(controller) == 200 })
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(await previewScrollY(controller) == 200)
+        }
+    }
+
+    @Test func pageFollowingTheEditorDoesNotLead() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 0 })
+            let clipView = controller.editorScrollView.contentView
+            let before = clipView.bounds.minY
+            // The page's own scrolling is reported as such and ignored...
+            controller.preview.pageDidScroll(to: 1500, byUser: false)
+            #expect(clipView.bounds.minY == before)
+            #expect(controller.preview.lastScrollTop == 1500)
+            // ...while the user's moves the editor.
+            controller.preview.pageDidScroll(to: 1500)
+            #expect(clipView.bounds.minY != before)
+        }
+    }
+
 }
 }

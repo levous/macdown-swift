@@ -64,6 +64,8 @@ fresh, and the original's plist can be copied over to migrate.
   CommonMark and GitHub Flavored Markdown; where the results differ is listed
   below. For one release the original's engine can be turned back on with
   `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
+- **Scroll sync** glides the preview after the editor rather than jumping
+  (unless reduced motion is on).
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

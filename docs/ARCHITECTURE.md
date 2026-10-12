@@ -75,6 +75,14 @@ images resolve against the document's location as in the original.
 code blocks) found in the source and reported by the page, mapped through
 `ScrollMap`, so unequal pane widths and tall images stay aligned in both
 directions. The migration moves this to source-line anchors from the parse.
+The page follows the editor smoothly: `PreviewController.scroll(to:animated:)`
+hands the offset to `MacDownScroll`, a script in the page that eases towards
+the latest target each animation frame. While the editor scrolls, each new
+offset just moves the target, so the preview moves continuously instead of in
+steps. It jumps instead after loads and resizes, with reduced motion, and when
+WebKit draws no frames (hidden windows, tests). The page tags its scroll
+reports with whether the user scrolled, so the preview's own movement never
+takes the lead from the editor.
 
 ## Editor and highlighting
 
@@ -154,6 +162,16 @@ The new model (`Sources/MacDownKit/Document/Model`):
 
 Dated, newest first. The migration intent has the full list for the engine
 work.
+
+**Smooth, live scroll sync (2026-10-12).** The preview followed the editor
+with an instant `window.scrollTo` per editor frame, sent across processes, so
+it moved in uneven steps and changed speed at anchors. MarkEdit's preview
+glides smoothly but only syncs once the editor stops, and never the other
+way. We keep the live, two-way sync and ease in the page: each frame covers
+`1 - e^(-dt/60 ms)` of the remaining distance, at least a pixel, so a moving
+target is followed without restarting. The 0.25 s window that told the page's
+own scrolling from the user's is replaced by the page tagging its reports, as
+an animation would outlast it.
 
 **Parse with cmark-gfm directly (2026-10-09).** The migration was planned on
 Apple's swift-markdown, a Swift wrapper around cmark-gfm. Measured on a
