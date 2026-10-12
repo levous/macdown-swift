@@ -111,6 +111,9 @@ public final class DocumentController: NSObject {
         super.init()
 
         highlighter.textView = editor
+        highlighter.onIdlePassFinished = { [weak self] in
+            self?.editorStorageDidProcessEditing(attributesOnly: true)
+        }
         editor.delegate = self
         editor.string = document.text
         editor.frameDidChange = { [weak self] _ in
@@ -1038,8 +1041,11 @@ public final class DocumentController: NSObject {
     private func editorStorageDidProcessEditing(attributesOnly: Bool) {
         editorAnchorsKey = nil
         // Text edits re-render, which syncs. Restyling alone moves the
-        // editor's text, so the preview has to follow.
-        guard attributesOnly, !inLiveScroll, !editorLayoutSyncScheduled,
+        // editor's text, so the preview has to follow. The highlighter's idle
+        // pass restyles a chunk at a time and reports when it's done, so
+        // the (full) layout isn't redone for every chunk.
+        guard attributesOnly, !inLiveScroll, !highlighter.isInIdlePass,
+              !editorLayoutSyncScheduled,
               preferences.editorSyncScrolling, isSetUp
         else { return }
         editorLayoutSyncScheduled = true

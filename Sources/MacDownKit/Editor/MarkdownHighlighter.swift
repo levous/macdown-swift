@@ -190,6 +190,15 @@ public final class MarkdownHighlighter {
     /// Spans come from elsewhere (the swift-markdown document model, via
     /// `update(_:)`) instead of the highlighter's own PEG parse.
     public var usesExternalElements = false
+    /// Whether the idle pass is styling the rest of the document. Its storage
+    /// edits come a chunk at a time; layout-dependent work can wait for
+    /// `onIdlePassFinished` instead of following each one.
+    public private(set) var isInIdlePass = false
+    /// How long after an edit the idle pass waits, so it doesn't restyle the
+    /// whole document per keystroke.
+    var idleDelayAfterEdit: TimeInterval = 0.5
+    /// Called when the idle pass has styled the whole document.
+    public var onIdlePassFinished: (() -> Void)?
 
     var styles: [HighlightingStyle] = HighlightingStyle.defaultStyles() {
         didSet { applyStyleDependencies() }
@@ -201,7 +210,13 @@ public final class MarkdownHighlighter {
     private var defaultTextColor: NSColor?
     private var defaultTypingAttributes: [NSAttributedString.Key: Any] = [:]
     private var parseGeneration = 0
-    private var scrollWorkItem: DispatchWorkItem?
+    /// Character ranges styled with `cachedElements`.
+    private(set) var highlightedRanges = IndexSet()
+    private var isHighlighting = false
+    private var idlePassScheduled = false
+    private var idlePassDidHighlight = false
+    /// The idle pass doesn't run before this date.
+    var idleStartDate = Date.distantPast
     private var observers: [NSObjectProtocol] = []
 
     public init(textView: NSTextView? = nil) {
@@ -223,8 +238,7 @@ public final class MarkdownHighlighter {
             }.value
             guard let self, self.isActive, generation == self.parseGeneration
             else { return }
-            self.cachedElements = elements
-            self.applyVisibleRangeHighlighting()
+            self.setElements(elements)
         }
     }
 
@@ -235,12 +249,23 @@ public final class MarkdownHighlighter {
     /// Highlights with spans parsed elsewhere, for the current text.
     func update(_ elements: HighlightElements) {
         parseGeneration += 1    // Any PEG parse in flight is stale.
-        cachedElements = elements
-        if isActive { applyVisibleRangeHighlighting() }
+        if isActive {
+            setElements(elements)
+        } else {
+            cachedElements = elements
+            highlightedRanges = IndexSet()
+        }
     }
 
     public func highlightNow() {
-        applyVisibleRangeHighlighting()
+        highlightedRanges = IndexSet()
+        highlightVisibleRange()
+    }
+
+    private func setElements(_ elements: HighlightElements) {
+        cachedElements = elements
+        highlightedRanges = IndexSet()
+        highlightVisibleRange()
     }
 
     // MARK: - Highlighting
@@ -365,26 +390,190 @@ public final class MarkdownHighlighter {
         }
     }
 
-    func applyVisibleRangeHighlighting() {
-        guard let textView, let cachedElements,
-              let layoutManager = textView.layoutManager,
-              let container = textView.textContainer
-        else { return }
-        let visibleRect = textView.enclosingScrollView?.contentView.documentVisibleRect
-            ?? textView.visibleRect
-        let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect,
-                                                  in: container)
-        var charRange = layoutManager.characterRange(forGlyphRange: glyphRange,
-                                                     actualGlyphRange: nil)
-        let length = textView.textStorage?.length ?? 0
-        charRange = NSIntersectionRange(charRange, NSRange(location: 0, length: length))
-        applyHighlighting(cachedElements, in: charRange)
+    /// Screens of text past each edge of the visible area that are
+    /// highlighted ahead of scrolling, so text is styled before it shows.
+    static let overscanScreens: CGFloat = 1
+    /// Characters per chunk, and time per main queue turn, for highlighting
+    /// the rest of the document after the visible part.
+    static let idleChunkLength = 8_192
+    static let idleTimeBudget: TimeInterval = 0.004
+
+    /// Highlights what's visible, plus the overscan, that isn't highlighted
+    /// yet, then schedules highlighting the rest of the document.
+    func highlightVisibleRange() {
+        guard let textView, cachedElements != nil, !isHighlighting else { return }
+        guard let range = overscannedRange(of: textView) else {
+            scheduleIdlePass()
+            return
+        }
+        let missing = IndexSet(integersIn: Range(range)!)
+            .subtracting(highlightedRanges)
+        highlight(missing.rangeView.map { NSRange($0) })
         if resetTypingAttributes {
             textView.typingAttributes = defaultTypingAttributes
         }
+        finishIdlePassIfDone()
+        scheduleIdlePass()
+    }
+
+    /// The visible text grown by the overscan, in whole paragraphs, or nil
+    /// when nothing is visible.
+    private func overscannedRange(of textView: NSTextView) -> NSRange? {
+        guard let layoutManager = textView.layoutManager,
+              let container = textView.textContainer
+        else { return nil }
+        let visibleRect = textView.enclosingScrollView?.contentView.documentVisibleRect
+            ?? textView.visibleRect
+        // A hidden editor shows nothing (and an empty rect would select
+        // every glyph).
+        guard !visibleRect.isEmpty else { return nil }
+        let margin = visibleRect.height * Self.overscanScreens
+        var rect = visibleRect.insetBy(dx: 0, dy: -margin)
+        rect.origin.y -= textView.textContainerOrigin.y
+        let glyphRange = layoutManager.glyphRange(forBoundingRect: rect, in: container)
+        let charRange = layoutManager.characterRange(forGlyphRange: glyphRange,
+                                                     actualGlyphRange: nil)
+        let string = textView.string as NSString
+        let clamped = NSIntersectionRange(charRange,
+                                          NSRange(location: 0, length: string.length))
+        return string.paragraphRange(for: clamped)
+    }
+
+    /// Highlights ranges in one storage edit, keeping the visible text in
+    /// place when styles above it change line heights (themes can set font
+    /// sizes, and NSScrollView doesn't anchor its content).
+    private func highlight(_ ranges: [NSRange]) {
+        guard let textView, let storage = textView.textStorage,
+              let cachedElements, !ranges.isEmpty
+        else { return }
+        isHighlighting = true
+        defer { isHighlighting = false }
+        let anchor = visibleAnchor(of: textView)
+        storage.beginEditing()
+        for range in ranges {
+            applyHighlighting(cachedElements, in: range)
+            if let bounds = Range(range) { highlightedRanges.insert(integersIn: bounds) }
+        }
+        storage.endEditing()
+        guard let anchor, ranges.contains(where: { $0.location < anchor.character }),
+              let scrollView = textView.enclosingScrollView,
+              let y = lineTop(of: anchor.character, in: textView)
+        else { return }
+        let delta = y - anchor.y
+        guard abs(delta) >= 0.5 else { return }
+        let clipView = scrollView.contentView
+        let origin = NSPoint(x: clipView.bounds.minX, y: clipView.bounds.minY + delta)
+        // The text view resizes itself once the text below is laid out
+        // again; until then it may be too short to scroll that far.
+        let height = origin.y + clipView.bounds.height
+        if textView.frame.height < height {
+            textView.setFrameSize(NSSize(width: textView.frame.width, height: height))
+        }
+        clipView.scroll(to: origin)
+        scrollView.reflectScrolledClipView(clipView)
+    }
+
+    /// The first visible character and the top of its line.
+    private func visibleAnchor(of textView: NSTextView) -> (character: Int, y: CGFloat)? {
+        guard let layoutManager = textView.layoutManager,
+              let container = textView.textContainer,
+              let clipView = textView.enclosingScrollView?.contentView,
+              clipView.bounds.minY > 0
+        else { return nil }
+        let point = NSPoint(x: 0, y: clipView.bounds.minY - textView.textContainerOrigin.y)
+        let glyph = layoutManager.glyphIndex(for: point, in: container)
+        let character = layoutManager.characterIndexForGlyph(at: glyph)
+        guard let y = lineTop(of: character, in: textView) else { return nil }
+        return (character, y)
+    }
+
+    private func lineTop(of character: Int, in textView: NSTextView) -> CGFloat? {
+        guard let layoutManager = textView.layoutManager,
+              character < (textView.textStorage?.length ?? 0)
+        else { return nil }
+        let glyph = layoutManager.glyphIndexForCharacter(at: character)
+        return layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil).minY
+    }
+
+    // MARK: - Idle highlighting
+
+    /// Highlights the rest of the document a little at a time, nearest the
+    /// visible text first (below it, then above it), so that scrolling
+    /// finds it already styled.
+    private func scheduleIdlePass() {
+        guard !idlePassScheduled,
+              highlightedRanges.count < textView?.textStorage?.length ?? 0
+        else { return }
+        idlePassScheduled = true
+        let delay = max(0, idleStartDate.timeIntervalSinceNow)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.idlePassScheduled = false
+                guard self.isActive else { return }
+                // Edits meanwhile pushed the start back.
+                if self.idleStartDate > Date() {
+                    self.scheduleIdlePass()
+                } else {
+                    self.runIdlePass()
+                }
+            }
+        }
+    }
+
+    private func runIdlePass() {
+        guard let textView, cachedElements != nil, !isHighlighting else { return }
+        let visibleLocation = overscannedRange(of: textView)?.location ?? 0
+        let string = textView.string as NSString
+        var missing = IndexSet(integersIn: 0..<string.length)
+            .subtracting(highlightedRanges)
+        let deadline = Date().addingTimeInterval(Self.idleTimeBudget)
+        isInIdlePass = true
+        while Date() < deadline,
+              let chunk = Self.nextChunk(of: missing, after: visibleLocation, in: string) {
+            highlight([chunk])
+            missing.remove(integersIn: Range(chunk)!)
+            idlePassDidHighlight = true
+        }
+        isInIdlePass = false
+        finishIdlePassIfDone()
+        scheduleIdlePass()
+    }
+
+    /// Reports that the document is fully styled, if the idle pass styled
+    /// part of it (scrolling may style the last of it).
+    private func finishIdlePassIfDone() {
+        guard idlePassDidHighlight,
+              highlightedRanges.count >= textView?.textStorage?.length ?? 0
+        else { return }
+        idlePassDidHighlight = false
+        onIdlePassFinished?()
+    }
+
+    /// The next unhighlighted chunk: the first one at or after `location`,
+    /// else the last one before it, in whole paragraphs.
+    static func nextChunk(of missing: IndexSet, after location: Int,
+                          in string: NSString) -> NSRange? {
+        if let range = missing.rangeView.first(where: { $0.upperBound > location }) {
+            let lower = max(range.lowerBound, location)
+            let upper = min(range.upperBound, lower + idleChunkLength)
+            let paragraph = string.paragraphRange(for: NSRange(location: upper == 0 ? 0 : upper - 1,
+                                                               length: 0))
+            return NSRange(location: lower,
+                           length: min(NSMaxRange(paragraph), range.upperBound) - lower)
+        }
+        if let range = missing.rangeView.last {
+            let upper = range.upperBound
+            let lower = max(range.lowerBound, upper - idleChunkLength)
+            let paragraph = string.paragraphRange(for: NSRange(location: lower, length: 0))
+            let start = max(paragraph.location, range.lowerBound)
+            return NSRange(location: start, length: upper - start)
+        }
+        return nil
     }
 
     public func clearHighlighting() {
+        highlightedRanges = IndexSet()
         guard let length = textView?.textStorage?.length else { return }
         clearHighlighting(in: NSRange(location: 0, length: length))
     }
@@ -471,6 +660,24 @@ public final class MarkdownHighlighter {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.textDidChange() }
         })
+        // Edits move the text, so what was highlighted no longer lines up.
+        // Posted synchronously, while `editedMask` is valid, and for
+        // programmatic changes too.
+        observers.append(center.addObserver(
+            forName: NSTextStorage.didProcessEditingNotification,
+            object: textView.textStorage, queue: nil
+        ) { [weak self] note in
+            let edited = (note.object as? NSTextStorage)?.editedMask
+                .contains(.editedCharacters) ?? false
+            guard edited else { return }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.highlightedRanges = IndexSet()
+                // Restyle only around the visible text while the user is
+                // typing; the rest of the document waits for a pause.
+                self.idleStartDate = Date().addingTimeInterval(self.idleDelayAfterEdit)
+            }
+        })
         if let clipView = textView.enclosingScrollView?.contentView {
             // Scrolling or resizing reveals text outside the highlighted range.
             clipView.postsBoundsChangedNotifications = true
@@ -490,8 +697,8 @@ public final class MarkdownHighlighter {
         guard isActive else { return }
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
-        scrollWorkItem?.cancel()
         cachedElements = nil
+        highlightedRanges = IndexSet()
         parseGeneration += 1
         isActive = false
     }
@@ -508,13 +715,8 @@ public final class MarkdownHighlighter {
     }
 
     private func textViewDidScroll() {
-        guard cachedElements != nil else { return }
-        // No need to over render; wait a little.
-        scrollWorkItem?.cancel()
-        let item = DispatchWorkItem { [weak self] in
-            MainActor.assumeIsolated { self?.applyVisibleRangeHighlighting() }
-        }
-        scrollWorkItem = item
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: item)
+        // Style newly revealed text right away, before it's drawn; mostly
+        // it's already styled by the overscan or the idle pass.
+        highlightVisibleRange()
     }
 }
