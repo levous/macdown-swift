@@ -1,0 +1,43 @@
+{
+  "name": "open-in-macdown",
+  "displayName": "Open in MacDown",
+  "description": "Opens the current Markdown file in MacDown.",
+  "version": "0.1.0",
+  "publisher": "levous",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/levous/macdown-swift" },
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "macdown.open",
+        "title": "Open in MacDown",
+        "category": "MacDown",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "macdown.open", "when": "editorLangId == markdown" }
+      ],
+      "editor/title": [
+        { "command": "macdown.open", "when": "resourceLangId == markdown", "group": "navigation" }
+      ],
+      "editor/title/context": [
+        { "command": "macdown.open", "when": "resourceLangId == markdown" }
+      ],
+      "editor/context": [
+        { "command": "macdown.open", "when": "resourceLangId == markdown", "group": "navigation" }
+      ],
+      "explorer/context": [
+        { "command": "macdown.open", "when": "resourceLangId == markdown", "group": "navigation" }
+      ]
+    },
+    "keybindings": [
+      { "command": "macdown.open", "key": "alt+cmd+m", "when": "editorLangId == markdown" }
+    ]
+  }
+}

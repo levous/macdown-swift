@@ -1,72 +1,88 @@
 # Using MacDown with VS Code
 
-Edit Markdown in VS Code and preview it in MacDown. A keyboard shortcut opens
-the current file in MacDown. Leave its window open next to VS Code: MacDown
-reloads the file whenever VS Code saves it, as long as the MacDown window has
-no unsaved changes of its own. The preview updates when you save, not as you
-type.
+Edit Markdown in VS Code and preview it in MacDown. The **Open in MacDown**
+extension opens the current file in MacDown. Leave its window open next to VS
+Code: MacDown reloads the file whenever VS Code saves it, as long as the
+MacDown window has no unsaved changes of its own. The preview updates when you
+save, not as you type.
 
-## Before you start
+## Install the extension
 
-You need the `macdown` command. Homebrew installs it with the app. Otherwise,
-link it as the [README](../README.md) describes. Check that it's there:
+The extension lives in this repository, in `Tools/vscode-macdown`. It needs
+Node.js to package. From the repository's root:
 
 ```sh
-macdown --version
+cd Tools/vscode-macdown
+npx --yes @vscode/vsce package --out /tmp/open-in-macdown.vsix
+code --install-extension /tmp/open-in-macdown.vsix
 ```
 
-## 1. Add a task
+If the `code` command is missing, run **Shell Command: Install 'code' command
+in PATH** from VS Code's Command Palette (⇧⌘P). Or install the `.vsix` from
+the Extensions view: **⋯ ▸ Install from VSIX…**.
 
-In VS Code, open the Command Palette (⇧⌘P) and run **Tasks: Open User Tasks**.
-Choose **Others** if it asks for a template. A user task works in every
-workspace. Make the file contain this task (add it to the `tasks` list if you
-already have tasks):
+Reload VS Code's windows (**Developer: Reload Window**) if the command doesn't
+show up right away.
 
-```json
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Open in MacDown",
-            "type": "shell",
-            "command": "macdown",
-            "args": ["${file}"],
-            "presentation": { "reveal": "never", "panel": "shared" },
-            "problemMatcher": []
-        }
-    ]
-}
-```
+## Use it
 
-`"reveal": "never"` keeps the terminal panel from opening each time.
+In a Markdown file, any of these opens it in MacDown:
 
-## 2. Add a keyboard shortcut
+- **⌥⌘M**
+- **MacDown: Open in MacDown** in the Command Palette
+- the preview button in the editor's title bar
+- **Open in MacDown** in the context menu of the editor, its tab, or the
+  file in the Explorer
 
-Run **Preferences: Open Keyboard Shortcuts (JSON)** from the Command Palette
-and add this entry to the list:
+Unsaved changes are saved first, since MacDown reads the file from disk. The
+extension opens MacDown by its bundle identifier, so it never picks the
+original MacDown by mistake.
 
-```json
-{
-    "key": "alt+cmd+m",
-    "command": "workbench.action.tasks.runTask",
-    "args": "Open in MacDown",
-    "when": "editorLangId == markdown"
-}
-```
+To use a different shortcut, change it in **Preferences: Open Keyboard
+Shortcuts** (search for "Open in MacDown").
 
-Now ⌥⌘M opens the Markdown file you're editing in MacDown. The `when` clause
-limits the shortcut to Markdown files, so ⌥⌘M keeps its usual meaning
-elsewhere. Pick another key if ⌥⌘M is already taken.
+## Without the extension
 
-Without the shortcut, you can still run the task with **Tasks: Run Task ▸
-Open in MacDown**.
+A VS Code task does the same from the keyboard, without menu items. It needs
+the `macdown` command, which Homebrew installs with the app (otherwise link it
+as the [README](../README.md) describes).
+
+1. Run **Tasks: Open User Tasks** (choose **Others** if it asks for a
+   template) and add this task:
+
+   ```json
+   {
+       "version": "2.0.0",
+       "tasks": [
+           {
+               "label": "Open in MacDown",
+               "type": "shell",
+               "command": "macdown",
+               "args": ["${file}"],
+               "presentation": { "reveal": "never", "panel": "shared" },
+               "problemMatcher": []
+           }
+       ]
+   }
+   ```
+
+2. Run **Preferences: Open Keyboard Shortcuts (JSON)** and add:
+
+   ```json
+   {
+       "key": "alt+cmd+m",
+       "command": "workbench.action.tasks.runTask",
+       "args": "Open in MacDown",
+       "when": "editorLangId == markdown"
+   }
+   ```
+
+If the task says "macdown: command not found", use the command's full path
+(`/opt/homebrew/bin/macdown` with Homebrew). Unlike the extension, the task
+doesn't save the file first.
 
 ## Troubleshooting
 
-- **"macdown: command not found"** in the task's terminal: VS Code's shell
-  can't find the command. Use its full path in the task
-  (`/opt/homebrew/bin/macdown` with Homebrew), or replace the command with
-  `open` and `"args": ["-a", "MacDown", "${file}"]`.
 - **The file opens in a different copy of MacDown** (such as a build from
   Xcode): every copy of the app registers itself with macOS. Remove the
   other copies, or see "Checking the running app" in
