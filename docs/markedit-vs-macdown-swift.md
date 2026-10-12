@@ -17,6 +17,12 @@ Sources read (2026-10-12):
   previews of a single Mermaid, KaTeX or table block.
 - MacDown-swift at `a9de35d` (Release 1.2).
 
+**Status (2026-10-12):** the highlighting design in section 2 is implemented;
+see "Highlight before drawing, then the rest when idle" in
+[ARCHITECTURE.md](ARCHITECTURE.md#decisions). Section 2 describes the code as
+it was at `a9de35d`. The smooth-scroll design in section 1 is not
+implemented yet.
+
 ## Architecture in one paragraph each
 
 **MarkEdit.** The whole editor is one `WKWebView` running CodeMirror 6, with the

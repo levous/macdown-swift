@@ -172,11 +172,13 @@ editor used to style the visible range 100 ms after scrolling stopped, so a
 continuous scroll showed unstyled text. Now newly visible text, with a
 screen of overscan, is styled synchronously in the scroll notification, and
 an idle pass styles the rest of the document. Measured on a 256,000-character
-document (release build): a scroll step costs 0.06 ms on average and at most
-2 ms, an idle turn at most about 8 ms, and the whole document is styled
-about 0.5 s after it opens. The cost is one full editor layout at the end of
-the idle pass (about 95 ms at that size), which the old code paid at every
-scroll stop. See [markedit-vs-macdown-swift.md](markedit-vs-macdown-swift.md).
+document (release build, Tomorrow+ theme, a real `DocumentController`): a
+scroll step costs 0.06 ms on average and at most 2 ms; restyling after a
+parse (the visible text and the overscan) about 4 ms; and the whole document
+is styled about 0.2 s after it opens. The idle pass adds no main-thread stalls
+beyond those opening already causes (parsing, loading the preview). It ends
+with one scroll-sync re-measurement, a full editor layout (about 36 ms at that
+size), which the old code paid at every scroll stop. See [markedit-vs-macdown-swift.md](markedit-vs-macdown-swift.md).
 
 **Parse with cmark-gfm directly (2026-10-09).** The migration was planned on
 Apple's swift-markdown, a Swift wrapper around cmark-gfm. Measured on a
