@@ -79,7 +79,8 @@ The page follows the editor smoothly: `PreviewController.scroll(to:animated:)`
 hands the offset to `MacDownScroll`, a script in the page that eases towards
 the latest target each animation frame. While the editor scrolls, each new
 offset just moves the target, so the preview moves continuously instead of in
-steps. It jumps instead after loads and resizes, with reduced motion, and when
+steps. It jumps instead after loading a new page and after resizes, with
+reduced motion, and when
 WebKit draws no frames (hidden windows, tests). The page tags its scroll
 reports with whether the user scrolled, so the preview's own movement never
 takes the lead from the editor.

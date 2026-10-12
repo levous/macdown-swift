@@ -664,7 +664,9 @@ public final class DocumentController: NSObject {
             if self.preferences.editorSyncScrolling {
                 self.previewMetrics = await self.preview.fetchMetrics()
                 self.updateEditorAnchors()
-                self.syncScrollers()
+                // A new page starts at the top, so it jumps into place; an
+                // updated one is where it was, and may be gliding.
+                self.syncScrollers(animated: self.preview.lastLoadReplacedBody)
             } else {
                 self.preview.restoreScrollPosition()
             }

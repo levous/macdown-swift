@@ -582,5 +582,97 @@ extension LiveDocumentTests {
         }
     }
 
+
+    /// WebKit draws no frames for test windows; frames from a timer let the
+    /// page's real animation loop run. Counts frames in `window.frameCount`.
+    func installFrameShim(_ controller: DocumentController) async {
+        _ = await evaluate(controller, """
+            window.frameCount = 0;
+            window.requestAnimationFrame = function (callback) {
+              return setTimeout(function () {
+                window.frameCount++;
+                callback(performance.now());
+              }, 16);
+            };
+            window.cancelAnimationFrame = clearTimeout;
+            0
+            """)
+    }
+
+    /// The page's offsets every 20 ms until it's been still for 200 ms.
+    func sampleUntilStill(_ controller: DocumentController) async throws -> [CGFloat] {
+        var samples: [CGFloat] = [await previewScrollY(controller)]
+        var still = 0
+        while still < 10, samples.count < 500 {
+            try await Task.sleep(for: .milliseconds(20))
+            let y = await previewScrollY(controller)
+            still = y == samples.last ? still + 1 : 0
+            samples.append(y)
+        }
+        return samples
+    }
+
+    @Test func glidesThroughIntermediateOffsets() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 0 })
+            await installFrameShim(controller)
+            var reports = 0
+            let onScroll = controller.preview.onScroll
+            controller.preview.onScroll = { reports += 1; onScroll?($0) }
+
+            controller.preview.scroll(to: 1500, animated: true)
+            let samples = try await sampleUntilStill(controller)
+            #expect(samples.last == 1500)
+            #expect(samples.contains { $0 > 0 && $0 < 1500 }, "\(samples)")
+            #expect(zip(samples, samples.dropFirst()).allSatisfy { $0 <= $1 }, "\(samples)")
+            // Moving under its own steam, the page doesn't lead the editor.
+            #expect(reports == 0)
+
+            // The user scrolling it does.
+            _ = await evaluate(controller, "window.scrollTo(0, 300); 0")
+            #expect(await waitUntil { reports > 0 })
+        }
+    }
+
+    @Test func glideFollowsAMovingTarget() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 0 })
+            await installFrameShim(controller)
+            controller.preview.scroll(to: 1500, animated: true)
+            try await Task.sleep(for: .milliseconds(60))
+            controller.preview.scroll(to: 600, animated: true)
+            let samples = try await sampleUntilStill(controller)
+            #expect(samples.last == 600, "\(samples)")
+
+            // Past the end of the page it stops at the end, and stops asking
+            // for frames.
+            controller.preview.scroll(to: 1_000_000, animated: true)
+            let end = try await sampleUntilStill(controller).last ?? 0
+            let max = await evaluate(controller,
+                "document.documentElement.scrollHeight - window.innerHeight") as? Double ?? -1
+            #expect(abs(end - CGFloat(max)) < 1)
+            let frames = await evaluate(controller, "window.frameCount") as? Int ?? 0
+            try await Task.sleep(for: .milliseconds(200))
+            #expect(await evaluate(controller, "window.frameCount") as? Int == frames)
+        }
+    }
+
+    @Test func clickFinishesTheGlide() async throws {
+        try await withSyncScrolling {
+            let (controller, window) = makeController()
+            defer { controller.tearDown(); window.close() }
+            #expect(await waitUntil { controller.previewMetrics.anchors.count > 0 })
+            await installFrameShim(controller)
+            controller.preview.scroll(to: 1500, animated: true)
+            try await Task.sleep(for: .milliseconds(40))
+            _ = await evaluate(controller,
+                "window.dispatchEvent(new MouseEvent('mousedown')); 0")
+            #expect(await previewScrollY(controller) == 1500)
+        }
+    }
 }
 }

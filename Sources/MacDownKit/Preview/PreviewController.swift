@@ -57,6 +57,9 @@ public final class PreviewController: NSObject {
     public private(set) var isReady = false
     public private(set) var currentBaseURL: URL?
     public private(set) var lastScrollTop: CGFloat = 0
+    /// Whether the last load replaced the body of the page in place, so the
+    /// page kept its scroll position, rather than loading a new page.
+    public private(set) var lastLoadReplacedBody = false
 
     private var waitsForMathJax = false
     /// The loaded page without its body; see `load(html:...)`.
@@ -134,6 +137,7 @@ public final class PreviewController: NSObject {
             }
         }
         isLoading = true
+        lastLoadReplacedBody = false
         waitsForMathJax = waitForMathJax
         currentBaseURL = baseURL
         // Not known to be in place until the navigation finishes.
@@ -170,6 +174,7 @@ public final class PreviewController: NSObject {
             if case .success(let value) = result, let y = value as? NSNumber,
                y.doubleValue >= 0 {
                 self.lastScrollTop = CGFloat(y.doubleValue)
+                self.lastLoadReplacedBody = true
                 self.finishLoading()
             } else {
                 // The page isn't what we thought it was; start over.
@@ -531,8 +536,11 @@ public final class PreviewController: NSObject {
             }
           };
 
-          // The user takes over; what scrolls next is theirs.
-          function userInput() {
+          // The user takes over; what scrolls next is theirs. A click (or
+          // grabbing the scroll bar) finishes the glide first, so the page
+          // isn't left short of where the editor is.
+          function userInput(event) {
+            if (event.type === "mousedown" && target !== null) jump(target);
             stop();
             ownY = null;
           }
