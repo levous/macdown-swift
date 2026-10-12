@@ -46,7 +46,8 @@ public final class PreviewController: NSObject {
     public var onLoadFinished: (() -> Void)?
     /// Called for link clicks that leave the current document.
     public var onOpenURL: ((URL) -> Void)?
-    /// Called when the page scrolls, with the new offset in CSS pixels.
+    /// Called when the user scrolls the page, with the new offset in CSS
+    /// pixels. Scrolling by `scroll(to:animated:)` isn't reported.
     public var onScroll: ((CGFloat) -> Void)?
     /// Called when the page's layout changes after loading, e.g. because
     /// the view was resized or an image finished loading.
@@ -56,6 +57,9 @@ public final class PreviewController: NSObject {
     public private(set) var isReady = false
     public private(set) var currentBaseURL: URL?
     public private(set) var lastScrollTop: CGFloat = 0
+    /// Whether the last load replaced the body of the page in place, so the
+    /// page kept its scroll position, rather than loading a new page.
+    public private(set) var lastLoadReplacedBody = false
 
     private var waitsForMathJax = false
     /// The loaded page without its body; see `load(html:...)`.
@@ -133,6 +137,7 @@ public final class PreviewController: NSObject {
             }
         }
         isLoading = true
+        lastLoadReplacedBody = false
         waitsForMathJax = waitForMathJax
         currentBaseURL = baseURL
         // Not known to be in place until the navigation finishes.
@@ -169,6 +174,7 @@ public final class PreviewController: NSObject {
             if case .success(let value) = result, let y = value as? NSNumber,
                y.doubleValue >= 0 {
                 self.lastScrollTop = CGFloat(y.doubleValue)
+                self.lastLoadReplacedBody = true
                 self.finishLoading()
             } else {
                 // The page isn't what we thought it was; start over.
@@ -250,8 +256,18 @@ public final class PreviewController: NSObject {
 
     // MARK: - JavaScript helpers
 
-    public func scroll(to y: CGFloat) {
-        webView.evaluateJavaScript("window.scrollTo(0, \(y));", completionHandler: nil)
+    /// Scrolls the page to an offset, in CSS pixels.
+    ///
+    /// - Parameter animated: Whether to glide there. Calls made while the
+    ///   page is still on its way just move the target, so a stream of them
+    ///   (one per frame while the editor scrolls) becomes one smooth motion.
+    ///   The page jumps instead when the user prefers reduced motion or
+    ///   WebKit isn't drawing frames (a hidden window).
+    public func scroll(to y: CGFloat, animated: Bool = false) {
+        webView.evaluateJavaScript(
+            "window.MacDownScroll ? MacDownScroll.to(\(y), \(animated))"
+                + " : window.scrollTo(0, \(y)); 0",
+            completionHandler: nil)
     }
 
     public func restoreScrollPosition() {
@@ -406,9 +422,11 @@ public final class PreviewController: NSObject {
 
     // MARK: - Messages
 
-    func pageDidScroll(to y: CGFloat) {
+    /// - Parameter byUser: False when the page scrolled because of
+    ///   `scroll(to:animated:)`.
+    func pageDidScroll(to y: CGFloat, byUser: Bool = true) {
         lastScrollTop = y
-        if !isLoading { onScroll?(y) }
+        if byUser, !isLoading { onScroll?(y) }
     }
 
     func pageLayoutDidChange() {
@@ -423,8 +441,10 @@ public final class PreviewController: NSObject {
                 finishLoading()
             }
         case "MacDownScroll":
-            if let y = message.body as? NSNumber {
-                pageDidScroll(to: CGFloat(y.doubleValue))
+            // [offset, whether the user scrolled]
+            if let body = message.body as? [Any], let y = body.first as? NSNumber {
+                pageDidScroll(to: CGFloat(y.doubleValue),
+                              byUser: (body.last as? NSNumber)?.boolValue ?? true)
             }
         case "MacDownLayout":
             pageLayoutDidChange()
@@ -435,13 +455,108 @@ public final class PreviewController: NSObject {
 
     static let scrollReporterScript = """
         (function () {
+          // Scrolling on behalf of the editor (`MacDownScroll.to`). Animated
+          // scrolls ease towards a target that can keep moving: each frame
+          // covers part of the remaining distance, so a new target per frame
+          // while the editor scrolls makes one continuous motion.
+          var target = null, frame = 0, lastFrame = 0, stallCheck = 0;
+          // Where the page last scrolled itself to, to tell those scroll
+          // events from the user's.
+          var ownY = null;
+          var reducedMotion = window.matchMedia
+            && window.matchMedia("(prefers-reduced-motion: reduce)");
+
+          function jump(y) {
+            window.scrollTo(window.scrollX, y);
+            ownY = window.scrollY;
+          }
+          function stop() {
+            target = null;
+            if (frame) window.cancelAnimationFrame(frame);
+            frame = 0;
+          }
+          function step(time) {
+            frame = 0;
+            if (target === null) return;
+            // The frame's time can be a little before the request's.
+            var dt = Math.min(Math.max(time - lastFrame, 1), 100);
+            lastFrame = time;
+            var y = MacDownScroll.step(window.scrollY, target, dt);
+            jump(y);
+            // Reached it, or can't go further (the end of the page).
+            if (y === target || Math.abs(window.scrollY - target) < 1
+                || Math.abs(window.scrollY - y) >= 1) {
+              stop();
+              return;
+            }
+            frame = window.requestAnimationFrame(step);
+          }
+          // WebKit doesn't draw frames for hidden windows; don't leave the
+          // page short of where it should be.
+          function checkStalled() {
+            stallCheck = 0;
+            if (target === null) return;
+            if (performance.now() - lastFrame > 90) {
+              jump(target);
+              stop();
+            } else {
+              stallCheck = setTimeout(checkStalled, 100);
+            }
+          }
+
+          window.MacDownScroll = {
+            // Seconds for the remaining distance to shrink by e (about two
+            // thirds): short enough to keep up with the editor, long
+            // enough to smooth over steps.
+            timeConstant: 0.06,
+
+            // The next offset when easing from `y` towards `target` over
+            // `dt` milliseconds; moves at least a pixel so it always ends.
+            step: function (y, target, dt) {
+              var distance = target - y;
+              if (Math.abs(distance) <= 1) return target;
+              var factor = 1 - Math.exp(-dt / 1000 / this.timeConstant);
+              var move = distance * factor;
+              if (Math.abs(move) < 1) move = distance > 0 ? 1 : -1;
+              return y + move;
+            },
+
+            to: function (y, animated) {
+              if (!animated || (reducedMotion && reducedMotion.matches)) {
+                stop();
+                jump(y);
+                return;
+              }
+              target = y;
+              if (!frame) {
+                lastFrame = performance.now();
+                frame = window.requestAnimationFrame(step);
+              }
+              if (!stallCheck) stallCheck = setTimeout(checkStalled, 100);
+            }
+          };
+
+          // The user takes over; what scrolls next is theirs. A click (or
+          // grabbing the scroll bar) finishes the glide first, so the page
+          // isn't left short of where the editor is.
+          function userInput(event) {
+            if (event.type === "mousedown" && target !== null) jump(target);
+            stop();
+            ownY = null;
+          }
+          ["wheel", "mousedown", "keydown", "touchstart"].forEach(function (name) {
+            window.addEventListener(name, userInput, { passive: true, capture: true });
+          });
+
           var pending = false;
           window.addEventListener("scroll", function () {
             if (pending) return;
             pending = true;
             window.requestAnimationFrame(function () {
               pending = false;
-              window.webkit.messageHandlers.MacDownScroll.postMessage(window.scrollY);
+              var y = window.scrollY;
+              var byUser = ownY === null || Math.abs(y - ownY) >= 1;
+              window.webkit.messageHandlers.MacDownScroll.postMessage([y, byUser]);
             });
           }, { passive: true });
 

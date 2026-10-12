@@ -67,6 +67,8 @@ fresh, and the original's plist can be copied over to migrate.
 - **Editor highlighting** styles text as it scrolls into view, and the
   rest of the document in the background, instead of restyling what's
   visible after scrolling (every 100 ms in the original).
+- **Scroll sync** glides the preview after the editor rather than jumping
+  (unless reduced motion is on).
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

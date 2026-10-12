@@ -85,9 +85,9 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private(set) var previewMetrics = PreviewMetrics()
     /// The pane the user scrolled last; the other one follows it.
     @ObservationIgnored private var scrollLeader = ScrollLeader.editor
-    /// The last scroll offset set on the preview, and when, so the scroll
-    /// events it causes aren't taken for the user scrolling the preview.
-    @ObservationIgnored private var previewScrollTarget: (y: CGFloat, date: Date)?
+    /// The last scroll offset set on the preview, so syncing to the same
+    /// place again doesn't send it again.
+    @ObservationIgnored private var previewScrollTarget: CGFloat?
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var isSetUp = false
 
@@ -667,7 +667,9 @@ public final class DocumentController: NSObject {
             if self.preferences.editorSyncScrolling {
                 self.previewMetrics = await self.preview.fetchMetrics()
                 self.updateEditorAnchors()
-                self.syncScrollers()
+                // A new page starts at the top, so it jumps into place; an
+                // updated one is where it was, and may be gliding.
+                self.syncScrollers(animated: self.preview.lastLoadReplacedBody)
             } else {
                 self.preview.restoreScrollPosition()
             }
@@ -762,7 +764,7 @@ public final class DocumentController: NSObject {
         shouldHandleBoundsChange = false
         scrollLeader = .editor
         if !inLiveScroll { updateEditorAnchors() }
-        syncScrollers()
+        syncScrollers(animated: true)
         shouldHandleBoundsChange = true
     }
 
@@ -985,7 +987,12 @@ public final class DocumentController: NSObject {
 
     /// Scrolls the pane that isn't being scrolled by the user to match the
     /// one that is.
-    private func syncScrollers() {
+    ///
+    /// - Parameter animated: Whether the preview glides to its new offset
+    ///   (following the editor's scrolling, or its text moving). After the
+    ///   page loads or the panes resize it jumps, as the page is already in
+    ///   the wrong place.
+    private func syncScrollers(animated: Bool = false) {
         guard preferences.editorSyncScrolling,
               previewMetrics.visibleHeight > 0, editorGeometry.visibleHeight > 0
         else { return }
@@ -994,13 +1001,9 @@ public final class DocumentController: NSObject {
             let y = scrollMap.previewOffset(
                 forEditorOffset: editorScrollView.contentView.bounds.minY,
                 editor: editorGeometry, preview: previewMetrics.geometry)
-            // Re-syncing to the same place (e.g. after restyling) mustn't
-            // restart the window in which preview scrolling is ignored.
-            if let target = previewScrollTarget, abs(target.y - y) < 1 {
-                return
-            }
-            previewScrollTarget = (y, Date())
-            preview.scroll(to: y)
+            if let target = previewScrollTarget, abs(target - y) < 1 { return }
+            previewScrollTarget = y
+            preview.scroll(to: y, animated: animated)
         case .preview:
             let y = scrollMap.editorOffset(
                 forPreviewOffset: preview.lastScrollTop,
@@ -1015,12 +1018,9 @@ public final class DocumentController: NSObject {
     }
 
     private func previewDidScroll(to y: CGFloat) {
+        // Only the user's scrolling is reported, not the page following the
+        // editor (see `PreviewController.onScroll`).
         guard preferences.editorSyncScrolling else { return }
-        // Ignore scrolling caused by syncScrollers().
-        if let target = previewScrollTarget,
-           abs(target.y - y) < 1 || Date().timeIntervalSince(target.date) < 0.25 {
-            return
-        }
         previewScrollTarget = nil
         scrollLeader = .preview
         syncScrollers()
@@ -1054,7 +1054,7 @@ public final class DocumentController: NSObject {
             self.editorLayoutSyncScheduled = false
             guard !self.preview.isLoading else { return }
             self.updateEditorAnchors()
-            self.syncScrollers()
+            self.syncScrollers(animated: true)
         }
     }
 
