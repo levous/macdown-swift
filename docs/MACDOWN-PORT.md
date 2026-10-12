@@ -64,6 +64,9 @@ fresh, and the original's plist can be copied over to migrate.
   CommonMark and GitHub Flavored Markdown; where the results differ is listed
   below. For one release the original's engine can be turned back on with
   `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
+- **Editor highlighting** styles text as it scrolls into view, and the
+  rest of the document in the background, instead of restyling what's
+  visible after scrolling (every 100 ms in the original).
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;
