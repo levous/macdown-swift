@@ -72,7 +72,9 @@ fresh, and the original's plist can be copied over to migrate.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;
-  the split ratio is stored per window.
+  the split ratio is stored per window. New windows open at the size a
+  window was last resized to, if it fits the screen (the original's
+  untitled-window frame, without the position).
 - **Save panel** uses SwiftUI's default name; export panels still suggest a
   name from the front matter title or first heading.
 - Following a link to a missing file with "Automatically create files for

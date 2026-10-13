@@ -176,6 +176,8 @@ public final class DocumentController: NSObject {
         closeGuard = nil
         responder?.uninstall()
         responder = nil
+        resizeObserver.map(NotificationCenter.default.removeObserver)
+        resizeObserver = nil
         Self.unregister(self)
     }
 
@@ -258,6 +260,7 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private weak var attachedWindow: NSWindow?
     @ObservationIgnored private(set) var closeGuard: WindowCloseGuard?
     @ObservationIgnored private(set) var responder: DocumentResponder?
+    @ObservationIgnored private var resizeObserver: NSObjectProtocol?
     /// Saves the document after the draft was copied into it, and reports
     /// whether it was saved. Replaceable for tests; the app saves through the
     /// window's NSDocument.
@@ -574,6 +577,13 @@ public final class DocumentController: NSObject {
         }
         closeGuard.install(on: window)
         self.closeGuard = closeGuard
+        resizeObserver.map(NotificationCenter.default.removeObserver)
+        resizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didEndLiveResizeNotification, object: window, queue: .main
+        ) { note in
+            guard let window = note.object as? NSWindow else { return }
+            MainActor.assumeIsolated { DocumentWindowSize.save(from: window) }
+        }
         updateUnsavedState()
     }
 
