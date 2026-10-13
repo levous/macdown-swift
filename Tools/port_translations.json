@@ -527,5 +527,28 @@
     "tr": "Akıllı Noktalama",
     "zh-Hans": "智能标点",
     "zh-Hant": "智慧型標點"
+  },
+  "Sync source and preview scrolling": {
+    "cs": "Synchronizovat posouvání zdroje a náhledu",
+    "da": "Synkroniser rulning af kilde og forhåndsvisning",
+    "da-DK": "Synkroniser rulning af kilde og forhåndsvisning",
+    "de": "Quelltext und Vorschau gemeinsam scrollen",
+    "es": "Sincronizar el desplazamiento del código fuente y la vista previa",
+    "et": "Sünkrooni lähteteksti ja eelvaate kerimine",
+    "fi": "Synkronoi lähdetekstin ja esikatselun vieritys",
+    "fr": "Synchroniser le défilement de la source et de la prévisualisation",
+    "is": "Samstilla skrun frumtexta og forskoðunar",
+    "it-IT": "Sincronizza lo scorrimento di sorgente e anteprima",
+    "ja": "ソースとプレビューのスクロールを同期",
+    "ko-KR": "소스와 미리 보기 스크롤 동기화",
+    "nb-NO": "Synkroniser rulling av kilde og forhåndsvisning",
+    "nl-NL": "Scrollen van bron en voorbeeld synchroniseren",
+    "pt-BR": "Sincronizar a rolagem do código-fonte e da visualização",
+    "ru-RU": "Синхронизировать прокрутку исходного текста и предпросмотра",
+    "sk": "Synchronizovať posúvanie zdroja a ukážky",
+    "sv": "Synkronisera rullning av källa och förhandsvisning",
+    "tr": "Kaynak ve önizleme kaydırmasını eşitle",
+    "zh-Hans": "同步滚动源文本和预览",
+    "zh-Hant": "同步捲動原始文字與預覽"
   }
 }

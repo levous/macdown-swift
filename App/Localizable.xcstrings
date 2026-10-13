@@ -12198,97 +12198,132 @@
         }
       }
     },
-    "Sync preview scrollbar when editor scrolls" : {
-      "extractionState" : "stale",
+    "Sync source and preview scrolling" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchronizovat posuvníky editoru a náhledu"
+            "state" : "needs_review",
+            "value" : "Synchronizovat posouvání zdroje a náhledu"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synkroniser rulning af kilde og forhåndsvisning"
           }
         },
         "da-DK" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkroniser preview- og editor rulleskakter"
+            "state" : "needs_review",
+            "value" : "Synkroniser rulning af kilde og forhåndsvisning"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorschau mit dem Editor scrollen"
+            "state" : "needs_review",
+            "value" : "Quelltext und Vorschau gemeinsam scrollen"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar la barra de desplazamiento de la vista previa al desplazar el editor"
+            "state" : "needs_review",
+            "value" : "Sincronizar el desplazamiento del código fuente y la vista previa"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sünkrooni lähteteksti ja eelvaate kerimine"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synkronoi lähdetekstin ja esikatselun vieritys"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchroniser le défilement de la prévisualisation quand l'éditeur défile"
+            "state" : "needs_review",
+            "value" : "Synchroniser le défilement de la source et de la prévisualisation"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Samstilla skrun frumtexta og forskoðunar"
           }
         },
         "it-IT" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizza le barra di scorrimento dell'editor e dell'anteprima"
+            "state" : "needs_review",
+            "value" : "Sincronizza lo scorrimento di sorgente e anteprima"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "エディタと連動してプレビューもスクロール"
+            "state" : "needs_review",
+            "value" : "ソースとプレビューのスクロールを同期"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "소스와 미리 보기 스크롤 동기화"
           }
         },
         "nb-NO" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkroniser forhåndsvisningas rulling med redigeringsvinduet"
+            "state" : "needs_review",
+            "value" : "Synkroniser rulling av kilde og forhåndsvisning"
           }
         },
         "nl-NL" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sychroniseer voorbeeldscrollbalk tijdens scrollen"
+            "state" : "needs_review",
+            "value" : "Scrollen van bron en voorbeeld synchroniseren"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar a rolagem da visualização quando o editor rolar"
+            "state" : "needs_review",
+            "value" : "Sincronizar a rolagem do código-fonte e da visualização"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Синхронизировать прокрутку исходного текста и предпросмотра"
           }
         },
         "sk" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchronizovať posuvník ukážky pri rolovaní editora"
+            "state" : "needs_review",
+            "value" : "Synchronizovať posúvanie zdroja a ukážky"
           }
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkronisera förhandsvisnings-scrollning med regierings-vyn's scrollning"
+            "state" : "needs_review",
+            "value" : "Synkronisera rullning av källa och förhandsvisning"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editör kaydırıldığında önizlemeyi de kaydır"
+            "state" : "needs_review",
+            "value" : "Kaynak ve önizleme kaydırmasını eşitle"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "预览窗口同步滚动"
+            "state" : "needs_review",
+            "value" : "同步滚动源文本和预览"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "編輯器捲動時同步預覽捲軸"
+            "state" : "needs_review",
+            "value" : "同步捲動原始文字與預覽"
           }
         }
       }

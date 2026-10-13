@@ -44,7 +44,7 @@ struct GeneralSettingsView: View {
         Form {
             Toggle("Update preview automatically as you type",
                    isOn: negated($preferences.markdownManualRender))
-            Toggle("Sync preview scrollbar when editor scrolls",
+            Toggle("Sync source and preview scrolling",
                    isOn: $preferences.editorSyncScrolling)
             Toggle("Put editor on the right", isOn: $preferences.editorOnRight)
             Toggle("Show word count", isOn: $preferences.editorShowWordCount)

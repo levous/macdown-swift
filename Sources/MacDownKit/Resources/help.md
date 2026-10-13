@@ -457,7 +457,7 @@ Normally I require you to put two spaces and a newline at the end of a line to c
 This is where I keep settings for how I behave: **MacDown ▸ Settings… ▸ General**.
 
 * **Update preview automatically as you type** (on by default). Turn it off to update the preview only when you choose **View ▸ Render Markdown** (Command-R).
-* **Sync preview scrollbar when editor scrolls** (on by default) keeps the preview lined up with the editor. Scroll either one, and the other follows.
+* **Sync source and preview scrolling** (on by default) keeps the preview lined up with the editor. Scroll either one, and the other follows.
 * **Put editor on the right** swaps the editor and the preview.
 * **Show word count** shows a count in the corner of the editor. Click it to choose words, characters, or characters without spaces.
 * **Ensure open document on launch** opens an empty document when I start without one.
