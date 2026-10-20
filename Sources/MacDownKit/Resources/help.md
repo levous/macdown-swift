@@ -356,6 +356,8 @@ This is where I keep the settings for how I render and style your document in th
 
 Choose the stylesheet the preview uses (*GitHub2* by default). The folder button reveals the Styles folder in `~/Library/Application Support/MacDown`, where you can edit the styles or add your own `.css` files; the reload button picks up your changes. **Default path** is the folder that relative links and images resolve against in documents that haven’t been saved yet.
 
+**Base font size** sets the page’s root font size, in the preview and in exported HTML and PDF. Stylesheets that size text in relative units (`rem`, `em` or `%`) grow and shrink with it; sizes a stylesheet sets in `px` stay as they are. Leave it at 0 to keep the stylesheet’s own size.
+
 ### Syntax Highlighting
 
 *Syntax highlighted code block* (on by default) colors [fenced code blocks](#fenced-code-block) that name a language, with a choice of themes.

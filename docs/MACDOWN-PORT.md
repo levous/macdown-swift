@@ -74,6 +74,10 @@ fresh, and the original's plist can be copied over to migrate.
   `[x]` (or back) in the Markdown, as an undoable edit. The original's
   preview checkboxes were always disabled, as they still are with the
   setting off and with the hoedown engine.
+- **Base font size**: Settings ▸ Rendering ▸ "Base font size" (0, off, by
+  default) sets the root `html` font size in the preview and exports, so
+  stylesheets in relative units scale with it. The bundled styles size
+  text in `px`, so they don't change with it.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

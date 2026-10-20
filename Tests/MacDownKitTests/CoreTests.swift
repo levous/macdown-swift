@@ -545,4 +545,26 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(!html.contains("src=\"file:"))
         #expect(html.contains("<script type=\"text/javascript\">"))
     }
+
+    /// The base font size sets the root size after the stylesheets, in the
+    /// preview and exports, and is left out when 0.
+    @Test func baseFontSize() throws {
+        var settings = PageSettings()
+        settings.styleName = "GitHub2"
+        let result = ParseResult(body: "<p>Text</p>", languages: [])
+        let rule = "<style>html { font-size: 17.5px; }</style>"
+        #expect(!PageBuilder.previewHTML(title: nil, result: result, settings: settings)
+            .contains("<style>html"))
+
+        settings.baseFontSize = 17.5
+        let preview = PageBuilder.previewHTML(title: nil, result: result, settings: settings)
+        let ruleRange = try #require(preview.range(of: rule))
+        let sheetRange = try #require(preview.range(of: "GitHub2.css"))
+        #expect(sheetRange.upperBound < ruleRange.lowerBound)
+        for withStyles in [false, true] {
+            #expect(PageBuilder.exportHTML(title: nil, result: result, settings: settings,
+                                           withStyles: withStyles, withHighlighting: false)
+                .contains(rule))
+        }
+    }
 }

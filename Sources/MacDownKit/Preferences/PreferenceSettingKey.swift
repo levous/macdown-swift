@@ -75,6 +75,9 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     /// New in the Swift port: task list checkboxes in the preview edit the
     /// Markdown.
     case htmlTaskListToggling
+    /// New in the Swift port: the preview's root font size, which styles
+    /// in relative units scale with.
+    case htmlBaseFontSize
 
     // MARK: Retired
     // Settings that are no longer read: standard Markdown is always on, and

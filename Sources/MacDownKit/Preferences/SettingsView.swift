@@ -271,6 +271,13 @@ struct RenderingSettingsView: View {
                     }
                 }
             }
+            LabeledContent("Base font size:") {
+                HStack {
+                    NumberField(value: $preferences.htmlBaseFontSize, step: 1)
+                    Text("pt (0 keeps the CSS’s size)")
+                        .foregroundStyle(.secondary)
+                }
+            }
             LabeledContent("Default path:") {
                 HStack {
                     Text(preferences.htmlDefaultDirectoryUrl?.path ?? "—")

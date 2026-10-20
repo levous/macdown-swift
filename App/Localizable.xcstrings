@@ -1575,6 +1575,137 @@
         }
       }
     },
+    "Base font size:" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Základní velikost písma:"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundlæggende skriftstørrelse:"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundlæggende skriftstørrelse:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundschriftgröße:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tamaño de letra base:"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Põhifondi suurus:"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Perusfonttikoko:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Taille de police de base :"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grunnleturstærð:"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dimensione font di base:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本フォントサイズ:"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "기본 글꼴 크기:"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grunnleggende skriftstørrelse:"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Basislettergrootte:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tamanho da fonte base:"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Базовый размер шрифта:"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Základná veľkosť písma:"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundteckenstorlek:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Temel yazı tipi boyutu:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本字体大小："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本字體大小："
+          }
+        }
+      }
+    },
     "Base font:" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -9698,6 +9829,137 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "列印..."
+          }
+        }
+      }
+    },
+    "pt (0 keeps the CSS’s size)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "b. (0 ponechá velikost z CSS)"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pkt. (0 beholder CSS’ens størrelse)"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pkt. (0 beholder CSS’ens størrelse)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behält die Größe aus dem CSS)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantiene el tamaño del CSS)"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 jätab CSS-i suuruse)"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 säilyttää CSS:n koon)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 conserve la taille du CSS)"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 heldur stærð CSS)"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantiene la dimensione del CSS)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt（0 で CSS のサイズのまま）"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt(0이면 CSS 크기 유지)"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 beholder størrelsen fra CSS)"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behoudt de grootte uit de CSS)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantém o tamanho do CSS)"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "пт (0 — размер из CSS)"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "b. (0 ponechá veľkosť z CSS)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behåller storleken från CSS)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0, CSS’teki boyutu korur)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "磅（0 表示沿用 CSS 的大小）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "點（0 表示沿用 CSS 的大小）"
           }
         }
       }
