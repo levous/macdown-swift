@@ -72,6 +72,9 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     case htmlCodeBlockAccessory
     case htmlDefaultDirectoryUrl
     case htmlRendersTOC
+    /// New in the Swift port: task list checkboxes in the preview edit the
+    /// Markdown.
+    case htmlTaskListToggling
 
     // MARK: Retired
     // Settings that are no longer read: standard Markdown is always on, and

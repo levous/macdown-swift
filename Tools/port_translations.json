@@ -550,5 +550,28 @@
     "tr": "Kaynak ve önizleme kaydırmasını eşitle",
     "zh-Hans": "同步滚动源文本和预览",
     "zh-Hant": "同步捲動原始文字與預覽"
+  },
+  "Enable checkbox toggling": {
+    "cs": "Povolit přepínání zaškrtávacích políček",
+    "da": "Slå afkrydsning af afkrydsningsfelter til",
+    "da-DK": "Slå afkrydsning af afkrydsningsfelter til",
+    "de": "Abhaken von Kontrollkästchen erlauben",
+    "es": "Permitir marcar y desmarcar casillas",
+    "et": "Luba märkeruutude märkimine",
+    "fi": "Salli valintaruutujen valitseminen",
+    "fr": "Permettre de cocher les cases",
+    "is": "Leyfa að haka í gátreiti",
+    "it-IT": "Consenti di selezionare le caselle",
+    "ja": "チェックボックスの切り替えを有効にする",
+    "ko-KR": "체크박스 전환 사용",
+    "nb-NO": "Tillat avkrysning av avmerkingsbokser",
+    "nl-NL": "Aanvinken van selectievakjes toestaan",
+    "pt-BR": "Permitir marcar e desmarcar caixas de seleção",
+    "ru-RU": "Разрешить переключение флажков",
+    "sk": "Povoliť prepínanie začiarkavacích políčok",
+    "sv": "Tillåt avbockning av kryssrutor",
+    "tr": "Onay kutularını işaretlemeye izin ver",
+    "zh-Hans": "允许切换复选框",
+    "zh-Hant": "允許切換核取方塊"
   }
 }

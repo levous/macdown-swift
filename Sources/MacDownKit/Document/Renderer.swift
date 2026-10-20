@@ -17,6 +17,8 @@ public struct PageSettings: Sendable, Equatable {
     public var lineNumbers = false
     public var codeBlockAccessory: CodeBlockAccessoryType = .none
     public var taskList = false
+    /// Task list checkboxes in the preview can be clicked (preview only).
+    public var taskListToggling = false
     public var mermaid = false
     public var graphviz = false
     public var mathJax = false
@@ -71,6 +73,7 @@ extension Preferences {
         page.lineNumbers = htmlLineNumbers
         page.codeBlockAccessory = codeBlockAccessory
         page.taskList = true
+        page.taskListToggling = htmlTaskListToggling
         page.mermaid = htmlMermaid
         page.graphviz = htmlGraphviz
         page.mathJax = htmlMathJax
@@ -196,7 +199,8 @@ public enum PageBuilder {
     static func scripts(_ s: PageSettings, languages: [String]) -> [Asset] {
         var scripts: [Asset] = []
         if s.taskList {
-            scripts.append(.javaScript(extensionURL("tasklist", "js")))
+            let name = s.taskListToggling ? "tasklist-toggle" : "tasklist"
+            scripts.append(.javaScript(extensionURL(name, "js")))
         }
         if s.syntaxHighlighting {
             scripts += prismScripts(s, languages: languages)

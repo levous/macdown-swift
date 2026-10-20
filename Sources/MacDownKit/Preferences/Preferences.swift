@@ -138,6 +138,9 @@ public final class Preferences {
     public var htmlLineNumbers = false { didSet { save(htmlLineNumbers, .htmlLineNumbers) } }
     public var htmlGraphviz = false { didSet { save(htmlGraphviz, .htmlGraphviz) } }
     public var htmlMermaid = false { didSet { save(htmlMermaid, .htmlMermaid) } }
+    /// Whether clicking a task list checkbox in the preview checks or
+    /// unchecks it in the Markdown. New in the Swift port; on by default.
+    public var htmlTaskListToggling = false { didSet { save(htmlTaskListToggling, .htmlTaskListToggling) } }
     public var htmlCodeBlockAccessory = 0 { didSet { save(htmlCodeBlockAccessory, .htmlCodeBlockAccessory) } }
     public var htmlDefaultDirectoryUrl: URL? {
         didSet {
@@ -296,6 +299,7 @@ public final class Preferences {
         htmlCodeBlockAccessory = d.integer(forKey: .htmlCodeBlockAccessory)
         htmlDefaultDirectoryUrl = d.url(forKey: .htmlDefaultDirectoryUrl)
         htmlRendersTOC = d.bool(forKey: .htmlRendersTOC)
+        htmlTaskListToggling = d.bool(forKey: .htmlTaskListToggling)
     }
 
     private func cleanupObsoleteAutosaveValues() {
@@ -354,6 +358,9 @@ public final class Preferences {
         }
         if defaults.object(forKey: .htmlTemplateName) == nil {
             htmlTemplateName = "Default"
+        }
+        if defaults.object(forKey: .htmlTaskListToggling) == nil {
+            htmlTaskListToggling = true
         }
     }
 }

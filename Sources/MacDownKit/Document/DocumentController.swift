@@ -126,6 +126,9 @@ public final class DocumentController: NSObject {
         preview.onOpenURL = { [weak self] url in self?.openOrCreateFile(for: url) }
         preview.onScroll = { [weak self] y in self?.previewDidScroll(to: y) }
         preview.onLayoutChange = { [weak self] in self?.previewLayoutDidChange() }
+        preview.onTaskListToggle = { [weak self] line, checked in
+            self?.previewDidToggleTaskList(line: line, checked: checked)
+        }
 
         setUpObservers()
         watchFile()
@@ -171,6 +174,7 @@ public final class DocumentController: NSObject {
         preview.onLoadFinished = nil
         preview.onOpenURL = nil
         preview.onScroll = nil
+        preview.onTaskListToggle = nil
         preview.onLayoutChange = nil
         closeGuard?.uninstall(from: attachedWindow)
         closeGuard = nil
@@ -665,6 +669,14 @@ public final class DocumentController: NSObject {
         preview.load(html: html, baseURL: baseURL, waitForMathJax: settings.mathJax,
                      restoresScroll: !preferences.editorSyncScrolling)
         renderer.markRendered(with: settings)
+    }
+
+    /// A task list checkbox was clicked in the preview: check or uncheck
+    /// the item in the Markdown. If the line isn't a task list item any
+    /// more, render again so the checkbox shows the Markdown's state.
+    private func previewDidToggleTaskList(line: Int, checked: Bool) {
+        guard preferences.htmlTaskListToggling else { return }
+        if !editor.setTaskListItem(atLine: line, checked: checked) { render() }
     }
 
     private func previewDidFinishLoading() {

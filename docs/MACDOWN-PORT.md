@@ -69,6 +69,11 @@ fresh, and the original's plist can be copied over to migrate.
   visible after scrolling (every 100 ms in the original).
 - **Scroll sync** glides the preview after the editor rather than jumping
   (unless reduced motion is on).
+- **Task list checkboxes** in the preview can be clicked: Settings ▸
+  Rendering ▸ "Enable checkbox toggling" (on by default) changes `[ ]` to
+  `[x]` (or back) in the Markdown, as an undoable edit. The original's
+  preview checkboxes were always disabled, as they still are with the
+  setting off and with the hoedown engine.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

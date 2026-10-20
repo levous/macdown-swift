@@ -159,12 +159,17 @@ extension LiveDocumentTests {
     @Test(arguments: MarkdownEngine.allCases)
     func previewRunsEveryExample(_ engine: MarkdownEngine) async throws {
         let p = Preferences.shared
-        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine)
+        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine,
+                     p.htmlTaskListToggling)
         p.htmlSyntaxHighlighting = true
         p.htmlMermaid = true
         p.htmlGraphviz = true
         p.markdownEngine = engine
-        defer { (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine) = saved }
+        p.htmlTaskListToggling = true
+        defer {
+            (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine,
+             p.htmlTaskListToggling) = saved
+        }
         let controller = DocumentController(
             document: MarkdownDocument(text: try HelpDocument.text()), fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
@@ -203,9 +208,10 @@ extension LiveDocumentTests {
         }
         #expect(images)
         #expect(await count("img") == 2)
-        // Task list checkboxes are shown, and disabled.
+        // Task list checkboxes are shown, and can be clicked (hoedown's have
+        // no source lines to edit, so they stay disabled).
         #expect(await count("input[type=checkbox]") == 4)
-        #expect(await count("input[type=checkbox]:disabled") == 4)
+        #expect(await count("input[type=checkbox]:disabled") == (engine == .hoedown ? 4 : 0))
     }
 }
 }

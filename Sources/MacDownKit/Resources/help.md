@@ -305,14 +305,16 @@ Write a footnote reference like this[^1], and the footnote itself anywhere in th
 1. [x] I can render checkbox list syntax
 	* [x] I support nesting
 	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
+2. [ ] Click me in the preview to check me off
 
 ```
 1. [x] I can render checkbox list syntax
 	* [x] I support nesting
 	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
+2. [ ] Click me in the preview to check me off
 ```
+
+With *Enable checkbox toggling* on in the [**Rendering** settings](#rendering-pane) (on by default), clicking a checkbox in the preview checks or unchecks it in your Markdown (`[ ]` ↔ `[x]`), as an edit you can undo.
 
 ### Jekyll Front-matter
 
@@ -451,6 +453,10 @@ Normally I require you to put two spaces and a newline at the end of a line to c
 ### Scale Preview
 
 *Scale preview based on editor font size* zooms the preview along with the editor’s font size.
+
+### Checkbox Toggling
+
+*Enable checkbox toggling* (on by default) lets you click [task list](#standard-extensions) checkboxes in the preview: each click changes `[ ]` to `[x]` (or back) in your Markdown. Turn it off to make the preview’s checkboxes read-only.
 
 ## <a name="general-pane"></a>The General Settings
 

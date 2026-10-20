@@ -319,6 +319,7 @@ struct RenderingSettingsView: View {
                 Toggle("Render newline literally", isOn: $preferences.htmlHardWrap)
                 Toggle("Scale preview based on editor font size",
                        isOn: $preferences.previewZoomRelativeToBaseFontSize)
+                Toggle("Enable checkbox toggling", isOn: $preferences.htmlTaskListToggling)
             }
         }
         .padding(20)

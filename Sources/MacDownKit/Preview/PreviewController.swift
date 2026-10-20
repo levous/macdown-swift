@@ -52,6 +52,9 @@ public final class PreviewController: NSObject {
     /// Called when the page's layout changes after loading, e.g. because
     /// the view was resized or an image finished loading.
     public var onLayoutChange: (() -> Void)?
+    /// Called when the user clicks a task list checkbox (with checkbox
+    /// toggling on), with the item's source line and whether it's checked.
+    public var onTaskListToggle: ((Int, Bool) -> Void)?
 
     public private(set) var isLoading = false
     public private(set) var isReady = false
@@ -85,6 +88,7 @@ public final class PreviewController: NSObject {
         controller.add(messageProxy, name: "MathJaxListener")
         controller.add(messageProxy, name: "MacDownScroll")
         controller.add(messageProxy, name: "MacDownLayout")
+        controller.add(messageProxy, name: "MacDownTaskList")
         controller.addUserScript(WKUserScript(
             source: Self.scrollReporterScript, injectionTime: .atDocumentEnd,
             forMainFrameOnly: true))
@@ -190,7 +194,8 @@ public final class PreviewController: NSObject {
 
     /// Replaces the nodes between the body markers, then does what loading
     /// the page would: highlights code, draws Mermaid diagrams, runs `load`
-    /// handlers (Graphviz), disables task list checkboxes (tasklist.js) and typesets
+    /// handlers (Graphviz), disables task list checkboxes (tasklist.js), or
+    /// enables them with checkbox toggling on (tasklist-toggle.js), and typesets
     /// math. Resolves to the scroll offset once images have loaded, so
     /// metrics are final, or to -1 if the markers are missing.
     private static let replaceBodyScript = """
@@ -220,11 +225,15 @@ public final class PreviewController: NSObject {
         // Graphviz renders from a load handler; other load listeners
         // (MathJax's startup) shouldn't run twice.
         if (window.Viz) window.dispatchEvent(new Event("load"));
-        Array.prototype.forEach.call(
-          document.getElementsByClassName("task-list-item"), function (item) {
-            var input = item.getElementsByTagName("input")[0];
-            if (input) input.disabled = true;
-          });
+        if (window.MacDownTaskList) {
+          MacDownTaskList.update();
+        } else {
+          Array.prototype.forEach.call(
+            document.getElementsByClassName("task-list-item"), function (item) {
+              var input = item.getElementsByTagName("input")[0];
+              if (input) input.disabled = true;
+            });
+        }
         if (mathJax && window.MathJax && MathJax.Hub) {
           await new Promise(function (resolve) {
             MathJax.Hub.Queue(["Typeset", MathJax.Hub], resolve);
@@ -433,6 +442,10 @@ public final class PreviewController: NSObject {
         if !isLoading { onLayoutChange?() }
     }
 
+    func pageDidToggleTaskList(line: Int, checked: Bool) {
+        onTaskListToggle?(line, checked)
+    }
+
     fileprivate func receive(_ message: WKScriptMessage) {
         switch message.name {
         case "MathJaxListener":
@@ -448,6 +461,12 @@ public final class PreviewController: NSObject {
             }
         case "MacDownLayout":
             pageLayoutDidChange()
+        case "MacDownTaskList":
+            // [source line, whether it's checked]
+            if let body = message.body as? [Any], body.count == 2,
+               let line = body[0] as? NSNumber, let checked = body[1] as? NSNumber {
+                pageDidToggleTaskList(line: line.intValue, checked: checked.boolValue)
+            }
         default:
             break
         }

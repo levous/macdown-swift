@@ -390,5 +390,75 @@ extension LiveDocumentTests {
         #expect(await evaluate(controller, count) as? Int == 2)
         #expect(await evaluate(controller, errors) as? Int == 1)
     }
+
+    @Test func clickingTaskListCheckboxesEditsTheMarkdown() async throws {
+        let preferences = Preferences.shared
+        let (engine, toggling, autosaves) = (preferences.markdownEngine,
+                                              preferences.htmlTaskListToggling,
+                                              preferences.autosavesDocuments)
+        preferences.markdownEngine = .cmarkGfm
+        preferences.htmlTaskListToggling = true
+        preferences.autosavesDocuments = false
+        defer {
+            preferences.markdownEngine = engine
+            preferences.htmlTaskListToggling = toggling
+            preferences.autosavesDocuments = autosaves
+        }
+        let (controller, window) = makeController("# Tasks\n\n- [ ] one\n    1. [x] two\n")
+        defer { controller.tearDown(); window.close() }
+        #expect(await waitUntil { await previewHeading(controller) == "Tasks" })
+
+        func click(_ index: Int) async {
+            _ = await evaluate(controller,
+                "document.querySelectorAll('li.task-list-item > input')[\(index)].click(); 0")
+        }
+        #expect(await evaluate(controller,
+            "document.querySelectorAll('input[type=checkbox]:disabled').length") as? Int == 0)
+
+        await click(0)
+        #expect(await waitUntil { controller.markdown == "# Tasks\n\n- [x] one\n    1. [x] two\n" })
+        #expect(controller.hasUnsavedChanges)
+        await click(1)
+        #expect(await waitUntil { controller.markdown == "# Tasks\n\n- [x] one\n    1. [ ] two\n" })
+
+        // The body was swapped in place; its checkboxes still work.
+        #expect(await waitUntil {
+            await evaluate(controller,
+                "document.querySelectorAll('input[type=checkbox]:checked').length") as? Int == 1
+        })
+        await click(0)
+        #expect(await waitUntil { controller.markdown == "# Tasks\n\n- [ ] one\n    1. [ ] two\n" })
+
+        controller.undoManager.undo()
+        #expect(controller.markdown == "# Tasks\n\n- [x] one\n    1. [ ] two\n")
+
+        // Showing only the preview.
+        controller.toggleEditorPane()
+        defer { if !controller.editorVisible { controller.toggleEditorPane() } }
+        #expect(await waitUntil {
+            await evaluate(controller,
+                "document.querySelectorAll('input[type=checkbox]:checked').length") as? Int == 1
+        })
+        await click(1)
+        #expect(await waitUntil { controller.markdown == "# Tasks\n\n- [x] one\n    1. [x] two\n" })
+        #expect(!controller.editor.isEditable)
+    }
+
+    @Test func checkboxesAreDisabledWithoutToggling() async throws {
+        let preferences = Preferences.shared
+        let toggling = preferences.htmlTaskListToggling
+        preferences.htmlTaskListToggling = false
+        defer { preferences.htmlTaskListToggling = toggling }
+        let (controller, window) = makeController("# Tasks\n\n- [ ] one\n")
+        defer { controller.tearDown(); window.close() }
+        #expect(await waitUntil { await previewHeading(controller) == "Tasks" })
+        #expect(await evaluate(controller,
+            "document.querySelectorAll('input[type=checkbox]:disabled').length") as? Int == 1)
+        controller.markdown = "# Tasks\n\n- [ ] one\n- [x] two\n"
+        #expect(await waitUntil {
+            await evaluate(controller,
+                "document.querySelectorAll('input[type=checkbox]:disabled').length") as? Int == 2
+        })
+    }
 }
 }
