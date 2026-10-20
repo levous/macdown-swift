@@ -1,0 +1,89 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write    # Review comments, inline and summary.
+      issues: write           # PR conversation comments are issue comments.
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Note the start time
+        id: start
+        run: echo "time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            HEAD SHA: ${{ github.event.pull_request.head.sha }}
+
+            Review this pull request and publish the result. Review every
+            run, including drafts, small changes and PRs you have already
+            commented on: each run reviews the PR as it is now.
+
+            1. Read the PR with `gh pr view` and its diff with `gh pr diff`.
+               Read CLAUDE.md at the repository root, and any CLAUDE.md in
+               directories with changed files, and the source files you need
+               for context.
+            2. Look for high-signal problems in the changed code only:
+               - code that won't compile, or that gives wrong results
+                 regardless of input (clear logic errors, crashes, races,
+                 security problems)
+               - clear violations of a CLAUDE.md rule you can quote
+               Don't flag style, nitpicks, missing tests (unless CLAUDE.md
+               requires them), pre-existing issues, or anything you aren't
+               sure is real. Check each finding against the code before
+               reporting it.
+            3. For each finding, post one inline comment on the changed line
+               with `mcp__github_inline_comment__create_inline_comment` and
+               `confirmed: true`. Explain the problem briefly; include a
+               suggestion block only when it fixes the issue completely.
+            4. Always finish by posting exactly one summary comment with
+               `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`
+               (write the body to a file under /tmp first),
+               even when there are no findings. Start it with
+               `## Claude code review` and the short head SHA, then either
+               list the findings (one line each, linking to
+               https://github.com/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}/<path>#L<start>-L<end>)
+               or say: "No issues found. Checked for bugs and CLAUDE.md
+               compliance."
+          claude_args: >-
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Read,Grep,Glob,Write"
+
+      # Post a result when the review didn't: it failed, was cancelled, or
+      # ended without a summary comment.
+      - name: Report a missing review
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SINCE: ${{ steps.start.outputs.time }}
+          OUTCOME: ${{ steps.claude-review.outcome }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          posted=$(gh api "repos/${{ github.repository }}/issues/$PR/comments?since=$SINCE" \
+            --jq '[.[] | select(.user.type == "Bot" and .user.login != "github-actions[bot]")
+                       | select(.body | startswith("## Claude code review"))] | length')
+          if [ "$OUTCOME" = "success" ] && [ "$posted" -gt 0 ]; then
+            exit 0
+          fi
+          gh pr comment "$PR" --body "## Claude code review
+
+          No review was published for ${HEAD_SHA::7} (review step: $OUTCOME). See the [workflow run]($RUN_URL)."
