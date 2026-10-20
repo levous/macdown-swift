@@ -94,15 +94,18 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     ]
 
     /// The editor's text checking settings: each `NSTextView` key path,
-    /// the preference that persists it, and its default.
+    /// the preference that persists it, and its default. Applied in order:
+    /// `enabledTextCheckingTypes` comes first because setting it also sets
+    /// the switches below (all types turns on smart dashes, quotes and text
+    /// replacement), which must override it.
     static let textChecking: [(textViewKeyPath: String, key: PreferenceSettingKey, defaultValue: any Sendable)] = [
+        ("enabledTextCheckingTypes", .editorEnabledTextCheckingTypes, NSTextCheckingAllTypes),
         ("automaticDashSubstitutionEnabled", .editorAutomaticDashSubstitutionEnabled, false),
         ("automaticDataDetectionEnabled", .editorAutomaticDataDetectionEnabled, false),
         ("automaticQuoteSubstitutionEnabled", .editorAutomaticQuoteSubstitutionEnabled, false),
         ("automaticSpellingCorrectionEnabled", .editorAutomaticSpellingCorrectionEnabled, false),
         ("automaticTextReplacementEnabled", .editorAutomaticTextReplacementEnabled, false),
         ("continuousSpellCheckingEnabled", .editorContinuousSpellCheckingEnabled, false),
-        ("enabledTextCheckingTypes", .editorEnabledTextCheckingTypes, NSTextCheckingAllTypes),
         ("grammarCheckingEnabled", .editorGrammarCheckingEnabled, false),
     ]
 }

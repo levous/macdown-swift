@@ -353,6 +353,19 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         }
     }
 
+    /// Applying the defaults leaves smart dashes, quotes and text
+    /// replacement off, though the default checking types include them.
+    @Test func textCheckingDefaultsLeaveSubstitutionsOff() {
+        let editor = NSTextView()
+        for setting in PreferenceSettingKey.textChecking {
+            editor.setValue(setting.defaultValue, forKey: setting.textViewKeyPath)
+        }
+        #expect(!editor.isAutomaticDashSubstitutionEnabled)
+        #expect(!editor.isAutomaticQuoteSubstitutionEnabled)
+        #expect(!editor.isAutomaticTextReplacementEnabled)
+        #expect(!editor.isAutomaticSpellingCorrectionEnabled)
+    }
+
     /// Settings that became standard are no longer read, but their saved
     /// values stay in user defaults (FR-36), so a downgrade still finds them.
     @Test func removedSettingsKeepTheirSavedValues() throws {
