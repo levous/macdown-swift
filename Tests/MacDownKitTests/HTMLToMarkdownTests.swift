@@ -416,3 +416,50 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<pre>\n\n</pre><p>Only</p>") == "Only")
     }
 }
+
+/// Links (FR-14).
+@Suite struct HTMLToMarkdownLinkTests {
+    @Test func inlineLinks() {
+        #expect(markdown(#"<p>Read <a href="https://example.com/x" title="X">the guide</a>.</p>"#)
+                    == #"Read [the guide](https://example.com/x "X")."#)
+        #expect(markdown(#"<p><a href="https://e.com" title='say "hi"'>t</a></p>"#) == #"[t](https://e.com "say \"hi\"")"#)
+    }
+
+    @Test func autolinks() {
+        #expect(markdown(#"<p><a href="https://example.com/">https://example.com/</a></p>"#) == "<https://example.com/>")
+        #expect(markdown(#"<p><a href="mailto:a@b.com">a@b.com</a></p>"#) == "<a@b.com>")
+    }
+
+    @Test func linksThatOnlyKeepText() {
+        #expect(markdown(#"<p>or <a href="javascript:void(0)">click here</a>.</p>"#) == "or click here.")
+        #expect(markdown(##"<p>jump to <a href="#install">installing</a></p>"##) == "jump to installing")
+        #expect(markdown(#"<p><a>no href</a></p>"#) == "no href")
+    }
+
+    @Test func emptyLinksAreDropped() {
+        #expect(markdown(##"<h2><a class="anchor" href="#setup"><i class="fa fa-link"></i></a>Setup</h2>"##) == "## Setup\n")
+        #expect(markdown(#"<p><a href="https://x.com"> </a>text</p>"#) == "text")
+    }
+
+    @Test func destinations() {
+        #expect(markdown(#"<p><a href="https://x.com/a b">t</a></p>"#) == "[t](https://x.com/a%20b)")
+        #expect(markdown(#"<p><a href="https://en.wikipedia.org/wiki/Swift_(language)">w</a></p>"#)
+                    == "[w](https://en.wikipedia.org/wiki/Swift_(language))")
+        #expect(markdown(#"<p><a href="https://x.com/a)">t</a></p>"#) == "[t](<https://x.com/a)>)")
+    }
+
+    @Test func relativeLinksResolveAgainstTheBaseURL() {
+        var options = pasteTestOptions
+        options.baseURL = URL(string: "https://example.com/guide/start.html")
+        #expect(markdown(#"<p><a href="../ref/api.html">API</a> <a href="/">Home</a></p>"#, options)
+                    == "[API](https://example.com/ref/api.html) [Home](https://example.com/)")
+        #expect(markdown(#"<p><a href="../ref/api.html">API</a></p>"#) == "[API](../ref/api.html)")
+    }
+
+    @Test func linkContent() {
+        #expect(markdown(#"<p><a href="u"><b>bold</b> link</a></p>"#) == "[**bold** link](u)")
+        #expect(markdown(#"<p><a href="u">[1]</a></p>"#) == #"[\[1\]](u)"#)
+        #expect(markdown(#"<p><a href="u"> spaced </a>x</p>"#) == "[spaced](u) x")
+        #expect(markdown(#"<p><b>see <a href="u">this</a></b></p>"#) == "**see** [**this**](u)")
+    }
+}

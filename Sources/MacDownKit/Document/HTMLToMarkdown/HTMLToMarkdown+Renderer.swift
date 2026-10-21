@@ -72,9 +72,75 @@ extension HTMLToMarkdown {
             }
         }
 
+        /// Inline content: links outermost, so a link is never split, then
+        /// emphasis, then code.
         func render(_ inlines: [Inline], atLineStart: Bool = true) -> String {
             var lineStart = atLineStart
-            return render(Self.joiningSpaces(inlines), levels: Emphasis.allCases[...], lineStart: &lineStart)
+            var output = ""
+            for group in Self.linkGroups(Self.joiningSpaces(inlines)) {
+                guard let link = group.link else {
+                    output += render(group.inlines, levels: Emphasis.allCases[...], lineStart: &lineStart)
+                    continue
+                }
+                var inner = false
+                let content = render(group.inlines, levels: Emphasis.allCases[...], lineStart: &inner)
+                let leading = content.prefix(while: { $0 == " " })
+                let trailing = content.reversed().prefix(while: { $0 == " " })
+                let text = content.dropFirst(leading.count).dropLast(trailing.count)
+                output += leading
+                if !text.isEmpty {
+                    output += Self.link(link, text: String(text), plainText: Self.plainText(group.inlines))
+                    lineStart = false
+                }
+                output += String(trailing)
+            }
+            return output
+        }
+
+        /// `[text](url "title")`, or `<url>` when the text is the URL.
+        static func link(_ link: Link, text: String, plainText: String) -> String {
+            let plain = plainText.trimmingCharacters(in: .whitespaces)
+            if link.title == nil, !link.url.contains(where: { $0.isWhitespace || $0 == "<" || $0 == ">" }) {
+                if plain == link.url, link.url.contains(":") { return "<\(link.url)>" }
+                if link.url.lowercased() == "mailto:" + plain.lowercased() { return "<\(plain)>" }
+            }
+            var destination = link.url.replacingOccurrences(of: " ", with: "%20")
+                .replacingOccurrences(of: "<", with: "%3C").replacingOccurrences(of: ">", with: "%3E")
+            var depth = 0, balanced = true
+            for character in destination {
+                if character == "(" { depth += 1 }
+                if character == ")" { depth -= 1; if depth < 0 { balanced = false } }
+            }
+            if !balanced || depth != 0 { destination = "<\(destination)>" }
+            if let title = link.title {
+                let escaped = title.replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "\"", with: "\\\"")
+                destination += " \"\(escaped)\""
+            }
+            return "[\(text)](\(destination))"
+        }
+
+        static func plainText(_ inlines: [Inline]) -> String {
+            inlines.map { if case .text(let text, _) = $0 { text } else { " " } }.joined()
+        }
+
+        /// Consecutive inlines in the same link; a line break is a group of
+        /// its own.
+        private static func linkGroups(_ inlines: [Inline]) -> [(link: Link?, inlines: [Inline])] {
+            var groups: [(link: Link?, inlines: [Inline])] = []
+            for inline in inlines {
+                let link: Link?
+                switch inline {
+                case .text(_, let style): link = style.link
+                case .lineBreak: link = nil
+                }
+                if let last = groups.last, last.link == link, link == nil || inline != .lineBreak {
+                    groups[groups.count - 1].inlines.append(inline)
+                } else {
+                    groups.append((link, [inline]))
+                }
+            }
+            return groups
         }
 
         /// Runs grouped by each emphasis in turn: a group with the emphasis on
@@ -205,6 +271,7 @@ extension HTMLToMarkdown {
                                  in: &textStyle)
                 }
                 textStyle.monospace = before?.monospace == true && after?.monospace == true
+                textStyle.link = before?.link == after?.link ? before?.link : nil
                 result[index] = .text(text, textStyle)
             }
             return result

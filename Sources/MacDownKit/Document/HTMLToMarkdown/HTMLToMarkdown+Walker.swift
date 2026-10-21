@@ -27,6 +27,8 @@ extension HTMLToMarkdown {
 
     struct Walker {
         var styleSheet = StyleSheet(css: "")
+        /// What relative URLs resolve against.
+        var baseURL: URL?
 
         /// Elements that start a block of their own; anything else is inline.
         static let blockElements: Set<String> = [
@@ -133,13 +135,32 @@ extension HTMLToMarkdown {
                 guard let element = node as? XMLElement else { return [] }
                 let tag = element.localName?.lowercased() ?? ""
                 if tag == "br" { return [.lineBreak] }
-                let style = self.style(of: element, inheriting: style)
+                var style = self.style(of: element, inheriting: style)
+                if tag == "a", let href = element.attribute(forName: "href")?.stringValue {
+                    style.link = link(href, title: element.attribute(forName: "title")?.stringValue)
+                }
                 let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
                 return Self.blockElements.contains(tag)
                     ? [.text(" ", style)] + content + [.text(" ", style)] : content
             default:
                 return []
             }
+        }
+
+        /// A link to `href`, resolved against the base URL; nil for scripts
+        /// and links within the copied page, which keep only their text
+        /// (FR-14).
+        func link(_ href: String, title: String?) -> Link? {
+            let href = href.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !href.isEmpty, !href.hasPrefix("#"), !href.lowercased().hasPrefix("javascript:")
+            else { return nil }
+            var url = href
+            if let baseURL, let resolved = URL(string: href.replacingOccurrences(of: " ", with: "%20"),
+                                               relativeTo: baseURL) {
+                url = resolved.absoluteString
+            }
+            let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return Link(url: url, title: title?.isEmpty == false ? title : nil)
         }
 
         func style(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle {

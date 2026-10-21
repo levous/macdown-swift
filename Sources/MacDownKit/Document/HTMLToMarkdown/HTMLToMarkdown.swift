@@ -44,15 +44,16 @@ public struct HTMLToMarkdown: Sendable {
     /// The Markdown for `html`, or nil if it can't be parsed or has no
     /// visible content (the caller pastes plain text instead).
     public func convert(_ html: String) -> Result? {
-        let result = Renderer(options: options).render(Self.blocks(html))
+        let result = Renderer(options: options).render(Self.blocks(html, baseURL: options.baseURL))
         return result.markdown.isEmpty ? nil : result
     }
 
     /// The blocks of `html`, empty if it can't be parsed.
-    static func blocks(_ html: String) -> [Block] {
+    static func blocks(_ html: String, baseURL: URL? = nil) -> [Block] {
         guard let (document, body) = parse(html) else { return [] }
         let css = ((try? document.nodes(forXPath: "//style")) ?? []).compactMap(\.stringValue)
-        return Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n"))).blocks(in: body)
+        return Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n")), baseURL: baseURL)
+            .blocks(in: body)
     }
 
     // MARK: - Parsing

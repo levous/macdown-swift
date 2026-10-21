@@ -18,6 +18,13 @@ extension HTMLToMarkdown {
         var italic = false
         var strike = false
         var monospace = false
+        /// The link the text is in.
+        var link: Link?
+    }
+
+    struct Link: Equatable, Hashable {
+        var url: String
+        var title: String?
     }
 
     /// The simple rules of a document's `<style>` blocks: `tag`, `.class` and
