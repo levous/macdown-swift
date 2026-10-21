@@ -9,10 +9,76 @@ import Foundation
 import Testing
 @testable import MacDownKit
 
-@MainActor @Suite struct PasteFixtureTests {
+/// A clipboard capture (`Paste/<source>/`): one file per pasteboard type,
+/// listed in `manifest.json`, and the Markdown a paste should produce.
+struct PasteFixture: CustomTestStringConvertible, Sendable {
+    let name: String
+    /// Pasteboard type identifier → data.
+    let types: [String: Data]
+    /// `expected.md`, if the fixture has one.
+    let expected: String?
+    let synthetic: Bool
+
+    var testDescription: String { name }
+
+    func data(_ type: String) -> Data? { types[type] }
+    func string(_ type: String) -> String? {
+        types[type].map { String(decoding: $0, as: UTF8.self) }
+    }
+    var html: String? { string("public.html") }
+    var rtf: Data? { data("public.rtf") }
+    var plainText: String? { string("public.utf8-plain-text") }
+    var sourceURL: URL? {
+        (string("org.chromium.source-url") ?? string("public.url")).flatMap(URL.init(string:))
+    }
+
     static var directory: URL {
         Bundle.module.url(forResource: "Paste", withExtension: nil,
                           subdirectory: "Resources")!
+    }
+
+    private struct Manifest: Decodable {
+        struct Entry: Decodable { let type: String; let file: String }
+        let source: String
+        let types: [Entry]
+        let synthetic: Bool?
+    }
+
+    static func load(_ name: String) throws -> PasteFixture {
+        let folder = directory.appendingPathComponent(name)
+        let manifest = try JSONDecoder().decode(
+            Manifest.self, from: Data(contentsOf: folder.appendingPathComponent("manifest.json")))
+        var types: [String: Data] = [:]
+        for entry in manifest.types {
+            types[entry.type] = try Data(contentsOf: folder.appendingPathComponent(entry.file))
+        }
+        let expected = try? String(contentsOf: folder.appendingPathComponent("expected.md"),
+                                   encoding: .utf8)
+        return PasteFixture(name: name, types: types, expected: expected,
+                            synthetic: manifest.synthetic ?? false)
+    }
+
+    /// Every fixture folder, in name order.
+    static func all() throws -> [PasteFixture] {
+        try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.isDirectoryKey])
+            .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+            .map(\.lastPathComponent).sorted().map(load)
+    }
+}
+
+@MainActor @Suite struct PasteFixtureTests {
+    static var directory: URL { PasteFixture.directory }
+
+    @Test func fixturesLoad() throws {
+        let fixtures = try PasteFixture.all()
+        #expect(fixtures.map(\.name).contains("synthetic-google-docs"))
+        for fixture in fixtures {
+            #expect(fixture.expected != nil, "\(fixture.name) has no expected.md")
+            #expect(fixture.html != nil || fixture.rtf != nil, "\(fixture.name) has no HTML or RTF")
+            #expect(fixture.plainText != nil, "\(fixture.name) has no plain text")
+        }
+        #expect(try PasteFixture.load("synthetic-browser").sourceURL?.absoluteString
+                    == "https://example.com/guide/start.html")
     }
 
     /// The sample copied from each source app has every construct the
