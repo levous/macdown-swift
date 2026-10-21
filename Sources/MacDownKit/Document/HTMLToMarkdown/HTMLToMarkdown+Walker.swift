@@ -51,6 +51,9 @@ extension HTMLToMarkdown {
         var blocks: [Block]
         /// A task item's checked state; nil for other items.
         var task: Bool?
+        /// The item's text is in paragraphs spaced apart, as in a loose
+        /// list (unlike Google Docs', whose paragraphs have no margins).
+        var spaced = false
     }
 
     struct Walker {
@@ -157,7 +160,8 @@ extension HTMLToMarkdown {
                 if !items.isEmpty, blocks.allSatisfy(\.isList) {
                     items[items.count - 1].blocks += blocks
                 } else {
-                    items.append(ListItem(blocks: blocks, task: Self.taskState(child)))
+                    items.append(ListItem(blocks: blocks, task: Self.taskState(child),
+                                          spaced: hasSpacedParagraph(child)))
                 }
             }
             guard !items.isEmpty else { return [] }
@@ -165,6 +169,27 @@ extension HTMLToMarkdown {
             let start = ordered ? element.attribute(forName: "start")?.stringValue
                 .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1 : 1
             return [.list(List(ordered: ordered, start: max(0, start), items: items))]
+        }
+
+        /// Whether an element has a `p` child with vertical margins.
+        func hasSpacedParagraph(_ element: XMLElement) -> Bool {
+            (element.children ?? []).contains { node in
+                guard let p = node as? XMLElement, p.localName?.lowercased() == "p" else { return false }
+                let classes = p.attribute(forName: "class")?.stringValue?
+                    .split(whereSeparator: \.isWhitespace).map(String.init) ?? []
+                var declarations = styleSheet.declarations(for: "p", classes: classes)
+                if let inline = p.attribute(forName: "style")?.stringValue {
+                    declarations.merge(HTMLToMarkdown.StyleSheet.declarations(inline)) { $1 }
+                }
+                func isZero(_ value: String?) -> Bool {
+                    guard let value else { return false }
+                    return Double(value.trimmingCharacters(in: CharacterSet.letters.union(.whitespaces))) == 0
+                }
+                let margin = declarations["margin"]?.split(separator: " ").map(String.init) ?? []
+                let top = declarations["margin-top"] ?? margin.first
+                let bottom = declarations["margin-bottom"] ?? (margin.count > 2 ? margin[2] : margin.first)
+                return !(isZero(top) && isZero(bottom))
+            }
         }
 
         /// Whether a list item is a checked or open task: a checkbox before
@@ -227,7 +252,10 @@ extension HTMLToMarkdown {
                 let classes = element.attribute(forName: "class")?.stringValue?.split(whereSeparator: \.isWhitespace) ?? []
                 for name in classes {
                     for prefix in ["language-", "lang-"] where name.hasPrefix(prefix) && name.count > prefix.count {
-                        return String(name.dropFirst(prefix.count))
+                        // MacDown's preview marks code without a language
+                        // `language-none`, for Prism.
+                        let language = String(name.dropFirst(prefix.count))
+                        return language == "none" ? nil : language
                     }
                 }
             }

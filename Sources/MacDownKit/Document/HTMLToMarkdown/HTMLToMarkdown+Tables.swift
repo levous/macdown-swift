@@ -12,6 +12,8 @@ import Foundation
 extension HTMLToMarkdown {
     struct Table: Equatable {
         var rows: [[TableCell]]
+        /// How many of the rows are in `thead`.
+        var headerRows = 0
 
         /// Whether a pipe table can show it.
         var isPipeTable: Bool {
@@ -44,21 +46,24 @@ extension HTMLToMarkdown.Walker {
     func table(_ element: XMLElement, style: TextStyle) -> [Block] {
         var blocks: [Block] = []
         var rows: [XMLElement] = []
+        var headerRows = 0
         for child in element.children ?? [] {
             guard let child = child as? XMLElement else { continue }
             switch child.localName?.lowercased() {
             case "caption":
                 blocks += self.blocks(in: child, style: self.style(of: child, inheriting: style))
             case "thead", "tbody", "tfoot":
-                rows += (child.children ?? []).compactMap { $0 as? XMLElement }
+                let section = (child.children ?? []).compactMap { $0 as? XMLElement }
                     .filter { $0.localName?.lowercased() == "tr" }
+                if child.localName?.lowercased() == "thead", rows.isEmpty { headerRows = section.count }
+                rows += section
             case "tr":
                 rows.append(child)
             default:
                 break
             }
         }
-        let cells: [[HTMLToMarkdown.TableCell]] = rows.map { row in
+        var cells: [[HTMLToMarkdown.TableCell]] = rows.map { row in
             (row.children ?? []).compactMap { node -> HTMLToMarkdown.TableCell? in
                 guard let cell = node as? XMLElement else { return nil }
                 let tag = cell.localName?.lowercased()
@@ -70,9 +75,12 @@ extension HTMLToMarkdown.Walker {
                     alignment: Self.alignment(cell),
                     blocks: self.blocks(in: cell, style: self.style(of: cell, inheriting: style)))
             }
-        }.filter { !$0.isEmpty }
+        }
+        // Rows without cells don't count, in the header either.
+        headerRows -= cells.prefix(headerRows).filter(\.isEmpty).count
+        cells.removeAll(where: \.isEmpty)
         if cells.contains(where: { $0.contains { !$0.blocks.isEmpty } }) {
-            blocks.append(.table(HTMLToMarkdown.Table(rows: cells)))
+            blocks.append(.table(HTMLToMarkdown.Table(rows: cells, headerRows: headerRows)))
         }
         return blocks
     }
@@ -129,7 +137,8 @@ extension HTMLToMarkdown.Renderer {
             .joined(separator: "\n")
     }
 
-    /// The table as an HTML block, one row per line.
+    /// The table as an HTML block, one row per line, its `thead` rows
+    /// first.
     private func htmlTable(_ table: Table) -> String {
         let rows = table.rows.map { row in
             "<tr>" + row.map { cell in
@@ -141,7 +150,14 @@ extension HTMLToMarkdown.Renderer {
                 return "<\(tag)\(attributes)>" + html(cell.blocks, unwrapsParagraph: true) + "</\(tag)>"
             }.joined() + "</tr>"
         }
-        return (["<table>"] + rows + ["</table>"]).joined(separator: "\n")
+        var lines = ["<table>"]
+        if table.headerRows > 0 {
+            lines += ["<thead>"] + rows.prefix(table.headerRows) + ["</thead>"]
+        }
+        if rows.count > table.headerRows {
+            lines += ["<tbody>"] + rows.dropFirst(table.headerRows) + ["</tbody>"]
+        }
+        return (lines + ["</table>"]).joined(separator: "\n")
     }
 
     /// Blocks as HTML on one line (a blank line would end the HTML block).

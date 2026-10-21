@@ -79,7 +79,7 @@ extension HTMLToMarkdown {
         /// after the first are indented by the indent setting, or to the
         /// content column when the marker is wider.
         func render(_ list: List, alternate: Bool) -> String {
-            let loose = list.items.contains { $0.blocks.filter { !$0.isList }.count > 1 }
+            let loose = list.items.contains { $0.spaced || $0.blocks.filter { !$0.isList }.count > 1 }
             var items: [String] = []
             for (offset, item) in list.items.enumerated() {
                 let marker = list.ordered
@@ -155,11 +155,11 @@ extension HTMLToMarkdown {
             var output = ""
             for group in Self.linkGroups(Self.joiningSpaces(inlines)) {
                 guard let link = group.link else {
-                    output += render(group.inlines, levels: Emphasis.allCases[...], lineStart: &lineStart)
+                    output += render(group.inlines, levels: Emphasis.allCases, lineStart: &lineStart)
                     continue
                 }
                 var inner = false
-                let content = render(group.inlines, levels: Emphasis.allCases[...], lineStart: &inner)
+                let content = render(group.inlines, levels: Emphasis.allCases, lineStart: &inner)
                 let leading = content.prefix(while: { $0 == " " })
                 let trailing = content.reversed().prefix(while: { $0 == " " })
                 let text = content.dropFirst(leading.count).dropLast(trailing.count)
@@ -236,22 +236,37 @@ extension HTMLToMarkdown {
             return groups
         }
 
-        /// Runs grouped by each emphasis in turn: a group with the emphasis on
-        /// is wrapped in its marker, with the whitespace at its edges moved
-        /// outside.
-        private func render(_ inlines: [Inline], levels: ArraySlice<Emphasis>,
+        /// Inlines with their emphasis markers. Left to right, the emphasis
+        /// whose run goes on furthest from each point is wrapped in its
+        /// marker (whitespace at its edges moved outside), with the rest
+        /// nested inside, so `*a **b** c*` stays nested rather than split.
+        /// Text with none of `levels` on goes to `renderCode`.
+        private func render(_ inlines: [Inline], levels: [Emphasis],
                             lineStart: inout Bool) -> String {
-            guard let level = levels.first else {
-                return renderCode(inlines, lineStart: &lineStart)
+            func isOn(_ emphasis: Emphasis, _ inline: Inline) -> Bool {
+                switch inline {
+                case .text(_, let style), .image(_, let style): emphasis.isOn(style)
+                case .lineBreak: false
+                }
             }
             var output = ""
-            for group in Self.groups(inlines, by: level) {
-                guard group.on else {
-                    output += render(group.inlines, levels: levels.dropFirst(), lineStart: &lineStart)
+            var plain: [Inline] = []
+            var index = 0
+            while index < inlines.count {
+                let runs = levels.map { emphasis in
+                    (emphasis, inlines[index...].prefix { isOn(emphasis, $0) }.count)
+                }
+                guard let (level, length) = runs.max(by: { $0.1 < $1.1 }), length > 0 else {
+                    plain.append(inlines[index])
+                    index += 1
                     continue
                 }
+                output += renderCode(plain, lineStart: &lineStart)
+                plain = []
                 var inner = false
-                let content = render(group.inlines, levels: levels.dropFirst(), lineStart: &inner)
+                let content = render(Array(inlines[index..<index + length]),
+                                     levels: levels.filter { $0 != level }, lineStart: &inner)
+                index += length
                 let leading = content.prefix(while: { $0 == " " })
                 let trailing = content.reversed().prefix(while: { $0 == " " })
                 var core = content.dropFirst(leading.count).dropLast(trailing.count)
@@ -265,7 +280,7 @@ extension HTMLToMarkdown {
                 output += leading + level.marker + core + level.marker + String(trailing)
                 lineStart = false
             }
-            return output
+            return output + renderCode(plain, lineStart: &lineStart)
         }
 
         /// Monospace runs as code spans, the rest as escaped text (FR-12).
@@ -274,15 +289,12 @@ extension HTMLToMarkdown {
             var code = ""
             func flushCode() {
                 guard !code.isEmpty else { return }
-                let leading = code.prefix(while: { $0 == " " })
-                let trailing = code.reversed().prefix(while: { $0 == " " })
-                let content = code.dropFirst(leading.count).dropLast(trailing.count)
-                output += leading
-                if !content.isEmpty {
-                    output += Self.codeSpan(String(content))
+                if code.allSatisfy({ $0 == " " }) {
+                    output += code
+                } else {
+                    output += Self.codeSpan(code)
                     lineStart = false
                 }
-                output += String(trailing)
                 code = ""
             }
             for inline in inlines {
@@ -307,11 +319,14 @@ extension HTMLToMarkdown {
             return output
         }
 
-        /// `content` between backtick runs longer than any inside it, padded
-        /// with a space when it starts or ends with a backtick.
+        /// `content` between backtick runs longer than any inside it. Its
+        /// spaces are kept: it's padded with a space on each side (which
+        /// CommonMark removes) when it starts or ends with a backtick, or
+        /// starts and ends with a space.
         static func codeSpan(_ content: String) -> String {
             let fence = String(repeating: "`", count: longestRun(of: "`", in: content) + 1)
-            let pad = content.hasPrefix("`") || content.hasSuffix("`") ? " " : ""
+            let pad = content.hasPrefix("`") || content.hasSuffix("`")
+                || (content.hasPrefix(" ") && content.hasSuffix(" ")) ? " " : ""
             return fence + pad + content + pad + fence
         }
 
@@ -322,28 +337,6 @@ extension HTMLToMarkdown {
                 longest = max(longest, current)
             }
             return longest
-        }
-
-        /// Consecutive inlines with the same setting of `style`; a line break
-        /// is a group of its own, so markers close before it.
-        private static func groups(_ inlines: [Inline], by emphasis: Emphasis)
-            -> [(on: Bool, inlines: [Inline])] {
-            var groups: [(on: Bool, inlines: [Inline])] = []
-            for inline in inlines {
-                let on: Bool
-                switch inline {
-                case .text(_, let textStyle), .image(_, let textStyle): on = emphasis.isOn(textStyle)
-                case .lineBreak:
-                    groups.append((false, [inline]))
-                    continue
-                }
-                if let last = groups.last, last.on == on, last.inlines.last != .lineBreak {
-                    groups[groups.count - 1].inlines.append(inline)
-                } else {
-                    groups.append((on, [inline]))
-                }
-            }
-            return groups
         }
 
         /// Whitespace between two runs takes the emphasis (and code) they

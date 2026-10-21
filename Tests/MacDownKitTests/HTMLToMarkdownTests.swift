@@ -325,7 +325,10 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
 
     @Test func nesting() {
         #expect(markdown("<p><b>bold <i>both</i></b></p>") == "**bold *both***")
-        #expect(markdown("<p><b><i>both</i></b> <s><b>all</b></s></p>") == "***both*** ~~**all**~~")
+        #expect(markdown("<p><b><i>both</i></b> <s><b>all</b></s></p>") == "***both* ~~all~~**")
+        // The emphasis spanning the most stays outermost, not split.
+        #expect(markdown("<p><i>emphasis with <b>strong</b> inside</i> and <b>strong with <i>em</i> inside</b></p>")
+                    == "*emphasis with **strong** inside* and **strong with *em* inside**")
     }
 
     /// Google Docs writes each run as its own styled span.
@@ -377,8 +380,20 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<p><code>`tick`</code></p>") == "`` `tick` ``")
     }
 
-    @Test func edgeWhitespaceMovesOutside() {
+    /// Tidy moves spaces at the edges of inline elements outside them.
+    @Test func edgeSpaces() {
+        #expect(markdown("<p>x<code>1. </code>z</p>") == "x`1.` z")
         #expect(markdown("<p>x<code> y </code>z</p>") == "x `y` z")
+        #expect(markdown("<p>a <code> </code> b</p>") == "a b")
+    }
+
+    /// Spaces that reach a code span are kept, padded so CommonMark keeps
+    /// them too.
+    @Test func codeSpanPadding() {
+        typealias Renderer = HTMLToMarkdown.Renderer
+        #expect(Renderer.codeSpan("1. ") == "`1. `")
+        #expect(Renderer.codeSpan(" y ") == "`  y  `")
+        #expect(Renderer.codeSpan("a b") == "`a b`")
     }
 
     @Test func adjacentCodeMerges() {
@@ -535,7 +550,11 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 
     @Test func looseAndTightLists() {
-        #expect(markdown("<ul><li><p>a</p></li><li><p>b</p></li></ul>") == "- a\n- b\n")
+        // Paragraphs in items mean a loose list, unless they have no
+        // margins (Google Docs).
+        #expect(markdown("<ul><li><p>a</p></li><li><p>b</p></li></ul>") == "- a\n\n- b\n")
+        #expect(markdown(#"<ul><li><p style="margin-top:0pt;margin-bottom:0pt;">a</p></li><li><p style="margin: 0.0px 0.0px 0.0px 0.0px">b</p></li></ul>"#)
+                    == "- a\n- b\n")
         #expect(markdown("<ul><li><p>a</p><p>a2</p></li><li><p>b</p></li></ul>") == "- a\n\n    a2\n\n- b\n")
         #expect(markdown("<ul><li>a<pre>x</pre></li></ul>") == "- a\n\n    ```\n    x\n    ```\n")
     }
@@ -653,9 +672,22 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         let html = #"<table><tr><th>Region</th><th colspan="2">Quarter</th></tr><tr><td rowspan="2">North</td><td>Q1</td><td>Q2</td></tr><tr><td>10 &lt; 20 &amp; more</td><td><b>20</b></td></tr></table>"#
         #expect(markdown(html) == """
             <table>
+            <tbody>
             <tr><th>Region</th><th colspan="2">Quarter</th></tr>
             <tr><td rowspan="2">North</td><td>Q1</td><td>Q2</td></tr>
             <tr><td>10 &lt; 20 &amp; more</td><td><strong>20</strong></td></tr>
+            </tbody>
+            </table>
+
+            """)
+        #expect(markdown("<table><thead><tr><th colspan=2>h</th></tr></thead><tbody><tr><td>a</td><td>b</td></tr></tbody></table>") == """
+            <table>
+            <thead>
+            <tr><th colspan="2">h</th></tr>
+            </thead>
+            <tbody>
+            <tr><td>a</td><td>b</td></tr>
+            </tbody>
             </table>
 
             """)
@@ -664,7 +696,9 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     @Test func blockContentStaysHTML() {
         #expect(markdown(#"<table><tr><td><ul><li>a</li><li><a href="u">b</a></li></ul></td><td><p>one</p><p>two</p></td></tr></table>"#) == """
             <table>
+            <tbody>
             <tr><td><ul><li>a</li><li><a href="u">b</a></li></ul></td><td><p>one</p><p>two</p></td></tr>
+            </tbody>
             </table>
 
             """)

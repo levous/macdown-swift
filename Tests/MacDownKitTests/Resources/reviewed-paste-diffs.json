@@ -1,0 +1,180 @@
+{
+  "rewrites": [
+    {
+      "id": "footnote-references",
+      "reason": "Footnotes aren't round-tripped (paste intent, non-goals): a reference keeps its number as text.",
+      "find": "<sup id=\"fnref\\d+\"><a href=\"#fn\\d+\" rel=\"footnote\">(\\d+)</a></sup>",
+      "replace": "$1"
+    },
+    {
+      "id": "footnote-list",
+      "reason": "Footnotes aren't round-tripped: the notes become a rule and a numbered list, without their ids or the footnotes div; the back-link keeps its text (Phase 3 drops it).",
+      "find": "<div class=\"footnotes\">(.*?)</div>",
+      "replace": "$1"
+    },
+    {
+      "id": "footnote-ids",
+      "reason": "Footnotes aren't round-tripped: notes lose their ids.",
+      "find": "<li id=\"fn\\d+\">",
+      "replace": "<li>"
+    },
+    {
+      "id": "footnote-back-links",
+      "reason": "Footnotes aren't round-tripped: a note's back-link is an in-page link, which keeps its text.",
+      "find": "<a href=\"#fnref\\d+\" rev=\"footnote\">(.*?)</a>",
+      "replace": "$1"
+    },
+    {
+      "id": "in-page-links",
+      "reason": "Links within the copied page (#anchor) and empty links keep only their text (FR-14).",
+      "find": "<a href=\"(?:#[^\"]*)?\">(.*?)</a>",
+      "replace": "$1"
+    },
+    {
+      "id": "named-anchors",
+      "reason": "Named anchors (<a name>) have no Markdown equivalent and no text.",
+      "find": "<a name=\"[^\"]*\"></a>",
+      "replace": ""
+    },
+    {
+      "id": "kbd-as-code",
+      "reason": "<kbd> is monospace text, written as a code span (FR-12).",
+      "find": "<(/?)kbd>",
+      "replace": "<$1code>"
+    },
+    {
+      "id": "raw-bold-italic",
+      "reason": "Raw <b> and <i> in Markdown become ** and *, so <strong> and <em>.",
+      "find": "<(/?)b>",
+      "replace": "<$1strong>"
+    },
+    {
+      "id": "no-equivalent",
+      "reason": "Elements without a Markdown equivalent keep only their text (FR-19).",
+      "find": "</?(?:sub|sup|u|mark|q|span|small|abbr|ins)(?: [^>]*)?>",
+      "replace": ""
+    },
+    {
+      "id": "comments-and-scripts",
+      "reason": "Comments and scripts aren't content (FR-19).",
+      "find": "<!--.*?-->|<script[^>]*>.*?</script>",
+      "replace": ""
+    }
+  ],
+  "hunks": [
+    {
+      "document": "07-html.md",
+      "original": "<div class=\"note\"> ",
+      "roundTrip": "<p>",
+      "reason": "A raw HTML block (<div>) keeps its text as a paragraph: Markdown has no div."
+    },
+    {
+      "document": "07-html.md",
+      "original": " </div>",
+      "roundTrip": "</p>",
+      "reason": "A raw HTML block (<div>) keeps its text as a paragraph: Markdown has no div."
+    },
+    {
+      "document": "07-html.md",
+      "original": "<details><summary>",
+      "roundTrip": "<p>",
+      "reason": "<details> and <summary> have no Markdown equivalent: the summary and content become paragraphs."
+    },
+    {
+      "document": "07-html.md",
+      "original": "</summary>",
+      "roundTrip": "</p>",
+      "reason": "<details> and <summary> have no Markdown equivalent: the summary and content become paragraphs."
+    },
+    {
+      "document": "07-html.md",
+      "original": "</details>",
+      "roundTrip": "",
+      "reason": "<details> and <summary> have no Markdown equivalent: the summary and content become paragraphs."
+    },
+    {
+      "document": "07-html.md",
+      "original": "",
+      "roundTrip": "<thead>",
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+    },
+    {
+      "document": "07-html.md",
+      "original": "<td>",
+      "roundTrip": "<th>",
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+    },
+    {
+      "document": "07-html.md",
+      "original": "</td>",
+      "roundTrip": "</th>",
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+    },
+    {
+      "document": "07-html.md",
+      "original": "",
+      "roundTrip": "</thead><tbody></tbody>",
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+    },
+    {
+      "document": "help.md",
+      "original": " ",
+      "roundTrip": "",
+      "reason": "Tidy moves spaces at the edges of inline elements outside them, so a code span ending in a space (`1. `) loses it."
+    },
+    {
+      "document": "help.md",
+      "original": " ",
+      "roundTrip": "",
+      "reason": "Tidy moves spaces at the edges of inline elements outside them, so a code span ending in a space (`1. `) loses it."
+    },
+    {
+      "document": "help.md",
+      "original": " ",
+      "roundTrip": "",
+      "reason": "Tidy moves spaces at the edges of inline elements outside them, so a code span ending in a space (`1. `) loses it."
+    },
+    {
+      "document": "help.md",
+      "original": "<math><mn>1</mn><mo>+</mo><mn>1</mn></math>,",
+      "roundTrip": "1+1,",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "<math display=\"block\"><msubsup><mi>",
+      "roundTrip": "<p>",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "</mi><mi>",
+      "roundTrip": " ",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "</mi><mi>",
+      "roundTrip": " ",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "</mi></msubsup><mo>",
+      "roundTrip": " ",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "</mo><mi>",
+      "roundTrip": " ",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    },
+    {
+      "document": "help.md",
+      "original": "</mi></math>",
+      "roundTrip": "</p>",
+      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+    }
+  ]
+}
