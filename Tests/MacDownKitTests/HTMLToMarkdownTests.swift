@@ -170,3 +170,25 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(style(of: "N", in: html) == Style())
     }
 }
+
+/// Whitespace as a browser shows it (FR-20).
+@Suite struct HTMLToMarkdownTextTests {
+    @Test func whitespaceCollapses() {
+        #expect(markdown("<p>  Hello\n   wide\tworld  </p>") == "Hello wide world")
+        #expect(markdown("<p>a <b> b</b>  c</p>")?.replacingOccurrences(of: "*", with: "") == "a b c")
+        #expect(markdown("<p>one<span> </span><span> </span>two</p>") == "one two")
+    }
+
+    @Test func entitiesAreDecoded() {
+        #expect(markdown("<p>caf&eacute; &#8617; &#x2014;</p>") == "café ↩ —")
+    }
+
+    @Test func nonBreakingSpacesBecomeSpacesOutsideCode() {
+        #expect(markdown("<p>a&nbsp;b&nbsp;&nbsp;</p>") == "a b")
+        let runs = HTMLToMarkdown.blocks("<p><code>a&nbsp;b</code></p>").flatMap { block -> [String] in
+            guard case .paragraph(let inlines) = block else { return [] }
+            return inlines.map { if case .text(let text, _) = $0 { text } else { "" } }
+        }
+        #expect(runs == ["a\u{a0}b"])
+    }
+}

@@ -72,9 +72,36 @@ extension HTMLToMarkdown {
 
         /// A paragraph of the runs, or nil if they have no visible text.
         static func paragraph(_ inlines: [Inline]) -> Block? {
-            var inlines = inlines
+            var inlines = collapseWhitespace(inlines)
             trimWhitespace(&inlines)
             return inlines.isEmpty ? nil : .paragraph(inlines)
+        }
+
+        /// Whitespace as a browser shows it outside `pre`: each run of spaces,
+        /// tabs and newlines is one space, also across runs. Non-breaking
+        /// spaces become spaces, except in code.
+        static func collapseWhitespace(_ inlines: [Inline]) -> [Inline] {
+            var result: [Inline] = []
+            var endsWithSpace = true
+            for inline in inlines {
+                guard case .text(let text, let style) = inline else {
+                    result.append(inline)
+                    endsWithSpace = false
+                    continue
+                }
+                var collapsed = ""
+                for character in text {
+                    if character == " " || character == "\t" || character.isNewline {
+                        if !endsWithSpace { collapsed.append(" ") }
+                        endsWithSpace = true
+                    } else {
+                        collapsed.append(character == "\u{a0}" && !style.monospace ? " " : character)
+                        endsWithSpace = false
+                    }
+                }
+                if !collapsed.isEmpty { result.append(.text(collapsed, style)) }
+            }
+            return result
         }
 
         /// Removes whitespace at the start and end of a run of inlines.
