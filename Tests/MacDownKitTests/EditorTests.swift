@@ -522,6 +522,49 @@ extension EditorCodeBlockTests {
         #expect(off.string == "")
     }
 
+    /// Services and drops from other apps read through readSelection, as
+    /// Paste does (FR-8); Paste and Match Style reads plain text (FR-4).
+    @Test func readSelectionConverts() {
+        let types: [NSPasteboard.PasteboardType: String] = [.html: "<b>x</b>", .string: "x"]
+        var editor = editor("")
+        var pasteboard = pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard))
+        #expect(editor.string == "**x**")
+        pasteboard.releaseGlobally()
+
+        editor = self.editor("")
+        pasteboard = self.pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard, type: .string))
+        #expect(editor.string == "**x**")
+        pasteboard.releaseGlobally()
+
+        editor = self.editor("")
+        editor.pastesPlainText = true
+        pasteboard = self.pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard, type: .string))
+        #expect(editor.string == "x")
+        pasteboard.releaseGlobally()
+    }
+
+    /// Formatted text dropped from another app is converted where it's
+    /// dropped (FR-8).
+    @Test func dropsConvert() {
+        let (scrollView, textView) = EditorTextView.makeScrollableEditor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        defer { withExtendedLifetime(window) {} }
+        window.contentView = scrollView
+        let editor = textView as! EditorTextView
+        editor.string = "first line\nsecond line"
+        editor.pasteOptions = pasteTestOptions
+        let pasteboard = pasteboard([.html: "<b>x</b>", .string: "x"])
+        defer { pasteboard.releaseGlobally() }
+        let drop = Drop(pasteboard, at: editor.convert(NSPoint(x: 2, y: 2), to: nil))
+        #expect(editor.draggingEntered(drop) != [])
+        #expect(editor.performDragOperation(drop))
+        #expect(editor.string == "**x**first line\nsecond line")
+    }
+
     /// Paste as Markdown converts with the setting off (FR-28).
     @Test func pasteAsMarkdownIgnoresTheSetting() {
         let editor = editor("")
@@ -546,4 +589,29 @@ extension EditorCodeBlockTests {
             #expect(editor.string == "See ![](data:image/png;base64,iVBORw==)")
         }
     }
+}
+
+/// A drop of `draggingPasteboard` at a window location.
+@MainActor final class Drop: NSObject, @MainActor NSDraggingInfo {
+    let draggingPasteboard: NSPasteboard
+    let draggingLocation: NSPoint
+    init(_ pasteboard: NSPasteboard, at location: NSPoint) {
+        draggingPasteboard = pasteboard
+        draggingLocation = location
+    }
+    var draggingDestinationWindow: NSWindow? { nil }
+    var draggingSourceOperationMask: NSDragOperation { .copy }
+    var draggedImageLocation: NSPoint { draggingLocation }
+    var draggedImage: NSImage? { nil }
+    var draggingSource: Any? { nil }
+    var draggingSequenceNumber: Int { 1 }
+    func slideDraggedImage(to screenPoint: NSPoint) {}
+    var draggingFormation: NSDraggingFormation = .default
+    var animatesToDestination = false
+    var numberOfValidItemsForDrop = 1
+    func enumerateDraggingItems(options: NSDraggingItemEnumerationOptions = [], for view: NSView?,
+                                classes: [AnyClass], searchOptions: [NSPasteboard.ReadingOptionKey: Any] = [:],
+                                using block: (NSDraggingItem, Int, UnsafeMutablePointer<ObjCBool>) -> Void) {}
+    var springLoadingHighlight: NSSpringLoadingHighlight { .none }
+    func resetSpringLoading() {}
 }

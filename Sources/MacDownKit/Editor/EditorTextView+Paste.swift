@@ -10,13 +10,20 @@ import AppKit
 extension EditorTextView {
     // MARK: - Paste
 
-    /// Formatted text is pasted as Markdown and image data as an image;
-    /// anything else as usual. Paste and Match Style (`pasteAsPlainText:`)
-    /// reads the plain text without coming here (FR-4).
-    public override func paste(_ sender: Any?) {
-        if !pasteConverted(from: .general) {
-            super.paste(sender)
-        }
+    /// Paste, Services and text dropped from other apps all read here
+    /// (FR-8): formatted text becomes Markdown and image data an image;
+    /// anything else is read as usual.
+    public override func readSelection(from pasteboard: NSPasteboard,
+                                       type: NSPasteboard.PasteboardType) -> Bool {
+        if !pastesPlainText, pasteConverted(from: pasteboard) { return true }
+        return super.readSelection(from: pasteboard, type: type)
+    }
+
+    /// Paste and Match Style: always the plain text (FR-4).
+    public override func pasteAsPlainText(_ sender: Any?) {
+        pastesPlainText = true
+        defer { pastesPlainText = false }
+        super.pasteAsPlainText(sender)
     }
 
     /// Edit ▸ Paste as Markdown: converts even with the setting off (FR-28).

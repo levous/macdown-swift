@@ -35,6 +35,9 @@ public final class EditorTextView: NSTextView {
     /// it writes it: the writer's list marker and indentation.
     public var convertsPastedFormatting = true
     public var pasteOptions = HTMLToMarkdown.Options()
+    /// Set during Paste and Match Style, which reads through the same
+    /// method as Paste but always pastes plain text (FR-4).
+    var pastesPlainText = false
 
     private var storedContentRect: NSRect = .zero
     private var trailingHeight: CGFloat = 0

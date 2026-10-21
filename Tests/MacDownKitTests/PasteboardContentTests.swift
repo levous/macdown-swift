@@ -104,5 +104,7 @@ import Testing
         #expect(read([.string: Data("text".utf8)]) == nil)
         #expect(read([.png: Data([0x89, 0x50]), .string: Data("name.png".utf8)]) == nil)
         #expect(read([:]) == nil)
+        // A file dragged from the Finder, with its icon.
+        #expect(read([.fileURL: Data("file:///tmp/a.txt".utf8), .tiff: Data([0x4D, 0x4D])]) == nil)
     }
 }

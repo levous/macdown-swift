@@ -33,7 +33,9 @@ enum PasteboardContent: Equatable {
                 return .html(html, baseURL: nil)
             }
         }
-        guard !types.contains(.string) else { return nil }
+        // Text wins over an image, and a file dragged from the Finder
+        // carries its icon.
+        guard !types.contains(.string), !types.contains(.fileURL) else { return nil }
         if let png = pasteboard.data(forType: .png) { return .image(png, mime: "image/png") }
         if let jpeg = pasteboard.data(forType: jpeg) { return .image(jpeg, mime: "image/jpeg") }
         if let tiff = pasteboard.data(forType: .tiff),
