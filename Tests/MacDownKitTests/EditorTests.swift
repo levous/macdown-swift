@@ -370,3 +370,23 @@ extension LiveDocumentTests {
     }
 }
 }
+
+/// Images embedded as data URIs (dropped files, pasted data; FR-33).
+@Suite struct ImageMarkupTests {
+    @Test func dataURI() {
+        #expect(ImageMarkup.dataURI(Data([1, 2, 3]), mime: "image/png") == "![](data:image/png;base64,AQID)")
+    }
+
+    @Test func filesAreTypedByExtension() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        for (name, mime) in [("a.png", "image/png"), ("b.JPG", "image/jpeg"), ("c.gif", "image/gif"),
+                             ("d", "image/jpeg")] {
+            let url = directory.appending(path: name)
+            try Data([0xFF]).write(to: url)
+            #expect(ImageMarkup.dataURI(contentsOf: url) == "![](data:\(mime);base64,/w==)")
+        }
+        #expect(ImageMarkup.dataURI(contentsOf: directory.appending(path: "missing.png")) == nil)
+    }
+}

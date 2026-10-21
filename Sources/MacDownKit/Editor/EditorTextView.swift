@@ -120,12 +120,7 @@ public final class EditorTextView: NSTextView {
         guard let url = urls.first else {
             return super.performDragOperation(sender)
         }
-        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else {
-            return false
-        }
-        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
-            ?? "image/jpeg"
-        let markup = "![](data:\(mime);base64,\(data.base64EncodedString()))"
+        guard let markup = ImageMarkup.dataURI(contentsOf: url) else { return false }
         let point = convert(sender.draggingLocation, from: nil)
         let index = characterIndexForInsertion(at: point)
         insertText(markup, replacementRange: NSRange(location: index, length: 0))

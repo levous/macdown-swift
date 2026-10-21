@@ -54,7 +54,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 
 ### Phase 2: Paste in the editor
 - [x] Preference: `PreferenceSettingKey.editorConvertsPastedFormatting`; `Preferences.editorConvertsPastedFormatting` with save/load; default on via nil-check in `loadDefaultUserDefaults()` (existing installs too, FR-27); tests in `PreferencesTests` (fresh install on, existing install without the key on, stored off stays off)
-- [ ] `ImageMarkup` helper (`Editor/` or `Utility/`): `![](data:<mime>;base64,…)`; refactor `EditorTextView.performDragOperation` to use it; test
+- [x] `ImageMarkup` helper (`Editor/` or `Utility/`): `![](data:<mime>;base64,…)`; refactor `EditorTextView.performDragOperation` to use it; test
 - [ ] `PasteboardContent` reader (pure where possible): HTML from `.html`; RTF/RTFD → HTML via `NSAttributedString` + `data(from:documentAttributes: [.documentType: .html])`; image data only (PNG/JPEG kept, TIFF → PNG via `NSBitmapImageRep`); source URL from `public.url`, `org.chromium.source-url`, `<base href>`; tests using a private `NSPasteboard(name:)`
 - [ ] Code-editor detection (FR-6, uses the Phase 1 effective-styles pass): all visible text monospace and no headings/lists/links/tables/emphasis → plain; tests with the VS Code/Xcode synthetic fixtures
 - [ ] Code-block check (FR-5): give `EditorTextView` the latest `MarkdownDocumentModel.Block`s from `DocumentController` (alongside the highlight spans); selection inside a `.codeBlock` range → plain; when the model is stale for the current text, fall back to a local fence scan above the caret; tests (fenced, indented, unclosed fence just typed)
