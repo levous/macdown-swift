@@ -91,9 +91,10 @@ extension HTMLToMarkdown {
                     }
                     content += entry.text
                 }
+                let task = item.task.map { $0 ? "[x] " : "[ ] " } ?? ""
                 let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
                 items.append(lines.enumerated().map { index, line in
-                    index == 0 ? marker + " " + line : line.isEmpty ? "" : indent + line
+                    index == 0 ? marker + " " + task + line : line.isEmpty ? "" : indent + line
                 }.joined(separator: "\n"))
             }
             return items.joined(separator: loose ? "\n\n" : "\n")

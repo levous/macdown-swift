@@ -46,6 +46,8 @@ extension HTMLToMarkdown {
 
     struct ListItem: Equatable {
         var blocks: [Block]
+        /// A task item's checked state; nil for other items.
+        var task: Bool?
     }
 
     struct Walker {
@@ -126,7 +128,7 @@ extension HTMLToMarkdown {
                 if !items.isEmpty, blocks.allSatisfy(\.isList) {
                     items[items.count - 1].blocks += blocks
                 } else {
-                    items.append(ListItem(blocks: blocks))
+                    items.append(ListItem(blocks: blocks, task: Self.taskState(child)))
                 }
             }
             guard !items.isEmpty else { return [] }
@@ -134,6 +136,28 @@ extension HTMLToMarkdown {
             let start = ordered ? element.attribute(forName: "start")?.stringValue
                 .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1 : 1
             return [.list(List(ordered: ordered, start: max(0, start), items: items))]
+        }
+
+        /// Whether a list item is a checked or open task: a checkbox before
+        /// any of its text. Nil if it isn't a task.
+        static func taskState(_ item: XMLElement) -> Bool? {
+            var state: Bool?
+            func visit(_ node: XMLNode) -> Bool {
+                if node.kind == .text {
+                    return node.stringValue?.allSatisfy(\.isWhitespace) != false
+                }
+                guard let element = node as? XMLElement else { return true }
+                if element.localName?.lowercased() == "input" {
+                    if element.attribute(forName: "type")?.stringValue?.lowercased() == "checkbox" {
+                        state = element.attribute(forName: "checked") != nil
+                    }
+                    return false
+                }
+                for child in element.children ?? [] where !visit(child) { return false }
+                return true
+            }
+            _ = visit(item)
+            return state
         }
 
         /// A `pre` element's text, verbatim, as a code block (FR-13).

@@ -558,3 +558,25 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<p>Intro</p><ul><li>a</li></ul><p>After</p>") == "Intro\n\n- a\n\nAfter\n")
     }
 }
+
+/// Task lists (FR-16).
+@Suite struct HTMLToMarkdownTaskListTests {
+    @Test func checkboxes() {
+        #expect(markdown(#"<ul><li><input type="checkbox" checked> Done</li><li><input type="checkbox"> Open</li></ul>"#)
+                    == "- [x] Done\n- [ ] Open\n")
+        #expect(markdown(#"<ol><li><input type="checkbox"> a</li></ol>"#) == "1. [ ] a\n")
+        #expect(markdown(#"<ul><li><input type="checkbox" checked>x</li></ul>"#, .init(listMarker: "*", indent: "\t")) == "* [x] x\n")
+    }
+
+    /// GitHub and MacDown's preview, and loose items with the box in a paragraph.
+    @Test func renderedTaskLists() {
+        #expect(markdown(#"<ul><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="" checked=""> Done</li></ul>"#)
+                    == "- [x] Done\n")
+        #expect(markdown(#"<ul><li><p><input type="checkbox" checked disabled>Done</p></li></ul>"#) == "- [x] Done\n")
+    }
+
+    @Test func otherInputsAreNotTasks() {
+        #expect(markdown(#"<ul><li>text <input type="checkbox"></li><li><input type="radio"> radio</li></ul>"#)
+                    == "- text\n- radio\n")
+    }
+}
