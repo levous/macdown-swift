@@ -463,3 +463,32 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(#"<p><b>see <a href="u">this</a></b></p>"#) == "**see** [**this**](u)")
     }
 }
+
+/// Images keep their address and are never fetched (FR-15, FR-34).
+@Suite struct HTMLToMarkdownImageTests {
+    @Test func images() {
+        #expect(markdown(#"<p><img src="https://e.com/a.png" alt="A pic" title="T"></p>"#) == #"![A pic](https://e.com/a.png "T")"#)
+        #expect(markdown(#"<p>See <img src="a.png"> here</p>"#) == "See ![](a.png) here")
+        #expect(markdown(#"<p><img src="data:image/png;base64,iVBORw0K"></p>"#) == "![](data:image/png;base64,iVBORw0K)")
+        #expect(markdown(#"<p><img src="a b.png" alt="[x] *y*"></p>"#) == #"![\[x\] \*y\*](a%20b.png)"#)
+    }
+
+    @Test func relativeSourcesResolveAgainstTheBaseURL() {
+        var options = pasteTestOptions
+        options.baseURL = URL(string: "https://example.com/guide/")
+        #expect(markdown(#"<p><img src="images/d.png" alt="D"></p>"#, options) == "![D](https://example.com/guide/images/d.png)")
+    }
+
+    @Test func linkedImages() {
+        #expect(markdown(#"<p><a href="https://e.com"><img src="i.png" alt="logo"></a></p>"#) == "[![logo](i.png)](https://e.com)")
+    }
+
+    @Test func imagesWithoutSourcesAreDropped() {
+        #expect(markdown(#"<p>x<img alt="y"></p>"#) == "x")
+    }
+
+    @Test func imagesBetweenBlocks() {
+        #expect(markdown(#"<p>a</p><img src="i.png"><p>b</p>"#) == "a\n\n![](i.png)\n\nb\n")
+        #expect(markdown(#"<h2><img src="i.png" alt="icon"> Title</h2>"#) == "## ![icon](i.png) Title\n")
+    }
+}

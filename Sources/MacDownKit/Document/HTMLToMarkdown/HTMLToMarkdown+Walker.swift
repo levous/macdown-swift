@@ -16,6 +16,13 @@ extension HTMLToMarkdown {
         case text(String, TextStyle)
         /// `<br>`: a hard line break.
         case lineBreak
+        case image(Image, TextStyle)
+    }
+
+    struct Image: Equatable {
+        var source: String
+        var alt: String
+        var title: String?
     }
 
     enum Block: Equatable {
@@ -66,9 +73,15 @@ extension HTMLToMarkdown {
                 // A heading's weight isn't emphasis, and it's one line.
                 let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
                     .map { inline -> Inline in
-                        guard case .text(let text, var style) = inline else { return .text(" ", .init()) }
-                        style.bold = false
-                        return .text(text, style)
+                        switch inline {
+                        case .text(let text, var style):
+                            style.bold = false
+                            return .text(text, style)
+                        case .lineBreak:
+                            return .text(" ", .init())
+                        case .image:
+                            return inline
+                        }
                     }
                 var inlines = Self.collapseWhitespace(content)
                 Self.trimWhitespace(&inlines)
@@ -136,6 +149,14 @@ extension HTMLToMarkdown {
                 let tag = element.localName?.lowercased() ?? ""
                 if tag == "br" { return [.lineBreak] }
                 var style = self.style(of: element, inheriting: style)
+                if tag == "img" {
+                    // Kept as an address, never fetched (FR-34).
+                    guard let source = element.attribute(forName: "src")?.stringValue,
+                          let link = link(source, title: element.attribute(forName: "title")?.stringValue)
+                    else { return [] }
+                    let alt = element.attribute(forName: "alt")?.stringValue ?? ""
+                    return [.image(Image(source: link.url, alt: alt, title: link.title), style)]
+                }
                 if tag == "a", let href = element.attribute(forName: "href")?.stringValue {
                     style.link = link(href, title: element.attribute(forName: "title")?.stringValue)
                 }
@@ -203,6 +224,11 @@ extension HTMLToMarkdown {
             var endsWithSpace = true
             for inline in inlines {
                 guard case .text(let text, let style) = inline else {
+                    guard inline == .lineBreak else {
+                        result.append(inline)
+                        endsWithSpace = false
+                        continue
+                    }
                     // No space at the end of a line or the start of the next.
                     if case .text(let text, let style)? = result.last, text.hasSuffix(" ") {
                         let trimmed = String(text.dropLast())

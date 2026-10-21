@@ -104,7 +104,18 @@ extension HTMLToMarkdown {
                 if plain == link.url, link.url.contains(":") { return "<\(link.url)>" }
                 if link.url.lowercased() == "mailto:" + plain.lowercased() { return "<\(plain)>" }
             }
-            var destination = link.url.replacingOccurrences(of: " ", with: "%20")
+            return "[\(text)](\(destination(link.url, title: link.title)))"
+        }
+
+        /// `![alt](src "title")` (FR-15).
+        static func image(_ image: Image) -> String {
+            "![\(escape(image.alt, atLineStart: false))](\(destination(image.source, title: image.title)))"
+        }
+
+        /// A link destination and title: spaces encoded, and wrapped in `<>`
+        /// when its parentheses don't balance.
+        static func destination(_ url: String, title: String?) -> String {
+            var destination = url.replacingOccurrences(of: " ", with: "%20")
                 .replacingOccurrences(of: "<", with: "%3C").replacingOccurrences(of: ">", with: "%3E")
             var depth = 0, balanced = true
             for character in destination {
@@ -112,16 +123,22 @@ extension HTMLToMarkdown {
                 if character == ")" { depth -= 1; if depth < 0 { balanced = false } }
             }
             if !balanced || depth != 0 { destination = "<\(destination)>" }
-            if let title = link.title {
+            if let title {
                 let escaped = title.replacingOccurrences(of: "\\", with: "\\\\")
                     .replacingOccurrences(of: "\"", with: "\\\"")
                 destination += " \"\(escaped)\""
             }
-            return "[\(text)](\(destination))"
+            return destination
         }
 
         static func plainText(_ inlines: [Inline]) -> String {
-            inlines.map { if case .text(let text, _) = $0 { text } else { " " } }.joined()
+            inlines.map {
+                switch $0 {
+                case .text(let text, _): text
+                case .image(let image, _): image.alt
+                case .lineBreak: " "
+                }
+            }.joined()
         }
 
         /// Consecutive inlines in the same link; a line break is a group of
@@ -131,7 +148,7 @@ extension HTMLToMarkdown {
             for inline in inlines {
                 let link: Link?
                 switch inline {
-                case .text(_, let style): link = style.link
+                case .text(_, let style), .image(_, let style): link = style.link
                 case .lineBreak: link = nil
                 }
                 if let last = groups.last, last.link == link, link == nil || inline != .lineBreak {
@@ -204,6 +221,10 @@ extension HTMLToMarkdown {
                     flushCode()
                     output += "\\\n"
                     lineStart = true
+                case .image(let image, _):
+                    flushCode()
+                    output += Self.image(image)
+                    lineStart = false
                 }
             }
             flushCode()
@@ -235,7 +256,7 @@ extension HTMLToMarkdown {
             for inline in inlines {
                 let on: Bool
                 switch inline {
-                case .text(_, let textStyle): on = emphasis.isOn(textStyle)
+                case .text(_, let textStyle), .image(_, let textStyle): on = emphasis.isOn(textStyle)
                 case .lineBreak:
                     groups.append((false, [inline]))
                     continue
@@ -256,8 +277,14 @@ extension HTMLToMarkdown {
             func style(near index: Int, step: Int) -> TextStyle? {
                 var index = index + step
                 while result.indices.contains(index) {
-                    guard case .text(let text, let style) = result[index] else { return nil }
-                    if !text.allSatisfy(\.isWhitespace) { return style }
+                    switch result[index] {
+                    case .text(let text, let style):
+                        if !text.allSatisfy(\.isWhitespace) { return style }
+                    case .image(_, let style):
+                        return style
+                    case .lineBreak:
+                        return nil
+                    }
                     index += step
                 }
                 return nil
