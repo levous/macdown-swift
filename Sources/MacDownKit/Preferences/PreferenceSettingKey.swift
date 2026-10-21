@@ -46,6 +46,9 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     case editorScrollsPastEnd
     case editorEnsuresNewlineAtEndOfFile
     case editorUnorderedListMarkerType
+    /// New in the Swift port: pasting formatted text (HTML or rich text)
+    /// inserts it as Markdown.
+    case editorConvertsPastedFormatting
 
     // MARK: Editor text checking (NSTextView settings, see `textViewKeyPath`)
     case editorAutomaticDashSubstitutionEnabled

@@ -301,6 +301,21 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
     }
 
+    /// Converting pasted formatting is on for new installs and for existing
+    /// ones that predate it, and stays off once turned off (FR-27).
+    @Test func convertsPastedFormattingByDefault() throws {
+        for existing in [false, true] {
+            let suite = "MacDownTests-\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suite))
+            defer { defaults.removePersistentDomain(forName: suite) }
+            if existing { defaults.set("1", forKey: .firstVersionInstalled) }
+            let preferences = Preferences(defaults: defaults)
+            #expect(preferences.editorConvertsPastedFormatting, "existing install: \(existing)")
+            preferences.editorConvertsPastedFormatting = false
+            #expect(!Preferences(defaults: defaults).editorConvertsPastedFormatting)
+        }
+    }
+
     /// The hidden engine switch for the swift-markdown migration (FR-32).
     @Test func markdownEngine() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
