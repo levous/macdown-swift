@@ -56,3 +56,117 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(HTMLToMarkdown(options: pasteTestOptions).convert("<p> </p>") == nil)
     }
 }
+
+/// Bold, italic, strikethrough and monospace come from tags, `<style>` class
+/// rules, inline styles and ancestors, since apps like Google Docs, Word and
+/// AppKit's RTF export mark formatting with styles instead of tags.
+@Suite struct HTMLToMarkdownStyleTests {
+    typealias Style = HTMLToMarkdown.TextStyle
+
+    /// Each text run's text and style, in order.
+    func runs(_ html: String) -> [(String, Style)] {
+        HTMLToMarkdown.blocks(html).flatMap { block -> [(String, Style)] in
+            guard case .paragraph(let inlines) = block else { return [] }
+            return inlines.map { inline -> (String, Style) in
+                switch inline { case .text(let text, let style): (text, style) }
+            }
+        }
+    }
+
+    func style(of text: String, in html: String) -> Style? {
+        runs(html).first { $0.0.contains(text) }?.1
+    }
+
+    @Test func tags() {
+        let html = "<p><b>B</b> <strong>S</strong> <i>I</i> <em>E</em> <s>X</s> <del>D</del> <strike>K</strike> <code>C</code> <kbd>Y</kbd></p>"
+        #expect(style(of: "B", in: html) == Style(bold: true))
+        #expect(style(of: "S", in: html) == Style(bold: true))
+        #expect(style(of: "I", in: html) == Style(italic: true))
+        #expect(style(of: "E", in: html) == Style(italic: true))
+        for text in ["X", "D", "K"] { #expect(style(of: text, in: html) == Style(strike: true)) }
+        for text in ["C", "Y"] { #expect(style(of: text, in: html) == Style(monospace: true)) }
+    }
+
+    @Test func inlineStyles() {
+        let html = """
+            <p><span style="font-weight:700">B</span><span style="font-weight: bold">W</span>\
+            <span style="font-style:italic">I</span><span style="text-decoration:line-through">X</span>\
+            <span style="font-family:'Roboto Mono',monospace">C</span><span style="font-weight:400">N</span></p>
+            """
+        #expect(style(of: "B", in: html) == Style(bold: true))
+        #expect(style(of: "W", in: html) == Style(bold: true))
+        #expect(style(of: "I", in: html) == Style(italic: true))
+        #expect(style(of: "X", in: html) == Style(strike: true))
+        #expect(style(of: "C", in: html) == Style(monospace: true))
+        #expect(style(of: "N", in: html) == Style())
+    }
+
+    /// Google Docs wraps everything in a `b` styled as normal weight.
+    @Test func normalWeightCancelsBoldTag() {
+        let html = #"<b style="font-weight:normal;" id="docs-internal-guid-1"><p><span style="font-weight:700">B</span><span style="font-weight:400">N</span> plain</p></b>"#
+        #expect(style(of: "B", in: html) == Style(bold: true))
+        #expect(style(of: "N", in: html) == Style())
+        #expect(style(of: "plain", in: html) == Style())
+    }
+
+    /// AppKit's RTF export puts fonts in classes, with the `font` shorthand.
+    @Test func classRulesAndFontShorthand() {
+        let html = """
+            <html><head><style type="text/css">
+            p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; color: #000000}
+            span.s1 {font: 12.0px Menlo}
+            .heavy {font: bold italic 14px/1.2 "Helvetica Neue", sans-serif}
+            </style></head><body>
+            <p class="p1">Plain <b>bold</b> <span class="s1">code</span> <span class="heavy">heavy</span></p>
+            </body></html>
+            """
+        #expect(style(of: "Plain", in: html) == Style())
+        #expect(style(of: "bold", in: html) == Style(bold: true))
+        #expect(style(of: "code", in: html) == Style(monospace: true))
+        #expect(style(of: "heavy", in: html) == Style(bold: true, italic: true))
+    }
+
+    /// Word's styles sit in a comment inside `<style>`, next to `@` rules,
+    /// and its `mso-` properties aren't the standard ones.
+    @Test func wordStyles() {
+        let html = """
+            <html><head><style>
+            <!--
+            /* Style Definitions */
+            p.MsoNormal, li.MsoNormal {margin:0in;font-family:"Calibri",sans-serif;}
+            @list l0:level1 {mso-level-text:\\F0B7;}
+            span.Code {font-family:Consolas;}
+            -->
+            </style></head><body>
+            <p class=MsoNormal>Text <span style='font-family:"Courier New";mso-fareast-font-family:"Times New Roman"'>courier</span> \
+            <span style='mso-bidi-font-family:"Courier New"'>not</span> <span class=Code>consolas</span></p>
+            </body></html>
+            """
+        #expect(style(of: "Text", in: html) == Style())
+        #expect(style(of: "courier", in: html) == Style(monospace: true))
+        #expect(style(of: "not", in: html) == Style())
+        #expect(style(of: "consolas", in: html) == Style(monospace: true))
+    }
+
+    /// Styles inherit: VS Code sets its font on the outer `div`.
+    @Test func inheritance() {
+        let html = #"<div style="font-family: Menlo, Monaco, 'Courier New', monospace;font-weight: normal;"><div><span style="color: #569cd6;">let</span></div></div>"#
+        #expect(style(of: "let", in: html) == Style(monospace: true))
+        #expect(style(of: "in", in: #"<p style="font-family: Helvetica"><code>x</code> <b style="font-style:italic">in</b></p>"#)
+                    == Style(bold: true, italic: true))
+        // A proportional font inside code turns monospace off.
+        #expect(style(of: "y", in: #"<code><span style="font-family: Georgia, serif">y</span></code>"#) == Style())
+    }
+
+    /// Inline styles beat class rules, and class rules beat tag defaults.
+    @Test func precedence() {
+        let html = """
+            <style>.light {font-weight: normal} b.heavy {font-weight: 800} .it {font-style: italic}</style>
+            <p><b class="light">L</b> <span class="heavy">S</span> <b class="heavy">H</b> <span class="it" style="font-style: normal">N</span></p>
+            """
+        #expect(style(of: "L", in: html) == Style())
+        #expect(style(of: "S", in: html) == Style())
+        #expect(style(of: "H", in: html) == Style(bold: true))
+        #expect(style(of: "N", in: html) == Style())
+    }
+}

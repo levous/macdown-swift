@@ -29,7 +29,7 @@ extension HTMLToMarkdown {
         func render(_ inlines: [Inline]) -> String {
             inlines.map { inline in
                 switch inline {
-                case .text(let text): text
+                case .text(let text, _): text
                 }
             }.joined()
         }

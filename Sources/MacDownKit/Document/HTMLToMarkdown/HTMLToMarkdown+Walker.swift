@@ -13,7 +13,7 @@ import Foundation
 extension HTMLToMarkdown {
     /// A piece of inline content.
     enum Inline: Equatable {
-        case text(String)
+        case text(String, TextStyle)
     }
 
     enum Block: Equatable {
@@ -21,6 +21,8 @@ extension HTMLToMarkdown {
     }
 
     struct Walker {
+        var styleSheet = StyleSheet(css: "")
+
         /// Elements that start a block of their own; anything else is inline.
         static let blockElements: Set<String> = [
             "address", "blockquote", "body", "center", "dd", "div", "dl", "dt", "fieldset",
@@ -30,7 +32,7 @@ extension HTMLToMarkdown {
 
         /// The blocks in a container. This is the one place siblings are
         /// grouped: consecutive inline nodes make an implicit paragraph.
-        func blocks(in container: XMLElement) -> [Block] {
+        func blocks(in container: XMLElement, style: TextStyle = .init()) -> [Block] {
             var blocks: [Block] = []
             var pending: [Inline] = []
             func flush() {
@@ -41,9 +43,9 @@ extension HTMLToMarkdown {
                 if let element = child as? XMLElement,
                    Self.blockElements.contains(element.localName ?? "") {
                     flush()
-                    blocks += self.blocks(in: element)
+                    blocks += self.blocks(in: element, style: self.style(of: element, inheriting: style))
                 } else {
-                    pending += inlines(in: child)
+                    pending += inlines(in: child, style: style)
                 }
             }
             flush()
@@ -51,15 +53,21 @@ extension HTMLToMarkdown {
         }
 
         /// The inline content of a node.
-        func inlines(in node: XMLNode) -> [Inline] {
+        func inlines(in node: XMLNode, style: TextStyle) -> [Inline] {
             switch node.kind {
             case .text:
-                return [.text(node.stringValue ?? "")]
+                return [.text(node.stringValue ?? "", style)]
             case .element:
-                return (node.children ?? []).flatMap(inlines(in:))
+                guard let element = node as? XMLElement else { return [] }
+                let style = self.style(of: element, inheriting: style)
+                return (element.children ?? []).flatMap { inlines(in: $0, style: style) }
             default:
                 return []
             }
+        }
+
+        func style(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle {
+            HTMLToMarkdown.style(of: element, inheriting: parent, styleSheet: styleSheet)
         }
 
         /// A paragraph of the runs, or nil if they have no visible text.
@@ -71,13 +79,13 @@ extension HTMLToMarkdown {
 
         /// Removes whitespace at the start and end of a run of inlines.
         static func trimWhitespace(_ inlines: inout [Inline]) {
-            while case .text(let text)? = inlines.first {
+            while case .text(let text, let style)? = inlines.first {
                 let trimmed = String(text.drop(while: \.isWhitespace))
-                if trimmed.isEmpty { inlines.removeFirst() } else { inlines[0] = .text(trimmed); break }
+                if trimmed.isEmpty { inlines.removeFirst() } else { inlines[0] = .text(trimmed, style); break }
             }
-            while case .text(let text)? = inlines.last {
+            while case .text(let text, let style)? = inlines.last {
                 let trimmed = String(text.reversed().drop(while: \.isWhitespace).reversed())
-                if trimmed.isEmpty { inlines.removeLast() } else { inlines[inlines.count - 1] = .text(trimmed); break }
+                if trimmed.isEmpty { inlines.removeLast() } else { inlines[inlines.count - 1] = .text(trimmed, style); break }
             }
         }
     }

@@ -44,10 +44,16 @@ public struct HTMLToMarkdown: Sendable {
     /// The Markdown for `html`, or nil if it can't be parsed or has no
     /// visible content (the caller pastes plain text instead).
     public func convert(_ html: String) -> Result? {
-        guard let body = Self.parse(html) else { return nil }
-        let blocks = Walker().blocks(in: body)
+        let blocks = Self.blocks(html)
         guard !blocks.isEmpty else { return nil }
         return Renderer(options: options).render(blocks)
+    }
+
+    /// The blocks of `html`, empty if it can't be parsed.
+    static func blocks(_ html: String) -> [Block] {
+        guard let (document, body) = parse(html) else { return [] }
+        let css = ((try? document.nodes(forXPath: "//style")) ?? []).compactMap(\.stringValue)
+        return Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n"))).blocks(in: body)
     }
 
     // MARK: - Parsing
@@ -63,8 +69,9 @@ public struct HTMLToMarkdown: Sendable {
     private static let html5InlinePattern = try! NSRegularExpression(
         pattern: "<(/?)(?:\(html5Inlines.joined(separator: "|")))(?=[\\s>/])", options: .caseInsensitive)
 
-    /// The repaired document's `body`.
-    static func parse(_ html: String) -> XMLElement? {
+    /// The repaired document and its `body`. The document must outlive the
+    /// body: nodes don't keep their document alive.
+    static func parse(_ html: String) -> (XMLDocument, XMLElement)? {
         guard html.contains(where: { !$0.isWhitespace }) else { return nil }
         var source = html
         let range = NSRange(source.startIndex..., in: source)
@@ -78,6 +85,6 @@ public struct HTMLToMarkdown: Sendable {
         guard let document = try? XMLDocument(xmlString: source, options: [.documentTidyHTML]),
               let body = try? document.nodes(forXPath: "//body").first as? XMLElement
         else { return nil }
-        return body
+        return (document, body)
     }
 }
