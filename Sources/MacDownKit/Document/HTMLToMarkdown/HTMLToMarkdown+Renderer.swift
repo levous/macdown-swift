@@ -80,18 +80,7 @@ extension HTMLToMarkdown {
         private func render(_ inlines: [Inline], levels: ArraySlice<Emphasis>,
                             lineStart: inout Bool) -> String {
             guard let level = levels.first else {
-                var output = ""
-                for inline in inlines {
-                    switch inline {
-                    case .text(let text, _):
-                        output += Self.escape(text, atLineStart: lineStart)
-                        lineStart = false
-                    case .lineBreak:
-                        output += "\\\n"
-                        lineStart = true
-                    }
-                }
-                return output
+                return renderCode(inlines, lineStart: &lineStart)
             }
             var output = ""
             for group in Self.groups(inlines, by: level) {
@@ -117,6 +106,58 @@ extension HTMLToMarkdown {
             return output
         }
 
+        /// Monospace runs as code spans, the rest as escaped text (FR-12).
+        private func renderCode(_ inlines: [Inline], lineStart: inout Bool) -> String {
+            var output = ""
+            var code = ""
+            func flushCode() {
+                guard !code.isEmpty else { return }
+                let leading = code.prefix(while: { $0 == " " })
+                let trailing = code.reversed().prefix(while: { $0 == " " })
+                let content = code.dropFirst(leading.count).dropLast(trailing.count)
+                output += leading
+                if !content.isEmpty {
+                    output += Self.codeSpan(String(content))
+                    lineStart = false
+                }
+                output += String(trailing)
+                code = ""
+            }
+            for inline in inlines {
+                switch inline {
+                case .text(let text, let style) where style.monospace:
+                    code += text
+                case .text(let text, _):
+                    flushCode()
+                    output += Self.escape(text, atLineStart: lineStart)
+                    lineStart = false
+                case .lineBreak:
+                    flushCode()
+                    output += "\\\n"
+                    lineStart = true
+                }
+            }
+            flushCode()
+            return output
+        }
+
+        /// `content` between backtick runs longer than any inside it, padded
+        /// with a space when it starts or ends with a backtick.
+        static func codeSpan(_ content: String) -> String {
+            let fence = String(repeating: "`", count: longestRun(of: "`", in: content) + 1)
+            let pad = content.hasPrefix("`") || content.hasSuffix("`") ? " " : ""
+            return fence + pad + content + pad + fence
+        }
+
+        static func longestRun(of character: Character, in text: String) -> Int {
+            var longest = 0, current = 0
+            for c in text {
+                current = c == character ? current + 1 : 0
+                longest = max(longest, current)
+            }
+            return longest
+        }
+
         /// Consecutive inlines with the same setting of `style`; a line break
         /// is a group of its own, so markers close before it.
         private static func groups(_ inlines: [Inline], by emphasis: Emphasis)
@@ -139,8 +180,8 @@ extension HTMLToMarkdown {
             return groups
         }
 
-        /// Whitespace between two runs takes the emphasis they share, so
-        /// `**one** **two**` is written `**one two**`.
+        /// Whitespace between two runs takes the emphasis (and code) they
+        /// share, so `**one** **two**` is written `**one two**`.
         static func joiningSpaces(_ inlines: [Inline]) -> [Inline] {
             var result = inlines
             func style(near index: Int, step: Int) -> TextStyle? {
@@ -160,6 +201,7 @@ extension HTMLToMarkdown {
                     emphasis.set(before.map(emphasis.isOn) == true && after.map(emphasis.isOn) == true,
                                  in: &textStyle)
                 }
+                textStyle.monospace = before?.monospace == true && after?.monospace == true
                 result[index] = .text(text, textStyle)
             }
             return result

@@ -351,3 +351,34 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<h2>A <i>b</i> <b>c</b></h2>") == "## A *b* c\n")
     }
 }
+
+/// Code and monospace text (FR-12).
+@Suite struct HTMLToMarkdownInlineCodeTests {
+    @Test func codeSpans() {
+        #expect(markdown("<p>Run <code>make install</code> now, press <kbd>⌘K</kbd></p>") == "Run `make install` now, press `⌘K`")
+        #expect(markdown(#"<p>Use <span style="font-family:'Roboto Mono',monospace">inline code</span>.</p>"#) == "Use `inline code`.")
+    }
+
+    @Test func contentIsNotEscaped() {
+        #expect(markdown("<p><code>*not* _emph_ [x] &lt;b&gt; \\n</code></p>") == "`*not* _emph_ [x] <b> \\n`")
+    }
+
+    @Test func backticksInContent() {
+        #expect(markdown("<p><code>a`b</code></p>") == "``a`b``")
+        #expect(markdown("<p><code>``x</code></p>") == "``` ``x ```")
+        #expect(markdown("<p><code>`tick`</code></p>") == "`` `tick` ``")
+    }
+
+    @Test func edgeWhitespaceMovesOutside() {
+        #expect(markdown("<p>x<code> y </code>z</p>") == "x `y` z")
+    }
+
+    @Test func adjacentCodeMerges() {
+        #expect(markdown("<p><code>a</code><code>b</code> <code>c</code></p>") == "`ab c`")
+    }
+
+    @Test func codeInsideEmphasis() {
+        #expect(markdown("<p><b>see <code>x</code></b></p>") == "**see `x`**")
+        #expect(markdown("<p><code><b>bold code</b></code></p>") == "**`bold code`**")
+    }
+}

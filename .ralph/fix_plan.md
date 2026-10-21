@@ -37,7 +37,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Output rules (FR-21, FR-9): one blank line between blocks, no leading blank lines, trailing newline only after a block, single-paragraph result flagged inline; tests
 - [x] Headings and paragraphs (FR-10): `h1`–`h6` → ATX; `p`/text-bearing `div` → paragraphs; `br` → backslash hard break; tests
 - [x] Emphasis (FR-11): `strong`/`b`/`font-weight ≥ 600` → `**`; `em`/`i`/`font-style: italic` → `*`; `del`/`s`/`strike`/`line-through` → `~~`; `font-weight: normal` cancels an outer bold; adjacent/nested runs merge cleanly, whitespace moved outside markers; tests
-- [ ] Inline code (FR-12): `code`, `kbd`, monospace `font-family` → backtick spans sized past embedded backtick runs, space padding when content starts/ends with a backtick; no escaping inside; tests
+- [x] Inline code (FR-12): `code`, `kbd`, monospace `font-family` → backtick spans sized past embedded backtick runs, space padding when content starts/ends with a backtick; no escaping inside; tests
 - [ ] Code blocks (FR-13): `pre`/`pre > code` → fenced, language from `language-x`/`lang-x`, fence longer than any internal backtick run, text kept verbatim; tests
 - [ ] Links (FR-14): `[text](url "title")`, `<url>` when text equals URL, text only for `javascript:` and in-page `#anchor`; URLs with spaces/parens wrapped or encoded; tests
 - [ ] Images (FR-15, FR-34): `![alt](src "title")`, `src` kept, never fetched; tests
