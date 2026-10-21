@@ -492,3 +492,69 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(#"<h2><img src="i.png" alt="icon"> Title</h2>"#) == "## ![icon](i.png) Title\n")
     }
 }
+
+/// Bulleted and numbered lists (FR-16).
+@Suite struct HTMLToMarkdownListTests {
+    func options(_ marker: String, _ indent: String = "    ") -> HTMLToMarkdown.Options {
+        .init(listMarker: marker, indent: indent)
+    }
+
+    @Test(arguments: ["-", "*", "+"])
+    func bulletsUseTheMarkerSetting(_ marker: String) {
+        #expect(markdown("<ul><li>a</li><li>b</li></ul>", options(marker)) == "\(marker) a\n\(marker) b\n")
+    }
+
+    @Test func numberedListsKeepTheirStart() {
+        #expect(markdown(#"<ol start="3"><li>x</li><li>y</li></ol>"#) == "3. x\n4. y\n")
+        #expect(markdown("<ol><li>x</li></ol>") == "1. x\n")
+    }
+
+    @Test func nestingUsesTheIndentSetting() {
+        let html = "<ul><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li><li>d</li></ul>"
+        #expect(markdown(html) == "- a\n    - b\n        1. c\n- d\n")
+        #expect(markdown(html, options("*", "\t")) == "* a\n\t* b\n\t\t1. c\n* d\n")
+    }
+
+    /// Continuation lines and sublists start at least at the content column.
+    @Test func wideMarkersIndentFurther() {
+        #expect(markdown(#"<ol start="99"><li>x</li><li>y<ul><li>z</li></ul></li></ol>"#) == "99. x\n100. y\n     - z\n")
+        #expect(markdown("<ul><li>a<br>b</li></ul>") == "- a\\\n    b\n")
+    }
+
+    /// A numbered list not starting at 1 can't interrupt a paragraph.
+    @Test func numberedSublistsNotStartingAtOne() {
+        #expect(markdown(#"<ul><li>a<ol start="2"><li>b</li></ol></li></ul>"#) == "- a\n\n    2. b\n")
+    }
+
+    @Test func looseAndTightLists() {
+        #expect(markdown("<ul><li><p>a</p></li><li><p>b</p></li></ul>") == "- a\n- b\n")
+        #expect(markdown("<ul><li><p>a</p><p>a2</p></li><li><p>b</p></li></ul>") == "- a\n\n    a2\n\n- b\n")
+        #expect(markdown("<ul><li>a<pre>x</pre></li></ul>") == "- a\n\n    ```\n    x\n    ```\n")
+    }
+
+    /// Google Docs puts a sublist directly in its parent list, which Tidy
+    /// wraps in an item of its own.
+    @Test func sublistsOutsideItemsJoinThePreviousItem() {
+        #expect(markdown("<ul><li>a</li><ul><li>b</li></ul><li>c</li></ul>") == "- a\n    - b\n- c\n")
+    }
+
+    /// Two lists in a row would merge into one with the same marker.
+    @Test func adjacentListsUseAnotherMarker() {
+        #expect(markdown("<ul><li>a</li></ul><ul><li>b</li></ul>") == "- a\n\n* b\n")
+        #expect(markdown("<ul><li>a</li></ul><ul><li>b</li></ul>", options("*")) == "* a\n\n- b\n")
+        #expect(markdown("<ol><li>a</li></ol><ol><li>b</li></ol>") == "1. a\n\n1) b\n")
+    }
+
+    @Test func itemTextIsEscaped() {
+        #expect(markdown("<ol><li>1. not nested</li><li>- nor this</li></ol>") == "1. 1\\. not nested\n2. \\- nor this\n")
+    }
+
+    @Test func emptyItemsAreDropped() {
+        #expect(markdown("<ul><li></li><li>b</li><li> </li></ul>") == "- b\n")
+        #expect(markdown("<ul><li> </li></ul><p>x</p>") == "x")
+    }
+
+    @Test func listsBetweenParagraphs() {
+        #expect(markdown("<p>Intro</p><ul><li>a</li></ul><p>After</p>") == "Intro\n\n- a\n\nAfter\n")
+    }
+}

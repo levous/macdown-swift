@@ -41,7 +41,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Code blocks (FR-13): `pre`/`pre > code` → fenced, language from `language-x`/`lang-x`, fence longer than any internal backtick run, text kept verbatim; tests
 - [x] Links (FR-14): `[text](url "title")`, `<url>` when text equals URL, text only for `javascript:` and in-page `#anchor`; URLs with spaces/parens wrapped or encoded; tests
 - [x] Images (FR-15, FR-34): `![alt](src "title")`, `src` kept, never fetched; tests
-- [ ] Lists (FR-16): nested `ul`/`ol`, user marker, `start` number, continuation lines at content column, nesting by `indent` option, loose vs tight items, block content in items; tests for each marker setting and tabs vs spaces
+- [x] Lists (FR-16): nested `ul`/`ol`, user marker, `start` number, continuation lines at content column, nesting by `indent` option, loose vs tight items, block content in items; tests for each marker setting and tabs vs spaces
 - [ ] Task lists (FR-16): `input type=checkbox` in `li` → `[ ]`/`[x]` after the marker; tests
 - [ ] Block quotes and rules (FR-17): nested `> `; `hr` → `---`, or `***` when the marker is `-`; tests
 - [ ] Tables (FR-18): pipe table when cells are inline-only and no `rowspan`/`colspan`; header from `thead`/`th` or first row; alignment from `align`/`text-align`; `|` escaped; otherwise raw HTML block; tests for simple and fallback tables

@@ -14,8 +14,7 @@ extension HTMLToMarkdown {
         /// The blocks separated by one blank line (FR-21); a lone paragraph
         /// has no newline, to be inserted inline (FR-9).
         func render(_ blocks: [Block]) -> Result {
-            let rendered = blocks.map { (block: $0, text: render($0).trimmingCharacters(in: .newlines)) }
-                .filter { !$0.text.isEmpty }
+            let rendered = renderedBlocks(blocks)
             let markdown = rendered.map(\.text).joined(separator: "\n\n")
             if rendered.count == 1, case .paragraph = rendered[0].block {
                 return Result(markdown: markdown, isInline: true)
@@ -23,7 +22,26 @@ extension HTMLToMarkdown {
             return Result(markdown: markdown.isEmpty ? "" : markdown + "\n", isInline: false)
         }
 
-        func render(_ block: Block) -> String {
+        /// Each block's Markdown, without edge newlines; empty ones are
+        /// dropped. A list right after another of the same kind uses the
+        /// other marker, so the two don't merge.
+        func renderedBlocks(_ blocks: [Block]) -> [(block: Block, text: String)] {
+            var result: [(block: Block, text: String)] = []
+            var alternate = false
+            for block in blocks {
+                if case .list(let list) = block, case .list(let previous)? = result.last?.block,
+                   previous.ordered == list.ordered {
+                    alternate.toggle()
+                } else {
+                    alternate = false
+                }
+                let text = render(block, alternate: alternate).trimmingCharacters(in: .newlines)
+                if !text.isEmpty { result.append((block, text)) }
+            }
+            return result
+        }
+
+        func render(_ block: Block, alternate: Bool = false) -> String {
             switch block {
             case .paragraph(let inlines):
                 return render(inlines)
@@ -38,7 +56,53 @@ extension HTMLToMarkdown {
             case .code(let language, let text):
                 let fence = String(repeating: "`", count: max(3, Self.longestRun(of: "`", in: text) + 1))
                 return fence + (language ?? "") + "\n" + text + "\n" + fence
+            case .list(let list):
+                return render(list, alternate: alternate)
             }
+        }
+
+        // MARK: - Lists
+
+        /// A list with the writer's marker (FR-16). Items are separated by
+        /// blank lines when any holds more than one block; an item's lines
+        /// after the first are indented by the indent setting, or to the
+        /// content column when the marker is wider.
+        func render(_ list: List, alternate: Bool) -> String {
+            let loose = list.items.contains { $0.blocks.filter { !$0.isList }.count > 1 }
+            var items: [String] = []
+            for (offset, item) in list.items.enumerated() {
+                let marker = list.ordered
+                    ? "\(list.start + offset)\(alternate ? ")" : ".")"
+                    : alternate ? (options.listMarker == "*" ? "-" : "*") : options.listMarker
+                let indent = childIndent(contentColumn: marker.count + 1)
+                var content = ""
+                for (index, entry) in renderedBlocks(item.blocks).enumerated() {
+                    if index > 0 {
+                        // A sublist follows its paragraph directly in a tight
+                        // list, except a numbered one not starting at 1, which
+                        // can't interrupt a paragraph.
+                        var directly = !loose
+                        if case .list(let sublist) = entry.block {
+                            if sublist.ordered, sublist.start != 1 { directly = false }
+                        } else {
+                            directly = false
+                        }
+                        content += directly ? "\n" : "\n\n"
+                    }
+                    content += entry.text
+                }
+                let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+                items.append(lines.enumerated().map { index, line in
+                    index == 0 ? marker + " " + line : line.isEmpty ? "" : indent + line
+                }.joined(separator: "\n"))
+            }
+            return items.joined(separator: loose ? "\n\n" : "\n")
+        }
+
+        /// The indent setting, or spaces to `contentColumn` if it's wider.
+        func childIndent(contentColumn: Int) -> String {
+            let width = options.indent.reduce(0) { $0 + ($1 == "\t" ? 4 : 1) }
+            return width >= contentColumn ? options.indent : String(repeating: " ", count: contentColumn)
         }
 
         // MARK: - Inline content

@@ -30,6 +30,22 @@ extension HTMLToMarkdown {
         case heading(Int, [Inline])
         /// A code block's language, if named, and its text.
         case code(String?, String)
+        case list(List)
+
+        var isList: Bool {
+            if case .list = self { true } else { false }
+        }
+    }
+
+    struct List: Equatable {
+        var ordered: Bool
+        /// The first item's number.
+        var start = 1
+        var items: [ListItem]
+    }
+
+    struct ListItem: Equatable {
+        var blocks: [Block]
     }
 
     struct Walker {
@@ -90,7 +106,34 @@ extension HTMLToMarkdown {
             if tag == "pre" {
                 return Self.codeBlock(element).map { [$0] } ?? []
             }
+            if tag == "ul" || tag == "ol" {
+                return list(element, style: style)
+            }
             return blocks(in: element, style: style)
+        }
+
+        /// A `ul` or `ol` as a list (FR-16). Empty items are dropped, and an
+        /// item holding only lists (Tidy's repair of a list directly inside
+        /// a list, as Google Docs writes it) joins the previous item.
+        func list(_ element: XMLElement, style: TextStyle) -> [Block] {
+            var items: [ListItem] = []
+            for child in element.children ?? [] {
+                guard let child = child as? XMLElement else { continue }
+                let childStyle = self.style(of: child, inheriting: style)
+                let blocks = child.localName?.lowercased() == "li"
+                    ? self.blocks(in: child, style: childStyle) : block(child, style: childStyle)
+                guard !blocks.isEmpty else { continue }
+                if !items.isEmpty, blocks.allSatisfy(\.isList) {
+                    items[items.count - 1].blocks += blocks
+                } else {
+                    items.append(ListItem(blocks: blocks))
+                }
+            }
+            guard !items.isEmpty else { return [] }
+            let ordered = element.localName?.lowercased() == "ol"
+            let start = ordered ? element.attribute(forName: "start")?.stringValue
+                .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1 : 1
+            return [.list(List(ordered: ordered, start: max(0, start), items: items))]
         }
 
         /// A `pre` element's text, verbatim, as a code block (FR-13).
