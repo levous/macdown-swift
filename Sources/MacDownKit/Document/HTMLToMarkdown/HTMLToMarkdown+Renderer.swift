@@ -27,15 +27,28 @@ extension HTMLToMarkdown {
             switch block {
             case .paragraph(let inlines):
                 return render(inlines)
+            case .heading(let level, let inlines):
+                var content = render(inlines, atLineStart: false)
+                // A trailing run of # after a space would close the heading.
+                let hashes = content.reversed().prefix(while: { $0 == "#" }).count
+                if hashes > 0, content.dropLast(hashes).last == " " {
+                    content.insert("\\", at: content.index(content.endIndex, offsetBy: -hashes))
+                }
+                return String(repeating: "#", count: level) + " " + content
             }
         }
 
-        func render(_ inlines: [Inline]) -> String {
+        func render(_ inlines: [Inline], atLineStart: Bool = true) -> String {
             var output = ""
+            var lineStart = atLineStart
             for inline in inlines {
                 switch inline {
                 case .text(let text, _):
-                    output += Self.escape(text, atLineStart: output.isEmpty)
+                    output += Self.escape(text, atLineStart: lineStart)
+                    lineStart = false
+                case .lineBreak:
+                    output += "\\\n"
+                    lineStart = true
                 }
             }
             return output

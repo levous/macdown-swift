@@ -67,8 +67,8 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     func runs(_ html: String) -> [(String, Style)] {
         HTMLToMarkdown.blocks(html).flatMap { block -> [(String, Style)] in
             guard case .paragraph(let inlines) = block else { return [] }
-            return inlines.map { inline -> (String, Style) in
-                switch inline { case .text(let text, let style): (text, style) }
+            return inlines.compactMap { inline -> (String, Style)? in
+                if case .text(let text, let style) = inline { (text, style) } else { nil }
             }
         }
     }
@@ -262,5 +262,48 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     @Test func oneParagraphIsInlineWithoutNewline() {
         #expect(renderer.render([paragraph("only")]) == .init(markdown: "only", isInline: true))
         #expect(markdown("<div><div><p>nested <b>only</b></p></div></div>")?.hasSuffix("\n") == false)
+    }
+}
+
+/// Headings, paragraphs and line breaks (FR-10, FR-20).
+@Suite struct HTMLToMarkdownHeadingTests {
+    @Test func atxHeadings() {
+        #expect(markdown("<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>")
+                    == "# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six\n")
+    }
+
+    @Test func headingContentIsOneLineWithoutBold() {
+        #expect(markdown("<h2><b>Bold</b> <span style=\"font-weight:700\">title</span><br>split</h2>")
+                    == "## Bold title split\n")
+        // Tidy moves blocks out of headings.
+        #expect(markdown("<h1><div>Block</div><p>inside</p></h1>") == "# Block\n\ninside\n")
+    }
+
+    @Test func emptyHeadingsAreDropped() {
+        #expect(markdown("<h1> </h1><p>Text</p>") == "Text")
+    }
+
+    @Test func headingTextIsEscaped() {
+        #expect(markdown("<h2>1. Intro *now*</h2>") == "## 1. Intro \\*now\\*\n")
+        // A trailing run of # would be read as a closing sequence.
+        #expect(markdown("<h2>Learn C#</h2><h3>Issue #</h3>") == "## Learn C#\n\n### Issue \\#\n")
+    }
+
+    @Test func lineBreaksInParagraphs() {
+        #expect(markdown("<p>one<br>two <br/> three</p>") == "one\\\ntwo\\\nthree")
+        #expect(markdown("<p>line<br>- not a list</p>") == "line\\\n\\- not a list")
+    }
+
+    @Test func breaksAtEdgesAreDropped() {
+        #expect(markdown("<p><br>text<br></p>") == "text")
+        #expect(markdown("<p>a</p><br><br><p>b</p>") == "a\n\nb\n")
+    }
+
+    @Test func doubleBreaksSplitParagraphs() {
+        #expect(markdown("<p>first<br><br>second<br><br><br>third</p>") == "first\n\nsecond\n\nthird\n")
+    }
+
+    @Test func divsAndParagraphs() {
+        #expect(markdown("<div>One</div><div><div>Two</div></div><p>Three</p>") == "One\n\nTwo\n\nThree\n")
     }
 }
