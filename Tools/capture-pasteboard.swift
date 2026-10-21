@@ -7,6 +7,22 @@
 // The output directory defaults to Tests/MacDownKitTests/Resources/Paste/<source>
 // (relative to the current directory, so run it from the repository root).
 // --pasteboard reads a named pasteboard instead of the general one.
+//
+// Capturing a source app, with Tests/MacDownKitTests/Resources/Paste/sample.md
+// (generated content only, never real documents):
+//
+// - MacDown's preview: open sample.md, select all in the preview, copy, then
+//   run this tool with source "macdown-preview".
+// - Browsers (Safari, Chrome): open the HTML exported from MacDown
+//   (File ▸ Export ▸ HTML) in the browser, select all, copy.
+// - Google Docs, Word, Pages, TextEdit, Notion: paste the copied preview into
+//   a new document, fix anything the app lost (lists, the merged-cell table),
+//   then select all in that app and copy.
+// - Code editors (VS Code, Xcode, Terminal, JetBrains): open sample.md (or
+//   `cat` it in Terminal), select the Swift code block's lines and copy.
+//
+// Use the app's name in lower case as the source (safari, chrome, google-docs,
+// word, pages, textedit, notion, vscode, xcode, terminal, macdown-preview).
 
 import AppKit
 
