@@ -33,6 +33,7 @@ extension HTMLToMarkdown {
         case list(List)
         case quote([Block])
         case rule
+        case table(Table)
 
         var isList: Bool {
             if case .list = self { true } else { false }
@@ -119,6 +120,9 @@ extension HTMLToMarkdown {
             }
             if tag == "hr" {
                 return [.rule]
+            }
+            if tag == "table" {
+                return table(element, style: style)
             }
             return blocks(in: element, style: style)
         }

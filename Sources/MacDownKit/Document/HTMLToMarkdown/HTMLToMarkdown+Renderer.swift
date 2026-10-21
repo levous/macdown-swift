@@ -67,6 +67,8 @@ extension HTMLToMarkdown {
             case .rule:
                 // `---` would read as a list item to someone using `-` bullets.
                 return options.listMarker == "-" ? "***" : "---"
+            case .table(let table):
+                return render(table)
             }
         }
 

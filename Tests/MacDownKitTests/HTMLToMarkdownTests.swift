@@ -617,3 +617,62 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<hr>") == "***\n")
     }
 }
+
+/// Tables (FR-18).
+@Suite struct HTMLToMarkdownTableTests {
+    @Test func pipeTables() {
+        #expect(markdown(#"<table><thead><tr><th>Name</th><th align="right">Count</th></tr></thead><tbody><tr><td>Apples</td><td>3</td></tr></tbody></table>"#)
+                    == "| Name | Count |\n| --- | ---: |\n| Apples | 3 |\n")
+        // Without a header row, the first row is the header.
+        #expect(markdown("<table><tr><td>a</td><td>b</td></tr><tr><td>1</td><td>2</td></tr></table>")
+                    == "| a | b |\n| --- | --- |\n| 1 | 2 |\n")
+    }
+
+    @Test func alignment() {
+        #expect(markdown(#"<table><tr><th style="text-align: center">c</th><th style="text-align:left">l</th><th>n</th></tr></table>"#)
+                    == "| c | l | n |\n| :---: | :--- | --- |\n")
+    }
+
+    @Test func pipesAreEscaped() {
+        #expect(markdown("<table><tr><th>a|b</th></tr><tr><td><code>x|y</code></td></tr></table>")
+                    == "| a\\|b |\n| --- |\n| `x\\|y` |\n")
+    }
+
+    /// Google Docs puts each cell's text in a paragraph.
+    @Test func formattingInCells() {
+        #expect(markdown("<table><tr><td><p><b>Name</b></p></td></tr><tr><td><p>x <i>y</i><br>z</p></td></tr></table>")
+                    == "| **Name** |\n| --- |\n| x *y* z |\n")
+    }
+
+    @Test func shortRowsArePadded() {
+        #expect(markdown("<table><tr><th>a</th><th>b</th></tr><tr><td>1</td></tr></table>")
+                    == "| a | b |\n| --- | --- |\n| 1 |  |\n")
+    }
+
+    @Test func mergedCellsStayHTML() {
+        let html = #"<table><tr><th>Region</th><th colspan="2">Quarter</th></tr><tr><td rowspan="2">North</td><td>Q1</td><td>Q2</td></tr><tr><td>10 &lt; 20 &amp; more</td><td><b>20</b></td></tr></table>"#
+        #expect(markdown(html) == """
+            <table>
+            <tr><th>Region</th><th colspan="2">Quarter</th></tr>
+            <tr><td rowspan="2">North</td><td>Q1</td><td>Q2</td></tr>
+            <tr><td>10 &lt; 20 &amp; more</td><td><strong>20</strong></td></tr>
+            </table>
+
+            """)
+    }
+
+    @Test func blockContentStaysHTML() {
+        #expect(markdown(#"<table><tr><td><ul><li>a</li><li><a href="u">b</a></li></ul></td><td><p>one</p><p>two</p></td></tr></table>"#) == """
+            <table>
+            <tr><td><ul><li>a</li><li><a href="u">b</a></li></ul></td><td><p>one</p><p>two</p></td></tr>
+            </table>
+
+            """)
+    }
+
+    @Test func captionsAndSurroundings() {
+        #expect(markdown("<p>Before</p><table><caption>Cap</caption><tr><td>a</td></tr></table><p>After</p>")
+                    == "Before\n\nCap\n\n| a |\n| --- |\n\nAfter\n")
+        #expect(markdown("<table><tr><td> </td></tr></table><p>x</p>") == "x")
+    }
+}
