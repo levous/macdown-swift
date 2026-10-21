@@ -44,9 +44,8 @@ public struct HTMLToMarkdown: Sendable {
     /// The Markdown for `html`, or nil if it can't be parsed or has no
     /// visible content (the caller pastes plain text instead).
     public func convert(_ html: String) -> Result? {
-        let blocks = Self.blocks(html)
-        guard !blocks.isEmpty else { return nil }
-        return Renderer(options: options).render(blocks)
+        let result = Renderer(options: options).render(Self.blocks(html))
+        return result.markdown.isEmpty ? nil : result
     }
 
     /// The blocks of `html`, empty if it can't be parsed.

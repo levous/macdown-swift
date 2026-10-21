@@ -34,7 +34,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Effective styles: before the walk, parse `<style>` blocks (AppKit's `p.pN`/`span.sN` classes) and merge class rules with inline `style` attributes into each element's effective `font-weight`, `font-style`, `text-decoration`, `font-family`; the emphasis, inline-code and code-editor rules read only effective styles (needed by FR-6 for Xcode/Terminal, which write RTF only, and by FR-22/FR-24); tests
 - [x] Text handling (FR-20): browser whitespace collapse outside `pre`, entity decoding (`&nbsp;` → space), trailing-space trim; tests
 - [x] Escaping (FR-20): `\ * _ [ ] < > ` `` ` `` `~` in text runs; `# > + - =` and `1.`/`1)` only at line start; `|` in table cells; tests for under- and over-escaping (no `1\.` mid-sentence)
-- [ ] Output rules (FR-21, FR-9): one blank line between blocks, no leading blank lines, trailing newline only after a block, single-paragraph result flagged inline; tests
+- [x] Output rules (FR-21, FR-9): one blank line between blocks, no leading blank lines, trailing newline only after a block, single-paragraph result flagged inline; tests
 - [ ] Headings and paragraphs (FR-10): `h1`–`h6` → ATX; `p`/text-bearing `div` → paragraphs; `br` → backslash hard break; tests
 - [ ] Emphasis (FR-11): `strong`/`b`/`font-weight ≥ 600` → `**`; `em`/`i`/`font-style: italic` → `*`; `del`/`s`/`strike`/`line-through` → `~~`; `font-weight: normal` cancels an outer bold; adjacent/nested runs merge cleanly, whitespace moved outside markers; tests
 - [ ] Inline code (FR-12): `code`, `kbd`, monospace `font-family` → backtick spans sized past embedded backtick runs, space padding when content starts/ends with a backtick; no escaping inside; tests

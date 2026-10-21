@@ -11,12 +11,16 @@ extension HTMLToMarkdown {
     struct Renderer {
         let options: Options
 
+        /// The blocks separated by one blank line (FR-21); a lone paragraph
+        /// has no newline, to be inserted inline (FR-9).
         func render(_ blocks: [Block]) -> Result {
-            let markdown = blocks.map(render).joined(separator: "\n\n")
-            if blocks.count == 1, case .paragraph = blocks[0] {
+            let rendered = blocks.map { (block: $0, text: render($0).trimmingCharacters(in: .newlines)) }
+                .filter { !$0.text.isEmpty }
+            let markdown = rendered.map(\.text).joined(separator: "\n\n")
+            if rendered.count == 1, case .paragraph = rendered[0].block {
                 return Result(markdown: markdown, isInline: true)
             }
-            return Result(markdown: markdown + "\n", isInline: false)
+            return Result(markdown: markdown.isEmpty ? "" : markdown + "\n", isInline: false)
         }
 
         func render(_ block: Block) -> String {

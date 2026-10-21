@@ -241,3 +241,26 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<p>1. Not a list *really*</p>") == #"1\. Not a list \*really\*"#)
     }
 }
+
+/// Blocks are separated by one blank line, with no blank lines at the
+/// start, and a trailing newline only after blocks (FR-9, FR-21).
+@Suite struct HTMLToMarkdownOutputTests {
+    let renderer = HTMLToMarkdown.Renderer(options: pasteTestOptions)
+    typealias Block = HTMLToMarkdown.Block
+
+    func paragraph(_ text: String) -> Block { .paragraph([.text(text, .init())]) }
+
+    @Test func emptyBlocksAddNoBlankLines() {
+        #expect(markdown("<p></p><br><p>a</p><div> <br> </div><p></p><p>b</p><p>&nbsp;</p>") == "a\n\nb\n")
+    }
+
+    @Test func blocksWithBlankEdgesAreTrimmed() {
+        let result = renderer.render([paragraph("one"), .paragraph([]), paragraph("two")])
+        #expect(result == .init(markdown: "one\n\ntwo\n", isInline: false))
+    }
+
+    @Test func oneParagraphIsInlineWithoutNewline() {
+        #expect(renderer.render([paragraph("only")]) == .init(markdown: "only", isInline: true))
+        #expect(markdown("<div><div><p>nested <b>only</b></p></div></div>")?.hasSuffix("\n") == false)
+    }
+}
