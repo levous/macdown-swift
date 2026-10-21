@@ -35,6 +35,9 @@ extension HTMLToMarkdown {
                     content.insert("\\", at: content.index(content.endIndex, offsetBy: -hashes))
                 }
                 return String(repeating: "#", count: level) + " " + content
+            case .code(let language, let text):
+                let fence = String(repeating: "`", count: max(3, Self.longestRun(of: "`", in: text) + 1))
+                return fence + (language ?? "") + "\n" + text + "\n" + fence
             }
         }
 

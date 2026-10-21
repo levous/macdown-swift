@@ -382,3 +382,37 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<p><code><b>bold code</b></code></p>") == "**`bold code`**")
     }
 }
+
+/// Preformatted text as fenced code blocks (FR-13).
+@Suite struct HTMLToMarkdownCodeBlockTests {
+    @Test func fencedWithLanguage() {
+        #expect(markdown(#"<pre><code class="language-swift">let a = 1&#10;print(a)&#10;</code></pre>"#)
+                    == "```swift\nlet a = 1\nprint(a)\n```\n")
+        #expect(markdown(#"<pre class="lang-python">x = 1</pre>"#) == "```python\nx = 1\n```\n")
+        #expect(markdown("<pre>plain</pre>") == "```\nplain\n```\n")
+    }
+
+    @Test func textIsVerbatim() {
+        #expect(markdown("<pre>  indented\n    *more* _b_ &lt;c&gt;\n\n  after blank</pre>")
+                    == "```\n  indented\n    *more* _b_ <c>\n\n  after blank\n```\n")
+    }
+
+    /// MacDown's preview: Prism's token spans inside a wrapper div.
+    @Test func highlightingSpansAreText() {
+        #expect(markdown(#"<div><pre class="language-js"><code class="language-js"><span class="token keyword" style="color: blue">let</span> x <span class="token operator">=</span> 1</code></pre></div>"#)
+                    == "```js\nlet x = 1\n```\n")
+    }
+
+    @Test func lineBreakElements() {
+        #expect(markdown("<pre>a<br>b<br/>c</pre>") == "```\na\nb\nc\n```\n")
+    }
+
+    @Test func fenceIsLongerThanBackticksInside() {
+        #expect(markdown("<pre>```\ncode\n```</pre>") == "````\n```\ncode\n```\n````\n")
+    }
+
+    @Test func betweenParagraphs() {
+        #expect(markdown("<p>Before</p><pre>x</pre><p>After</p>") == "Before\n\n```\nx\n```\n\nAfter\n")
+        #expect(markdown("<pre>\n\n</pre><p>Only</p>") == "Only")
+    }
+}

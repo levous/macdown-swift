@@ -21,6 +21,8 @@ extension HTMLToMarkdown {
     enum Block: Equatable {
         case paragraph([Inline])
         case heading(Int, [Inline])
+        /// A code block's language, if named, and its text.
+        case code(String?, String)
     }
 
     struct Walker {
@@ -70,7 +72,55 @@ extension HTMLToMarkdown {
                 Self.trimWhitespace(&inlines)
                 return inlines.isEmpty ? [] : [.heading(level, inlines)]
             }
+            if tag == "pre" {
+                return Self.codeBlock(element).map { [$0] } ?? []
+            }
             return blocks(in: element, style: style)
+        }
+
+        /// A `pre` element's text, verbatim, as a code block (FR-13).
+        static func codeBlock(_ pre: XMLElement) -> Block? {
+            var text = ""
+            func visit(_ node: XMLNode) {
+                switch node.kind {
+                case .text:
+                    text += node.stringValue ?? ""
+                case .element:
+                    guard let element = node as? XMLElement else { return }
+                    let tag = element.localName?.lowercased() ?? ""
+                    if tag == "br" {
+                        text += "\n"
+                        return
+                    }
+                    let isBlock = blockElements.contains(tag)
+                    if isBlock, !text.isEmpty, !text.hasSuffix("\n") { text += "\n" }
+                    element.children?.forEach(visit)
+                    if isBlock, !text.hasSuffix("\n") { text += "\n" }
+                default:
+                    break
+                }
+            }
+            pre.children?.forEach(visit)
+            // HTML drops a newline right after <pre>.
+            if text.hasPrefix("\n") { text.removeFirst() }
+            while text.last?.isNewline == true { text.removeLast() }
+            guard text.contains(where: { !$0.isWhitespace }) else { return nil }
+            return .code(language(of: pre), text)
+        }
+
+        /// The language named by a `language-x` or `lang-x` class on the
+        /// `pre` or the `code` inside it.
+        static func language(of pre: XMLElement) -> String? {
+            let code = pre.elements(forName: "code").first
+            for element in [pre, code].compactMap(\.self) {
+                let classes = element.attribute(forName: "class")?.stringValue?.split(whereSeparator: \.isWhitespace) ?? []
+                for name in classes {
+                    for prefix in ["language-", "lang-"] where name.hasPrefix(prefix) && name.count > prefix.count {
+                        return String(name.dropFirst(prefix.count))
+                    }
+                }
+            }
+            return nil
         }
 
         /// The inline content of a node. Block elements met here (inside a
