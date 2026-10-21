@@ -192,3 +192,52 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(runs == ["a\u{a0}b"])
     }
 }
+
+/// Characters are escaped only where they'd change the Markdown (FR-20).
+@Suite struct HTMLToMarkdownEscapingTests {
+    func escaped(_ text: String) -> String {
+        HTMLToMarkdown.Renderer.escape(text, atLineStart: true)
+    }
+
+    @Test func markupCharacters() {
+        #expect(escaped("2 * 3, [link], `tick`, ~tilde~") == #"2 \* 3, \[link\], \`tick\`, \~tilde\~"#)
+    }
+
+    @Test func underscoresOnlyAtWordBoundaries() {
+        #expect(escaped("snake_case and _word_ and __init__") == #"snake_case and \_word\_ and \_\_init\_\_"#)
+    }
+
+    @Test func backslashesOnlyBeforePunctuation() {
+        #expect(escaped(##"C:\Users\me and a\*b and end\"##) == ##"C:\Users\me and a\\\*b and end\"##)
+    }
+
+    @Test func angleBracketsAndAmpersands() {
+        #expect(escaped("<div> and 1 < 2 and a > b, </p>, <!-- x") == #"\<div> and 1 < 2 and a > b, \</p>, \<!-- x"#)
+        #expect(escaped("AT&T &amp; &#123; & more") == #"AT&T \&amp; \&#123; & more"#)
+    }
+
+    @Test func blockMarkersAtLineStart() {
+        #expect(escaped("# not a heading") == "\\# not a heading")
+        #expect(escaped("### three") == "\\### three")
+        #expect(escaped("#hashtag") == "#hashtag")
+        #expect(escaped("> not a quote") == #"\> not a quote"#)
+        #expect(escaped("- not an item") == #"\- not an item"#)
+        #expect(escaped("+ plus") == #"\+ plus"#)
+        #expect(escaped("1. First") == #"1\. First"#)
+        #expect(escaped("12) Twelfth") == #"12\) Twelfth"#)
+        #expect(escaped("===") == #"\==="#)
+        #expect(escaped("---") == #"\---"#)
+        #expect(escaped("-5 degrees") == "-5 degrees")
+        #expect(escaped("1.5 litres") == "1.5 litres")
+    }
+
+    @Test func blockMarkersElsewhereAreLeftAlone() {
+        let text = "Chapter 1. Begins - then + more > less # tag ==="
+        #expect(HTMLToMarkdown.Renderer.escape(text, atLineStart: false) == text)
+        #expect(escaped(text) == text)
+    }
+
+    @Test func paragraphsAreEscaped() {
+        #expect(markdown("<p>1. Not a list *really*</p>") == #"1\. Not a list \*really\*"#)
+    }
+}
