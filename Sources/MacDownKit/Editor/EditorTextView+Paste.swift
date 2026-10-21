@@ -19,6 +19,21 @@ extension EditorTextView {
         return super.readSelection(from: pasteboard, type: type)
     }
 
+    /// AppKit only reads the types below on to the method above, so image
+    /// data alone would go nowhere.
+    public override func readSelection(from pasteboard: NSPasteboard) -> Bool {
+        if !pastesPlainText, pasteConverted(from: pasteboard) { return true }
+        return super.readSelection(from: pasteboard)
+    }
+
+    /// Formatted text and image data are readable too, so Paste is enabled
+    /// for them and they can be dropped.
+    public override var readablePasteboardTypes: [NSPasteboard.PasteboardType] {
+        super.readablePasteboardTypes + [.html, PasteboardContent.webArchive, .rtf, .rtfd,
+                                         .png, PasteboardContent.jpeg, .tiff]
+            .filter { !super.readablePasteboardTypes.contains($0) }
+    }
+
     /// Paste and Match Style: always the plain text (FR-4).
     public override func pasteAsPlainText(_ sender: Any?) {
         pastesPlainText = true
@@ -96,18 +111,14 @@ extension EditorTextView {
     // MARK: - Code blocks
 
     /// Whether `location` is inside a fenced or indented code block (FR-5):
-    /// from the latest parse, or, when that's behind the text, by scanning
-    /// the fences above it.
+    /// by scanning the fences above it, which also works when the latest
+    /// parse is behind the text, or, for indented code, from the parse.
     func isInCodeBlock(_ location: Int) -> Bool {
-        if let documentBlocks, documentBlocks.source == string {
-            let length = (string as NSString).length
-            return documentBlocks.blocks.contains { block in
-                // An unclosed fence runs to the end of the document.
-                block.kind == .codeBlock && (NSLocationInRange(location, block.range)
-                    || (location == length && NSMaxRange(block.range) == length))
-            }
+        if isInFencedBlock(location) { return true }
+        guard let documentBlocks, documentBlocks.source == string else { return false }
+        return documentBlocks.blocks.contains { block in
+            block.kind == .codeBlock && NSLocationInRange(location, block.range)
         }
-        return isInFencedBlock(location)
     }
 
     /// Whether `location` is after an opening fence that isn't closed
