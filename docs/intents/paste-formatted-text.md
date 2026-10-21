@@ -172,6 +172,8 @@ When the clipboard holds image data and no HTML, RTF or text (a screenshot copie
 
 Dated, newest first.
 
+**Bold keywords don't stop code detection (2026-10-21).** "Code editors" above says emphasis makes content not code. But JetBrains IDEs, and some Xcode themes, bold keywords, so their code would be converted, which the code-safety requirement rules out. Content is treated as code when all its visible text is monospace (or in code blocks) and it has no links, images, headings, lists, quotes or tables; bold, italic and colors don't count. A document set entirely in a monospace font with bold words then pastes as plain text, which is the safer mistake.
+
 **Conversion stays on the main actor (2026-10-21).** Measured in a release build on an M-series Mac: `help.md`'s rendered HTML (30 KB, a long article) converts in 11 ms, and 40 copies of the Google Docs fixture (360 KB of HTML, about 3,000 styled spans) in 44 ms. Both are under the 50 ms goal, so pastes convert synchronously and there's no off-main-actor path. Most of the time was parsing `style` attributes; reading only the properties the converter uses, from the raw bytes, took the Google Docs case from 106 ms to 44 ms.
 
 **Parser: Foundation's `XMLDocument` with `.documentTidyHTML` (2026-10-21).** The Phase 0 spike parsed every synthetic fixture (Google Docs, Word, MacDown's preview, a browser fragment, VS Code, and AppKit's HTML for TextEdit and Xcode RTF) and kept all visible text. Findings:

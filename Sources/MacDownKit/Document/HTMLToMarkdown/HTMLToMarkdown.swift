@@ -33,6 +33,9 @@ public struct HTMLToMarkdown: Sendable {
         /// A single paragraph, inserted inline without paragraph breaks
         /// around it (FR-9).
         public var isInline: Bool
+        /// The HTML looks like code from a code editor or terminal, to be
+        /// pasted as plain text instead (FR-6).
+        public var isCode = false
     }
 
     public var options: Options
@@ -44,8 +47,34 @@ public struct HTMLToMarkdown: Sendable {
     /// The Markdown for `html`, or nil if it can't be parsed or has no
     /// visible content (the caller pastes plain text instead).
     public func convert(_ html: String) -> Result? {
-        let result = Renderer(options: options).render(Self.blocks(html, baseURL: options.baseURL))
+        let blocks = Self.blocks(html, baseURL: options.baseURL)
+        var result = Renderer(options: options).render(blocks)
+        result.isCode = Self.isCode(blocks)
         return result.markdown.isEmpty ? nil : result
+    }
+
+    /// Whether blocks look like code copied from a code editor or terminal
+    /// (FR-6): all their visible text is monospace (or in code blocks), with
+    /// no links, images, headings, lists, quotes or tables. Bold or colored
+    /// keywords, as some editors' themes have, don't count.
+    static func isCode(_ blocks: [Block]) -> Bool {
+        !blocks.isEmpty && blocks.allSatisfy { block in
+            switch block {
+            case .code:
+                return true
+            case .paragraph(let inlines):
+                return inlines.allSatisfy { inline in
+                    switch inline {
+                    case .lineBreak: true
+                    case .image: false
+                    case .text(let text, let style):
+                        style.link == nil && (style.monospace || text.allSatisfy(\.isWhitespace))
+                    }
+                }
+            default:
+                return false
+            }
+        }
     }
 
     /// The blocks of `html`, empty if it can't be parsed.

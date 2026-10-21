@@ -5,7 +5,7 @@
 //  Converting pasted HTML to Markdown (paste intent, FR-9 to FR-21).
 //
 
-import Foundation
+import AppKit
 import Testing
 @testable import MacDownKit
 
@@ -768,5 +768,46 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
             best = min(best, ContinuousClock.now - start)
         }
         #expect(best < .milliseconds(50), "converted in \(best)")
+    }
+}
+
+/// Code copied from a code editor or terminal is pasted as it is: all its
+/// text is monospace, without structure (FR-6).
+@MainActor @Suite struct HTMLToMarkdownCodeDetectionTests {
+    func isCode(_ html: String) -> Bool {
+        HTMLToMarkdown(options: pasteTestOptions).convert(html)?.isCode ?? false
+    }
+
+    @Test func vsCode() throws {
+        #expect(isCode(try #require(try PasteFixture.load("synthetic-vscode").html)))
+    }
+
+    /// Xcode and Terminal write only RTF; AppKit's HTML puts the font in
+    /// classes.
+    @Test func xcode() throws {
+        let fixture = try PasteFixture.load("synthetic-xcode")
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.setData(try #require(fixture.rtf), forType: .rtf)
+        guard case .html(let html, _)? = PasteboardContent.read(from: pasteboard) else {
+            Issue.record("no HTML")
+            return
+        }
+        #expect(isCode(html))
+    }
+
+    /// JetBrains IDEs copy a styled pre, with bold keywords.
+    @Test func boldKeywordsAreStillCode() {
+        #expect(isCode(#"<pre style="font-family:'JetBrains Mono',monospace"><span style="color:#cc7832;font-weight:bold;">fun </span>main() {}</pre>"#))
+        #expect(isCode(#"<div style="font-family: Menlo"><b>let</b> x = 1<br>print(x)</div>"#))
+    }
+
+    @Test func formattedTextIsNotCode() throws {
+        #expect(!isCode(try #require(try PasteFixture.load("synthetic-google-docs").html)))
+        #expect(!isCode("<p>Run <code>make</code> now</p>"))
+        #expect(!isCode(#"<div style="font-family: Menlo"><a href="https://e.com">link</a></div>"#))
+        #expect(!isCode(#"<ul style="font-family: Menlo"><li>item</li></ul>"#))
+        #expect(!isCode(#"<h1 style="font-family: Menlo">Title</h1>"#))
     }
 }
