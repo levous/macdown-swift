@@ -38,20 +38,131 @@ extension HTMLToMarkdown {
             }
         }
 
-        func render(_ inlines: [Inline], atLineStart: Bool = true) -> String {
-            var output = ""
-            var lineStart = atLineStart
-            for inline in inlines {
-                switch inline {
-                case .text(let text, _):
-                    output += Self.escape(text, atLineStart: lineStart)
-                    lineStart = false
-                case .lineBreak:
-                    output += "\\\n"
-                    lineStart = true
+        // MARK: - Inline content
+
+        /// Emphasis, outermost first (FR-11).
+        enum Emphasis: CaseIterable {
+            case strike, bold, italic
+
+            var marker: String {
+                switch self {
+                case .strike: "~~"
+                case .bold: "**"
+                case .italic: "*"
                 }
             }
+
+            func isOn(_ style: TextStyle) -> Bool {
+                switch self {
+                case .strike: style.strike
+                case .bold: style.bold
+                case .italic: style.italic
+                }
+            }
+
+            func set(_ on: Bool, in style: inout TextStyle) {
+                switch self {
+                case .strike: style.strike = on
+                case .bold: style.bold = on
+                case .italic: style.italic = on
+                }
+            }
+        }
+
+        func render(_ inlines: [Inline], atLineStart: Bool = true) -> String {
+            var lineStart = atLineStart
+            return render(Self.joiningSpaces(inlines), levels: Emphasis.allCases[...], lineStart: &lineStart)
+        }
+
+        /// Runs grouped by each emphasis in turn: a group with the emphasis on
+        /// is wrapped in its marker, with the whitespace at its edges moved
+        /// outside.
+        private func render(_ inlines: [Inline], levels: ArraySlice<Emphasis>,
+                            lineStart: inout Bool) -> String {
+            guard let level = levels.first else {
+                var output = ""
+                for inline in inlines {
+                    switch inline {
+                    case .text(let text, _):
+                        output += Self.escape(text, atLineStart: lineStart)
+                        lineStart = false
+                    case .lineBreak:
+                        output += "\\\n"
+                        lineStart = true
+                    }
+                }
+                return output
+            }
+            var output = ""
+            for group in Self.groups(inlines, by: level) {
+                guard group.on else {
+                    output += render(group.inlines, levels: levels.dropFirst(), lineStart: &lineStart)
+                    continue
+                }
+                var inner = false
+                let content = render(group.inlines, levels: levels.dropFirst(), lineStart: &inner)
+                let leading = content.prefix(while: { $0 == " " })
+                let trailing = content.reversed().prefix(while: { $0 == " " })
+                var core = content.dropFirst(leading.count).dropLast(trailing.count)
+                guard !core.isEmpty else {
+                    output += content
+                    continue
+                }
+                // A backslash just before the closing marker would escape it.
+                let backslashes = core.reversed().prefix(while: { $0 == "\\" }).count
+                if backslashes % 2 == 1 { core += "\\" }
+                output += leading + level.marker + core + level.marker + String(trailing)
+                lineStart = false
+            }
             return output
+        }
+
+        /// Consecutive inlines with the same setting of `style`; a line break
+        /// is a group of its own, so markers close before it.
+        private static func groups(_ inlines: [Inline], by emphasis: Emphasis)
+            -> [(on: Bool, inlines: [Inline])] {
+            var groups: [(on: Bool, inlines: [Inline])] = []
+            for inline in inlines {
+                let on: Bool
+                switch inline {
+                case .text(_, let textStyle): on = emphasis.isOn(textStyle)
+                case .lineBreak:
+                    groups.append((false, [inline]))
+                    continue
+                }
+                if let last = groups.last, last.on == on, last.inlines.last != .lineBreak {
+                    groups[groups.count - 1].inlines.append(inline)
+                } else {
+                    groups.append((on, [inline]))
+                }
+            }
+            return groups
+        }
+
+        /// Whitespace between two runs takes the emphasis they share, so
+        /// `**one** **two**` is written `**one two**`.
+        static func joiningSpaces(_ inlines: [Inline]) -> [Inline] {
+            var result = inlines
+            func style(near index: Int, step: Int) -> TextStyle? {
+                var index = index + step
+                while result.indices.contains(index) {
+                    guard case .text(let text, let style) = result[index] else { return nil }
+                    if !text.allSatisfy(\.isWhitespace) { return style }
+                    index += step
+                }
+                return nil
+            }
+            for index in result.indices {
+                guard case .text(let text, var textStyle) = result[index], text.allSatisfy(\.isWhitespace)
+                else { continue }
+                let before = style(near: index, step: -1), after = style(near: index, step: 1)
+                for emphasis in Emphasis.allCases {
+                    emphasis.set(before.map(emphasis.isOn) == true && after.map(emphasis.isOn) == true,
+                                 in: &textStyle)
+                }
+                result[index] = .text(text, textStyle)
+            }
+            return result
         }
 
         // MARK: - Escaping

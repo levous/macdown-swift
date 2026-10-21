@@ -307,3 +307,47 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<div>One</div><div><div>Two</div></div><p>Three</p>") == "One\n\nTwo\n\nThree\n")
     }
 }
+
+/// Bold, italic and strikethrough (FR-11).
+@Suite struct HTMLToMarkdownEmphasisTests {
+    @Test func markers() {
+        #expect(markdown("<p><b>bold</b> and <i>italic</i> and <s>struck</s></p>") == "**bold** and *italic* and ~~struck~~")
+        #expect(markdown("<p>in<b>side</b>word</p>") == "in**side**word")
+    }
+
+    @Test func nesting() {
+        #expect(markdown("<p><b>bold <i>both</i></b></p>") == "**bold *both***")
+        #expect(markdown("<p><b><i>both</i></b> <s><b>all</b></s></p>") == "***both*** ~~**all**~~")
+    }
+
+    /// Google Docs writes each run as its own styled span.
+    @Test func adjacentRunsMerge() {
+        #expect(markdown(#"<p><span style="font-weight:700">one</span><span style="font-weight:700"> two</span> <span style="font-weight:700">three</span></p>"#)
+                    == "**one two three**")
+        #expect(markdown("<p><i>a</i><i>b</i></p>") == "*ab*")
+    }
+
+    @Test func whitespaceMovesOutsideMarkers() {
+        #expect(markdown("<p>a<b> spaced </b>b</p>") == "a **spaced** b")
+        #expect(markdown("<p><b> </b>text<i> </i></p>") == "text")
+    }
+
+    @Test func normalWeightInsideBold() {
+        #expect(markdown(#"<p><b>bold <span style="font-weight:normal">plain</span> bold</b></p>"#) == "**bold** plain **bold**")
+    }
+
+    @Test func lineBreaksCloseMarkers() {
+        #expect(markdown("<p><b>one<br>two</b></p>") == "**one**\\\n**two**")
+    }
+
+    @Test func textInsideMarkersIsEscaped() {
+        #expect(markdown("<p><b>*star*</b></p>") == "**\\*star\\***")
+        #expect(markdown("<p><b>1. Bold</b></p>") == "**1. Bold**")
+        // A backslash right before a closing marker stays a backslash.
+        #expect(markdown(#"<p><i>path\</i></p>"#) == #"*path\\*"#)
+    }
+
+    @Test func headingsKeepItalic() {
+        #expect(markdown("<h2>A <i>b</i> <b>c</b></h2>") == "## A *b* c\n")
+    }
+}
