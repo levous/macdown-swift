@@ -6,7 +6,15 @@
 import AppKit
 import CPegMarkdown
 import Testing
+
 @testable import MacDownKit
+
+/// Whether a color is the stylesheets' ff0000. Checking only the red
+/// component would also match white, the default text color in Dark Mode.
+func isPureRed(_ color: NSColor?) -> Bool {
+    guard let color = color?.usingColorSpace(.deviceRGB) else { return false }
+    return color.redComponent == 1 && color.greenComponent == 0 && color.blueComponent == 0
+}
 
 /// Highlight spans from either engine: PEG, or the swift-markdown model.
 func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
@@ -49,18 +57,16 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
             // As after a parse: spans arrive once the text is laid out.
             highlighter.update(highlightElements(textView.string, engine: engine))
         }
-        func red() -> CGFloat? {
-            let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
-                                                        effectiveRange: nil) as? NSColor
-            return color?.usingColorSpace(.deviceRGB)?.redComponent
+        func red() -> Bool {
+            isPureRed(textView.textStorage?.attribute(.foregroundColor, at: 2, effectiveRange: nil) as? NSColor)
         }
         // The hoedown engine parses in the background, which can take longer
         // than the first wait while the rest of the suite runs in parallel.
         let deadline = ContinuousClock.now + .seconds(5)
-        while red() != 1.0, ContinuousClock.now < deadline {
+        while !red(), ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(50))
         }
-        #expect(red() == 1.0)
+        #expect(red())
     }
 }
 
@@ -88,9 +94,8 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
     }
 
     func isRed(_ textView: NSTextView, at location: Int) -> Bool {
-        let color = textView.textStorage?.attribute(.foregroundColor, at: location,
-                                                    effectiveRange: nil) as? NSColor
-        return color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0
+        isPureRed(textView.textStorage?.attribute(.foregroundColor, at: location,
+                                                  effectiveRange: nil) as? NSColor)
     }
 
     func location(of string: String) -> Int {
