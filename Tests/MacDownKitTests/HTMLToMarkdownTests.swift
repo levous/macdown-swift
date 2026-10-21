@@ -676,3 +676,43 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<table><tr><td> </td></tr></table><p>x</p>") == "x")
     }
 }
+
+/// Formatting without a Markdown equivalent keeps its text; what isn't
+/// content is dropped (FR-19).
+@Suite struct HTMLToMarkdownDroppedTests {
+    @Test func formattingWithoutEquivalentKeepsText() {
+        #expect(markdown("<p>H<sub>2</sub>O and x<sup>2</sup>, <u>under</u>, <mark>hi</mark>, <font color=red>red</font>, <span style=\"color: blue; font-size: 20px\">big</span></p>")
+                    == "H2O and x2, under, hi, red, big")
+    }
+
+    @Test func nonContentIsDropped() {
+        #expect(markdown("<p>a<script>alert(1)</script>b</p><style>p { color: red }</style><noscript>no</noscript><template><p>t</p></template>")
+                    == "ab")
+        #expect(markdown(#"<p>a<svg viewBox="0 0 1 1"><text>t</text></svg><iframe src="x"></iframe><select><option>o</option></select></p>"#) == "a")
+    }
+
+    /// Docs sites put a Copy button next to code.
+    @Test func buttonsAreDropped() {
+        #expect(markdown("<div><button>Copy</button><pre>code</pre></div>") == "```\ncode\n```\n")
+    }
+
+    @Test func hiddenContentIsDropped() {
+        #expect(markdown(#"<p>shown<span style="display:none">hidden</span></p><div style="display: none"><p>gone</p></div>"#) == "shown")
+    }
+
+    /// Every word the reader sees survives, whatever the markup.
+    @Test func visibleTextIsPreserved() {
+        let html = """
+            <h1>Title words</h1><p>Some <b>bold</b>, <i>italic</i> and <code>code</code> with a \
+            <a href="https://e.com">link here</a>.</p><ul><li>first item<ul><li>nested item</li></ul></li></ul>\
+            <blockquote><p>quoted text</p></blockquote><pre>let code = block</pre>\
+            <table><tr><th>head cell</th></tr><tr><td>body cell</td></tr></table><p>H<sub>2</sub>O end</p>
+            """
+        func words(_ text: String) -> [String] {
+            text.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
+        }
+        let expected = words("Title words Some bold italic and code with a link here first item nested item quoted text let code block head cell body cell H2O end")
+        let converted = words((markdown(html) ?? "").replacingOccurrences(of: "(https://e.com)", with: ""))
+        #expect(converted == expected)
+    }
+}

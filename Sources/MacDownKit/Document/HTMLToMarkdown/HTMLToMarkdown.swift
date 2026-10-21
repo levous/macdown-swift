@@ -66,6 +66,10 @@ public struct HTMLToMarkdown: Sendable {
 
     private static let html5BlockPattern = try! NSRegularExpression(
         pattern: "<(/?)(?:\(html5Blocks.joined(separator: "|")))(?=[\\s>/])", options: .caseInsensitive)
+    /// HTML5 elements whose content isn't text; Tidy would drop the tags
+    /// and keep the content.
+    private static let nonTextPattern = try! NSRegularExpression(
+        pattern: "<(template|svg)\\b.*?</\\1\\s*>", options: [.caseInsensitive, .dotMatchesLineSeparators])
     private static let html5InlinePattern = try! NSRegularExpression(
         pattern: "<(/?)(?:\(html5Inlines.joined(separator: "|")))(?=[\\s>/])", options: .caseInsensitive)
 
@@ -73,9 +77,10 @@ public struct HTMLToMarkdown: Sendable {
     /// body: nodes don't keep their document alive.
     static func parse(_ html: String) -> (XMLDocument, XMLElement)? {
         guard html.contains(where: { !$0.isWhitespace }) else { return nil }
-        var source = html
-        let range = NSRange(source.startIndex..., in: source)
-        source = html5BlockPattern.stringByReplacingMatches(in: source, range: range, withTemplate: "<$1div")
+        var source = nonTextPattern.stringByReplacingMatches(
+            in: html, range: NSRange(html.startIndex..., in: html), withTemplate: "")
+        source = html5BlockPattern.stringByReplacingMatches(
+            in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "<$1div")
         source = html5InlinePattern.stringByReplacingMatches(
             in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "<$1span")
         // XMLDocument only repairs (tidies) input that isn't well-formed XML

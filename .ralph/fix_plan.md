@@ -45,7 +45,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Task lists (FR-16): `input type=checkbox` in `li` → `[ ]`/`[x]` after the marker; tests
 - [x] Block quotes and rules (FR-17): nested `> `; `hr` → `---`, or `***` when the marker is `-`; tests
 - [x] Tables (FR-18): pipe table when cells are inline-only and no `rowspan`/`colspan`; header from `thead`/`th` or first row; alignment from `align`/`text-align`; `|` escaped; otherwise raw HTML block; tests for simple and fallback tables
-- [ ] Dropped elements (FR-19): `sup`/`sub`/`mark`/`u` → text; `script`/`style`/`head`/`title`/comments/`meta`/`link` dropped; test that visible text is preserved
+- [x] Dropped elements (FR-19): `sup`/`sub`/`mark`/`u` → text; `script`/`style`/`head`/`title`/comments/`meta`/`link` dropped; test that visible text is preserved
 - [ ] Round-trip harness (`Tests/MacDownKitTests/PasteRoundTripTests.swift`): for each `Resources/Corpus` document, render with `HTMLRenderer`, convert, render again, compare bodies ignoring `data-source-line` (reuse `HTMLDiffHarness` normalization); unreviewed differences fail; `MACDOWN_DIFF_REPORT` writes a report
 - [ ] Review round-trip differences; fix real bugs; list expected ones (extended syntax, footnotes) in `Tests/MacDownKitTests/Resources/reviewed-paste-diffs.json`
 - [ ] Performance test: long-article fixture converts in < 50 ms; record the number. If over, add the off-main-actor path for pastes above a size threshold (NFR Performance)

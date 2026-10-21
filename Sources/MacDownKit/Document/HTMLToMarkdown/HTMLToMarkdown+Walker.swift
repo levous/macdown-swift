@@ -65,6 +65,21 @@ extension HTMLToMarkdown {
             "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul",
         ]
 
+        /// Elements that aren't content, dropped with everything in them
+        /// (FR-19).
+        static let droppedElements: Set<String> = [
+            "audio", "button", "canvas", "embed", "head", "iframe", "link", "meta", "noscript",
+            "object", "script", "select", "style", "svg", "template", "title", "video",
+        ]
+
+        /// Whether an element and its content are left out: not content, or
+        /// not shown.
+        func isDropped(_ element: XMLElement) -> Bool {
+            if Self.droppedElements.contains(element.localName?.lowercased() ?? "") { return true }
+            guard let style = element.attribute(forName: "style")?.stringValue else { return false }
+            return HTMLToMarkdown.StyleSheet.declarations(style)["display"]?.lowercased() == "none"
+        }
+
         /// The blocks in a container. This is the one place siblings are
         /// grouped: consecutive inline nodes make an implicit paragraph.
         func blocks(in container: XMLElement, style: TextStyle = .init()) -> [Block] {
@@ -75,6 +90,7 @@ extension HTMLToMarkdown {
                 pending = []
             }
             for child in container.children ?? [] {
+                if let element = child as? XMLElement, isDropped(element) { continue }
                 if let element = child as? XMLElement,
                    Self.blockElements.contains(element.localName?.lowercased() ?? "") {
                     flush()
@@ -225,7 +241,7 @@ extension HTMLToMarkdown {
             case .text:
                 return [.text(node.stringValue ?? "", style)]
             case .element:
-                guard let element = node as? XMLElement else { return [] }
+                guard let element = node as? XMLElement, !isDropped(element) else { return [] }
                 let tag = element.localName?.lowercased() ?? ""
                 if tag == "br" { return [.lineBreak] }
                 var style = self.style(of: element, inheriting: style)
