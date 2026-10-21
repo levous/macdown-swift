@@ -8,6 +8,76 @@
 import AppKit
 
 extension EditorTextView {
+    // MARK: - Paste
+
+    /// Formatted text is pasted as Markdown and image data as an image;
+    /// anything else as usual.
+    public override func paste(_ sender: Any?) {
+        if !pasteConverted(from: .general) {
+            super.paste(sender)
+        }
+    }
+
+    /// Inserts the Markdown for `pasteboard`'s formatted text, or its
+    /// image, in place of the selection, as one undoable change. False when
+    /// there's nothing to convert, so the caller pastes as usual: plain
+    /// text, code (FR-6), a paste into a code block (FR-5), or formatted
+    /// text with the setting off (FR-27; images are pasted anyway, FR-34).
+    @discardableResult
+    func pasteConverted(from pasteboard: NSPasteboard) -> Bool {
+        let selection = selectedRange()
+        guard !isInCodeBlock(selection.location),
+              let content = PasteboardContent.read(from: pasteboard)
+        else { return false }
+        switch content {
+        case .image(let data, let mime):
+            insertPasted(ImageMarkup.dataURI(data, mime: mime), isInline: true)
+        case .html(let html, let baseURL):
+            guard convertsPastedFormatting else { return false }
+            var options = pasteOptions
+            options.baseURL = baseURL
+            guard let result = HTMLToMarkdown(options: options).convert(html), !result.isCode
+            else { return false }
+            insertPasted(result.markdown, isInline: result.isInline)
+        }
+        return true
+    }
+
+    /// Inserts pasted Markdown as its own undo step (not merged with the
+    /// typing before it), through the usual text-change path so the
+    /// document sees it like typing (FR-7). Blocks are set off from the
+    /// text around them by blank lines.
+    private func insertPasted(_ markdown: String, isInline: Bool) {
+        let range = selectedRange()
+        var text = markdown
+        if !isInline {
+            let padding = Self.blockPadding(around: range, in: string as NSString)
+            text = padding.before + text + padding.after
+        }
+        breakUndoCoalescing()
+        insertText(text, replacementRange: range)
+        breakUndoCoalescing()
+    }
+
+    /// What to add around pasted blocks (ending in a newline) at `range` so
+    /// they're separated from the text before and after by a blank line.
+    static func blockPadding(around range: NSRange, in text: NSString) -> (before: String, after: String) {
+        var before = ""
+        if range.location > 0 {
+            let lineStart = text.lineRange(for: NSRange(location: range.location, length: 0)).location
+            if range.location > lineStart {
+                before = "\n\n"
+            } else {
+                let previous = text.lineRange(for: NSRange(location: range.location - 1, length: 0))
+                if !text.substring(with: previous).allSatisfy(\.isWhitespace) { before = "\n" }
+            }
+        }
+        let end = NSMaxRange(range)
+        let after = end < text.length && !CharacterSet.newlines.contains(UnicodeScalar(text.character(at: end)) ?? " ")
+            ? "\n" : ""
+        return (before, after)
+    }
+
     // MARK: - Code blocks
 
     /// Whether `location` is inside a fenced or indented code block (FR-5):

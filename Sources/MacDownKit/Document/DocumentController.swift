@@ -96,7 +96,8 @@ public final class DocumentController: NSObject {
         .editorBaseFontInfo, .editorHorizontalInset, .markdownEngine,
         .editorVerticalInset, .editorWidthLimited, .editorMaximumWidth,
         .editorLineSpacing, .editorOnRight, .editorStyleName,
-        .editorShowWordCount, .editorScrollsPastEnd,
+        .editorShowWordCount, .editorScrollsPastEnd, .editorConvertsPastedFormatting,
+        .editorUnorderedListMarkerType, .editorConvertTabs,
     ]
 
     // MARK: - Init
@@ -858,6 +859,15 @@ public final class DocumentController: NSObject {
 
         if changedKey == nil || changedKey == .editorScrollsPastEnd {
             editor.scrollsPastEnd = preferences.editorScrollsPastEnd
+        }
+
+        if changedKey == nil || [.editorConvertsPastedFormatting, .editorUnorderedListMarkerType,
+                                 .editorConvertTabs].contains(changedKey) {
+            editor.convertsPastedFormatting = preferences.editorConvertsPastedFormatting
+            // The marker setting includes the space after it.
+            editor.pasteOptions = .init(
+                listMarker: preferences.editorUnorderedListMarker.trimmingCharacters(in: .whitespaces),
+                indent: preferences.editorConvertTabs ? "    " : "\t")
         }
 
         if changedKey == nil {

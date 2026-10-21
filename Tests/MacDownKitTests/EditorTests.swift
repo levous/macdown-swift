@@ -446,3 +446,93 @@ extension EditorCodeBlockTests {
         #expect(editor(text, parsed: text).isInCodeBlock((text as NSString).length))
     }
 }
+
+/// Pasting formatted text and images (FR-1 to FR-3, FR-6, FR-9, FR-33,
+/// FR-34). Each test uses its own named pasteboard.
+@MainActor @Suite struct EditorPasteTests {
+    func editor(_ text: String, selection: NSRange? = nil) -> EditorTextView {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let editor = textView as! EditorTextView
+        editor.string = text
+        editor.pasteOptions = pasteTestOptions
+        editor.setSelectedRange(selection ?? NSRange(location: (text as NSString).length, length: 0))
+        return editor
+    }
+
+    func pasteboard(_ types: [NSPasteboard.PasteboardType: String]) -> NSPasteboard {
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        pasteboard.clearContents()
+        let item = NSPasteboardItem()
+        for (type, string) in types { item.setString(string, forType: type) }
+        pasteboard.writeObjects([item])
+        return pasteboard
+    }
+
+    /// Pastes `types` into `editor`; whether it was converted.
+    func paste(_ types: [NSPasteboard.PasteboardType: String], into editor: EditorTextView) -> Bool {
+        let pasteboard = pasteboard(types)
+        defer { pasteboard.releaseGlobally() }
+        return editor.pasteConverted(from: pasteboard)
+    }
+
+    @Test func inlineParagraph() {
+        let editor = editor("Say ")
+        #expect(paste([.html: "<p><b>hello</b> world</p>", .string: "hello world"], into: editor))
+        #expect(editor.string == "Say **hello** world")
+        #expect(editor.selectedRange() == NSRange(location: editor.string.utf16.count, length: 0))
+    }
+
+    @Test func replacesTheSelection() {
+        let editor = editor("one two three", selection: NSRange(location: 4, length: 3))
+        #expect(paste([.html: "<i>2</i>", .string: "2"], into: editor))
+        #expect(editor.string == "one *2* three")
+    }
+
+    /// Blocks are set off from the text around them by blank lines.
+    @Test func blocksGetBlankLines() {
+        let html = "<h1>T</h1><p>p</p>"
+        var editor = editor("Foo")
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "Foo\n\n# T\n\np\n")
+        editor = self.editor("A\n\nB", selection: NSRange(location: 3, length: 0))
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "A\n\n# T\n\np\n\nB")
+        editor = self.editor("")
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "# T\n\np\n")
+    }
+
+    @Test func usesTheEditingSettingsAndBaseURL() {
+        let editor = editor("")
+        editor.pasteOptions = .init(listMarker: "+", indent: "\t")
+        #expect(paste([.html: #"<ul><li><a href="x.html">a</a><ul><li>b</li></ul></li></ul>"#,
+                       .init("org.chromium.source-url"): "https://e.com/d/page.html", .string: "a b"], into: editor))
+        #expect(editor.string == "+ [a](https://e.com/d/x.html)\n\t+ b\n")
+    }
+
+    /// Plain text, code and code blocks are left to the usual paste.
+    @Test func notConverted() throws {
+        #expect(!paste([.string: "plain"], into: editor("")))
+        #expect(!paste([.html: try #require(try PasteFixture.load("synthetic-vscode").html), .string: "let"],
+                       into: editor("")))
+        #expect(!paste([.html: "<b>x</b>", .string: "x"], into: editor("```\ncode\n")))
+        let off = editor("")
+        off.convertsPastedFormatting = false
+        #expect(!paste([.html: "<b>x</b>", .string: "x"], into: off))
+        #expect(off.string == "")
+    }
+
+    /// Image data is pasted as a data URI, whatever the setting (FR-34).
+    @Test func images() {
+        for converts in [true, false] {
+            let editor = editor("See ")
+            editor.convertsPastedFormatting = converts
+            let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+            defer { pasteboard.releaseGlobally() }
+            pasteboard.clearContents()
+            pasteboard.setData(Data([0x89, 0x50, 0x4E, 0x47]), forType: .png)
+            #expect(editor.pasteConverted(from: pasteboard))
+            #expect(editor.string == "See ![](data:image/png;base64,iVBORw==)")
+        }
+    }
+}

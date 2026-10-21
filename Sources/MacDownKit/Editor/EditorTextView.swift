@@ -31,6 +31,11 @@ public final class EditorTextView: NSTextView {
     /// where code blocks are when pasting (see EditorTextView+Paste.swift).
     var documentBlocks: (source: String, blocks: [MarkdownDocumentModel.Block])?
 
+    /// Whether Paste converts formatted text to Markdown (FR-27), and how
+    /// it writes it: the writer's list marker and indentation.
+    public var convertsPastedFormatting = true
+    public var pasteOptions = HTMLToMarkdown.Options()
+
     private var storedContentRect: NSRect = .zero
     private var trailingHeight: CGFloat = 0
 
