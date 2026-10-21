@@ -522,6 +522,17 @@ extension EditorCodeBlockTests {
         #expect(off.string == "")
     }
 
+    /// Paste as Markdown converts with the setting off (FR-28).
+    @Test func pasteAsMarkdownIgnoresTheSetting() {
+        let editor = editor("")
+        editor.convertsPastedFormatting = false
+        let pasteboard = pasteboard([.html: "<b>x</b>", .string: "x"])
+        defer { pasteboard.releaseGlobally() }
+        #expect(editor.pasteConverted(from: pasteboard, convertsFormatting: true))
+        #expect(editor.string == "**x**")
+        #expect(editor.responds(to: #selector(EditorTextView.pasteAsMarkdown(_:))))
+    }
+
     /// Image data is pasted as a data URI, whatever the setting (FR-34).
     @Test func images() {
         for converts in [true, false] {

@@ -11,9 +11,17 @@ extension EditorTextView {
     // MARK: - Paste
 
     /// Formatted text is pasted as Markdown and image data as an image;
-    /// anything else as usual.
+    /// anything else as usual. Paste and Match Style (`pasteAsPlainText:`)
+    /// reads the plain text without coming here (FR-4).
     public override func paste(_ sender: Any?) {
         if !pasteConverted(from: .general) {
+            super.paste(sender)
+        }
+    }
+
+    /// Edit ▸ Paste as Markdown: converts even with the setting off (FR-28).
+    @objc public func pasteAsMarkdown(_ sender: Any?) {
+        if !pasteConverted(from: .general, convertsFormatting: true) {
             super.paste(sender)
         }
     }
@@ -22,9 +30,9 @@ extension EditorTextView {
     /// image, in place of the selection, as one undoable change. False when
     /// there's nothing to convert, so the caller pastes as usual: plain
     /// text, code (FR-6), a paste into a code block (FR-5), or formatted
-    /// text with the setting off (FR-27; images are pasted anyway, FR-34).
+    /// text when not converting it (FR-27; images are pasted anyway, FR-34).
     @discardableResult
-    func pasteConverted(from pasteboard: NSPasteboard) -> Bool {
+    func pasteConverted(from pasteboard: NSPasteboard, convertsFormatting: Bool? = nil) -> Bool {
         let selection = selectedRange()
         guard !isInCodeBlock(selection.location),
               let content = PasteboardContent.read(from: pasteboard)
@@ -33,7 +41,7 @@ extension EditorTextView {
         case .image(let data, let mime):
             insertPasted(ImageMarkup.dataURI(data, mime: mime), isInline: true)
         case .html(let html, let baseURL):
-            guard convertsPastedFormatting else { return false }
+            guard convertsFormatting ?? convertsPastedFormatting else { return false }
             var options = pasteOptions
             options.baseURL = baseURL
             guard let result = HTMLToMarkdown(options: options).convert(html), !result.isCode
