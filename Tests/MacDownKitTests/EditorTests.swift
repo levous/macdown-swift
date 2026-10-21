@@ -390,3 +390,59 @@ extension LiveDocumentTests {
         #expect(ImageMarkup.dataURI(contentsOf: directory.appending(path: "missing.png")) == nil)
     }
 }
+
+/// Pasting inside a code block pastes plain text (FR-5): the editor knows
+/// where code blocks are from the latest parse, or by scanning for fences
+/// when the parse is behind the text.
+@MainActor @Suite struct EditorCodeBlockTests {
+    func editor(_ text: String, parsed: String? = nil) -> EditorTextView {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let editor = textView as! EditorTextView
+        editor.string = text
+        if let parsed {
+            editor.documentBlocks = (parsed, MarkdownDocumentModel(parsed, options: .init()).blocks)
+        }
+        return editor
+    }
+
+    func location(of marker: String, in text: String) -> Int {
+        (text as NSString).range(of: marker).location
+    }
+
+    static let text = "Intro\n\n```swift\nlet a = 1\n\nlet b = 2\n```\n\nOutside\n\n    indented code\n\n~~~\nTILDE\n````\nstill\n~~~\nafter\n"
+
+    @Test(arguments: [true, false])
+    func fencedBlocks(parsed: Bool) {
+        let text = Self.text
+        let editor = editor(text, parsed: parsed ? text : "stale")
+        #expect(editor.isInCodeBlock(location(of: "let a", in: text)))
+        #expect(editor.isInCodeBlock(location(of: "\nlet b", in: text)))    // the blank line
+        #expect(!editor.isInCodeBlock(location(of: "Intro", in: text)))
+        #expect(!editor.isInCodeBlock(location(of: "Outside", in: text)))
+        // A fence closes only with its own character, at least as long.
+        #expect(editor.isInCodeBlock(location(of: "TILDE", in: text)))
+        #expect(editor.isInCodeBlock(location(of: "still", in: text)))
+        #expect(!editor.isInCodeBlock(location(of: "after", in: text)))
+    }
+
+    /// Indented code is known from the parse.
+    @Test func indentedBlocks() {
+        let text = Self.text
+        #expect(editor(text, parsed: text).isInCodeBlock(location(of: "indented code", in: text)))
+    }
+
+    /// A fence just typed, before the parse catches up, runs to the end.
+    @Test func unclosedFenceJustTyped() {
+        let text = "Before\n\n```\n"
+        let editor = editor(text, parsed: "Before\n\n")
+        #expect(editor.isInCodeBlock((text as NSString).length))
+        #expect(!editor.isInCodeBlock(0))
+    }
+}
+
+extension EditorCodeBlockTests {
+    @Test func unclosedFenceFromTheParse() {
+        let text = "Before\n\n```\ncode"
+        #expect(editor(text, parsed: text).isInCodeBlock((text as NSString).length))
+    }
+}

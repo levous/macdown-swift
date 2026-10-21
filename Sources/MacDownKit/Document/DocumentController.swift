@@ -631,8 +631,12 @@ public final class DocumentController: NSObject {
     }
 
     /// With the swift-markdown engine, the editor is highlighted from the
-    /// renderer's model of the same text (one parse for both, FR-1).
+    /// renderer's model of the same text (one parse for both, FR-1), and
+    /// learns where its code blocks are, for pasting (FR-5).
     private func highlightFromModel() {
+        if let model = renderer.model {
+            editor.documentBlocks = (model.source, model.blocks)
+        }
         guard highlighter.usesExternalElements, let model = renderer.model,
               model.source == editor.string
         else { return }

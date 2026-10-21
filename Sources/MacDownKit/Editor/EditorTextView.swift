@@ -27,6 +27,10 @@ public final class EditorTextView: NSTextView {
     /// Called when the frame changes (used to apply width limiting).
     public var frameDidChange: ((EditorTextView) -> Void)?
 
+    /// The latest parse's blocks, and the text they're from, for knowing
+    /// where code blocks are when pasting (see EditorTextView+Paste.swift).
+    var documentBlocks: (source: String, blocks: [MarkdownDocumentModel.Block])?
+
     private var storedContentRect: NSRect = .zero
     private var trailingHeight: CGFloat = 0
 
