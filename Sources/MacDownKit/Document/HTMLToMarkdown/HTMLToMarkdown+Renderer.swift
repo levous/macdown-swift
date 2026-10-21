@@ -58,6 +58,15 @@ extension HTMLToMarkdown {
                 return fence + (language ?? "") + "\n" + text + "\n" + fence
             case .list(let list):
                 return render(list, alternate: alternate)
+            case .quote(let blocks):
+                // FR-17
+                return renderedBlocks(blocks).map(\.text).joined(separator: "\n\n")
+                    .split(separator: "\n", omittingEmptySubsequences: false)
+                    .map { $0.isEmpty ? ">" : "> " + $0 }
+                    .joined(separator: "\n")
+            case .rule:
+                // `---` would read as a list item to someone using `-` bullets.
+                return options.listMarker == "-" ? "***" : "---"
             }
         }
 

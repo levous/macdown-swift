@@ -78,10 +78,10 @@ public struct HTMLToMarkdown: Sendable {
         source = html5BlockPattern.stringByReplacingMatches(in: source, range: range, withTemplate: "<$1div")
         source = html5InlinePattern.stringByReplacingMatches(
             in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "<$1span")
-        // Text without tags parses to a document without a body.
-        if !source.contains("<") {
-            source = "<body>\(source)</body>"
-        }
+        // XMLDocument only repairs (tidies) input that isn't well-formed XML
+        // and is longer than a few bytes; anything else parses as XML
+        // without a body, or not at all. An unclosed meta makes sure.
+        source = #"<meta charset="utf-8">"# + source
         guard let document = try? XMLDocument(xmlString: source, options: [.documentTidyHTML]),
               let body = try? document.nodes(forXPath: "//body").first as? XMLElement
         else { return nil }

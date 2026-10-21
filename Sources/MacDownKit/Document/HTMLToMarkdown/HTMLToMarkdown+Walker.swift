@@ -31,6 +31,8 @@ extension HTMLToMarkdown {
         /// A code block's language, if named, and its text.
         case code(String?, String)
         case list(List)
+        case quote([Block])
+        case rule
 
         var isList: Bool {
             if case .list = self { true } else { false }
@@ -73,7 +75,7 @@ extension HTMLToMarkdown {
             }
             for child in container.children ?? [] {
                 if let element = child as? XMLElement,
-                   Self.blockElements.contains(element.localName ?? "") {
+                   Self.blockElements.contains(element.localName?.lowercased() ?? "") {
                     flush()
                     blocks += block(element, style: self.style(of: element, inheriting: style))
                 } else {
@@ -110,6 +112,13 @@ extension HTMLToMarkdown {
             }
             if tag == "ul" || tag == "ol" {
                 return list(element, style: style)
+            }
+            if tag == "blockquote" {
+                let content = blocks(in: element, style: style)
+                return content.isEmpty ? [] : [.quote(content)]
+            }
+            if tag == "hr" {
+                return [.rule]
             }
             return blocks(in: element, style: style)
         }

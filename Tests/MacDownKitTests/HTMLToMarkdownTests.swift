@@ -38,6 +38,14 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("Just text") == "Just text")
     }
 
+    /// XMLDocument skips repairing short input and well-formed XML.
+    @Test func shortAndWellFormedInput() {
+        #expect(markdown("<p>x</p>") == "x")
+        #expect(markdown("<b>x</b> y") == "**x** y")
+        #expect(markdown("x") == "x")
+        #expect(markdown("<P>Upper</P><P>case</P>") == "Upper\n\ncase\n")
+    }
+
     /// Tidy only knows HTML 4 and drops HTML5 elements, keeping their
     /// content; block ones are renamed so their boundaries survive.
     @Test func html5BlockElementsKeepTheirBoundaries() {
@@ -578,5 +586,34 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     @Test func otherInputsAreNotTasks() {
         #expect(markdown(#"<ul><li>text <input type="checkbox"></li><li><input type="radio"> radio</li></ul>"#)
                     == "- text\n- radio\n")
+    }
+}
+
+/// Block quotes and rules (FR-17).
+@Suite struct HTMLToMarkdownQuoteTests {
+    @Test func quotes() {
+        #expect(markdown("<blockquote><p>Quoted</p></blockquote>") == "> Quoted\n")
+        #expect(markdown("<blockquote>Plain text</blockquote>") == "> Plain text\n")
+        #expect(markdown("<blockquote><p>a</p><p>b</p></blockquote>") == "> a\n>\n> b\n")
+    }
+
+    @Test func nestedQuotesAndBlocksInQuotes() {
+        #expect(markdown("<blockquote><p>a</p><blockquote><p>b</p></blockquote></blockquote>") == "> a\n>\n> > b\n")
+        #expect(markdown("<blockquote><ul><li>x</li><li>y</li></ul><pre>code</pre></blockquote>")
+                    == "> - x\n> - y\n>\n> ```\n> code\n> ```\n")
+    }
+
+    @Test func quoteTextIsEscaped() {
+        #expect(markdown("<blockquote><p>&gt; not nested</p></blockquote>") == "> \\> not nested\n")
+    }
+
+    @Test func emptyQuotesAreDropped() {
+        #expect(markdown("<blockquote> </blockquote><p>x</p>") == "x")
+    }
+
+    @Test func rules() {
+        #expect(markdown("<p>a</p><hr><p>b</p>") == "a\n\n***\n\nb\n")
+        #expect(markdown("<p>a</p><hr><p>b</p>", .init(listMarker: "*", indent: "    ")) == "a\n\n---\n\nb\n")
+        #expect(markdown("<hr>") == "***\n")
     }
 }
