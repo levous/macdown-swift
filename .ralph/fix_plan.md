@@ -48,7 +48,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Dropped elements (FR-19): `sup`/`sub`/`mark`/`u` → text; `script`/`style`/`head`/`title`/comments/`meta`/`link` dropped; test that visible text is preserved
 - [x] Round-trip harness (`Tests/MacDownKitTests/PasteRoundTripTests.swift`): for each `Resources/Corpus` document, render with `HTMLRenderer`, convert, render again, compare bodies ignoring `data-source-line` (reuse `HTMLDiffHarness` normalization); unreviewed differences fail; `MACDOWN_DIFF_REPORT` writes a report
 - [x] Review round-trip differences; fix real bugs; list expected ones (extended syntax, footnotes) in `Tests/MacDownKitTests/Resources/reviewed-paste-diffs.json`
-- [ ] Performance test: long-article fixture converts in < 50 ms; record the number. If over, add the off-main-actor path for pastes above a size threshold (NFR Performance)
+- [x] Performance test: long-article fixture converts in < 50 ms; record the number. If over, add the off-main-actor path for pastes above a size threshold (NFR Performance)
 
 ## Medium Priority
 

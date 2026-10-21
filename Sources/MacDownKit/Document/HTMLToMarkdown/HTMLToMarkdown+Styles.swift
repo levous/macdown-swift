@@ -64,32 +64,64 @@ extension HTMLToMarkdown {
                                       declarations: declarations))
                 }
             }
-        }
-
-        /// The declarations of the rules matching an element, lowest
-        /// specificity first, so later ones win.
-        func declarations(for tag: String, classes: [String]) -> [String: String] {
-            rules.enumerated()
-                .filter { _, rule in
-                    (rule.tag == nil || rule.tag == tag) && rule.classes.allSatisfy(classes.contains)
-                }
+            rules = rules.enumerated()
                 .sorted { ($0.element.specificity, $0.offset) < ($1.element.specificity, $1.offset) }
-                .reduce(into: [:]) { result, rule in result.merge(rule.element.declarations) { $1 } }
+                .map(\.element)
         }
 
-        /// `name: value; …` as a dictionary of lowercased names.
-        static func declarations(_ text: String) -> [String: String] {
+        /// The declarations of the rules matching an element. The rules are
+        /// in order of specificity (then source order), so later ones win.
+        func declarations(for tag: String, classes: [String]) -> [String: String] {
             var result: [String: String] = [:]
-            for declaration in text.split(separator: ";") {
-                let pair = declaration.split(separator: ":", maxSplits: 1)
-                guard pair.count == 2 else { continue }
-                let name = pair[0].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                let value = pair[1].trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "!important", with: "")
-                    .trimmingCharacters(in: .whitespaces)
-                if !name.isEmpty { result[name] = value }
+            for rule in rules where (rule.tag == nil || rule.tag == tag) && rule.classes.allSatisfy(classes.contains) {
+                result.merge(rule.declarations) { $1 }
             }
             return result
+        }
+
+        /// The properties the converter reads.
+        static let properties: Set<String> = [
+            "display", "font", "font-family", "font-style", "font-weight", "margin",
+            "margin-bottom", "margin-top", "text-align", "text-decoration", "text-decoration-line",
+        ]
+
+        /// `name: value; …` as a dictionary of lowercased names, keeping
+        /// only `properties`. Scans bytes: pasted HTML can have thousands
+        /// of long `style` attributes (Google Docs styles every run).
+        static func declarations(_ text: String) -> [String: String] {
+            var text = text
+            return text.withUTF8 { bytes in
+                var result: [String: String] = [:]
+                func isSpace(_ byte: UInt8) -> Bool { byte == 0x20 || (byte >= 0x09 && byte <= 0x0D) }
+                func string(_ start: Int, _ end: Int) -> String {
+                    var start = start, end = end
+                    while start < end, isSpace(bytes[start]) { start += 1 }
+                    while end > start, isSpace(bytes[end - 1]) { end -= 1 }
+                    return String(decoding: UnsafeBufferPointer(rebasing: bytes[start..<end]), as: UTF8.self)
+                }
+                var index = 0
+                while index < bytes.count {
+                    var colon = -1, end = index
+                    while end < bytes.count, bytes[end] != UInt8(ascii: ";") {
+                        if colon < 0, bytes[end] == UInt8(ascii: ":") { colon = end }
+                        end += 1
+                    }
+                    defer { index = end + 1 }
+                    // Every property read starts with d, f, m or t.
+                    var first = index
+                    while first < colon, isSpace(bytes[first]) { first += 1 }
+                    guard colon > first, "dfmtDFMT".utf8.contains(bytes[first]) else { continue }
+                    let name = string(first, colon).lowercased()
+                    guard properties.contains(name) else { continue }
+                    var value = string(colon + 1, end)
+                    if let important = value.range(of: "!important", options: .caseInsensitive) {
+                        value.removeSubrange(important)
+                        value = value.trimmingCharacters(in: .whitespaces)
+                    }
+                    result[name] = value
+                }
+                return result
+            }
         }
     }
 
@@ -145,19 +177,26 @@ extension HTMLToMarkdown {
     /// An element's style, given its parent's.
     static func style(of element: XMLElement, inheriting parent: TextStyle,
                       styleSheet: StyleSheet) -> TextStyle {
+        resolvedStyle(of: element, inheriting: parent, styleSheet: styleSheet) ?? parent
+    }
+
+    /// An element's style, given its parent's, or nil if it's hidden
+    /// (`display: none`).
+    static func resolvedStyle(of element: XMLElement, inheriting parent: TextStyle,
+                              styleSheet: StyleSheet) -> TextStyle? {
         let tag = element.localName?.lowercased() ?? ""
+        let classes = element.attribute(forName: "class")?.stringValue?
+            .split(whereSeparator: \.isWhitespace).map(String.init) ?? []
+        var declarations = styleSheet.rules.isEmpty ? [:] : styleSheet.declarations(for: tag, classes: classes)
+        if let inline = element.attribute(forName: "style")?.stringValue {
+            declarations.merge(StyleSheet.declarations(inline)) { $1 }
+        }
+        if declarations["display"]?.lowercased() == "none" { return nil }
         var style = parent
         if boldTags.contains(tag) { style.bold = true }
         if italicTags.contains(tag) { style.italic = true }
         if strikeTags.contains(tag) { style.strike = true }
         if monospaceTags.contains(tag) { style.monospace = true }
-
-        let classes = element.attribute(forName: "class")?.stringValue?
-            .split(whereSeparator: \.isWhitespace).map(String.init) ?? []
-        var declarations = styleSheet.declarations(for: tag, classes: classes)
-        if let inline = element.attribute(forName: "style")?.stringValue {
-            declarations.merge(StyleSheet.declarations(inline)) { $1 }
-        }
         if let font = declarations["font"] {
             let shorthand = fontShorthand(font)
             // The shorthand resets what it doesn't name.

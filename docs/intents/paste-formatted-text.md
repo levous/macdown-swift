@@ -172,6 +172,8 @@ When the clipboard holds image data and no HTML, RTF or text (a screenshot copie
 
 Dated, newest first.
 
+**Conversion stays on the main actor (2026-10-21).** Measured in a release build on an M-series Mac: `help.md`'s rendered HTML (30 KB, a long article) converts in 11 ms, and 40 copies of the Google Docs fixture (360 KB of HTML, about 3,000 styled spans) in 44 ms. Both are under the 50 ms goal, so pastes convert synchronously and there's no off-main-actor path. Most of the time was parsing `style` attributes; reading only the properties the converter uses, from the raw bytes, took the Google Docs case from 106 ms to 44 ms.
+
 **Parser: Foundation's `XMLDocument` with `.documentTidyHTML` (2026-10-21).** The Phase 0 spike parsed every synthetic fixture (Google Docs, Word, MacDown's preview, a browser fragment, VS Code, and AppKit's HTML for TextEdit and Xcode RTF) and kept all visible text. Findings:
 
 - **Google Docs:** Tidy repairs the `<b style="font-weight:normal">` wrapper by copying it, with its style, into every block, so the "normal weight cancels bold" rule still works. A `ul` directly inside a `ul` becomes `<li style="list-style: none"><ul>…</ul></li>`: the converter treats an item holding only a list as a nested list of the previous item.

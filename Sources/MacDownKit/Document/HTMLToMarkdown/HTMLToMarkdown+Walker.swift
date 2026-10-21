@@ -75,12 +75,11 @@ extension HTMLToMarkdown {
             "object", "script", "select", "style", "svg", "template", "title", "video",
         ]
 
-        /// Whether an element and its content are left out: not content, or
-        /// not shown.
-        func isDropped(_ element: XMLElement) -> Bool {
-            if Self.droppedElements.contains(element.localName?.lowercased() ?? "") { return true }
-            guard let style = element.attribute(forName: "style")?.stringValue else { return false }
-            return HTMLToMarkdown.StyleSheet.declarations(style)["display"]?.lowercased() == "none"
+        /// An element's style, or nil if it and its content are left out:
+        /// not content, or not shown.
+        func visibleStyle(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle? {
+            if Self.droppedElements.contains(element.localName?.lowercased() ?? "") { return nil }
+            return HTMLToMarkdown.resolvedStyle(of: element, inheriting: parent, styleSheet: styleSheet)
         }
 
         /// The blocks in a container. This is the one place siblings are
@@ -93,13 +92,16 @@ extension HTMLToMarkdown {
                 pending = []
             }
             for child in container.children ?? [] {
-                if let element = child as? XMLElement, isDropped(element) { continue }
-                if let element = child as? XMLElement,
-                   Self.blockElements.contains(element.localName?.lowercased() ?? "") {
-                    flush()
-                    blocks += block(element, style: self.style(of: element, inheriting: style))
-                } else {
+                guard let element = child as? XMLElement else {
                     pending += inlines(in: child, style: style)
+                    continue
+                }
+                guard let elementStyle = visibleStyle(of: element, inheriting: style) else { continue }
+                if Self.blockElements.contains(element.localName?.lowercased() ?? "") {
+                    flush()
+                    blocks += block(element, style: elementStyle)
+                } else {
+                    pending += inlines(of: element, style: elementStyle)
                 }
             }
             flush()
@@ -269,27 +271,34 @@ extension HTMLToMarkdown {
             case .text:
                 return [.text(node.stringValue ?? "", style)]
             case .element:
-                guard let element = node as? XMLElement, !isDropped(element) else { return [] }
-                let tag = element.localName?.lowercased() ?? ""
-                if tag == "br" { return [.lineBreak] }
-                var style = self.style(of: element, inheriting: style)
-                if tag == "img" {
-                    // Kept as an address, never fetched (FR-34).
-                    guard let source = element.attribute(forName: "src")?.stringValue,
-                          let link = link(source, title: element.attribute(forName: "title")?.stringValue)
-                    else { return [] }
-                    let alt = element.attribute(forName: "alt")?.stringValue ?? ""
-                    return [.image(Image(source: link.url, alt: alt, title: link.title), style)]
-                }
-                if tag == "a", let href = element.attribute(forName: "href")?.stringValue {
-                    style.link = link(href, title: element.attribute(forName: "title")?.stringValue)
-                }
-                let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
-                return Self.blockElements.contains(tag)
-                    ? [.text(" ", style)] + content + [.text(" ", style)] : content
+                guard let element = node as? XMLElement,
+                      let elementStyle = visibleStyle(of: element, inheriting: style)
+                else { return [] }
+                return inlines(of: element, style: elementStyle)
             default:
                 return []
             }
+        }
+
+        /// An element's inline content, given its resolved style.
+        func inlines(of element: XMLElement, style: TextStyle) -> [Inline] {
+            var style = style
+            let tag = element.localName?.lowercased() ?? ""
+            if tag == "br" { return [.lineBreak] }
+            if tag == "img" {
+                // Kept as an address, never fetched (FR-34).
+                guard let source = element.attribute(forName: "src")?.stringValue,
+                      let link = link(source, title: element.attribute(forName: "title")?.stringValue)
+                else { return [] }
+                let alt = element.attribute(forName: "alt")?.stringValue ?? ""
+                return [.image(Image(source: link.url, alt: alt, title: link.title), style)]
+            }
+            if tag == "a", let href = element.attribute(forName: "href")?.stringValue {
+                style.link = link(href, title: element.attribute(forName: "title")?.stringValue)
+            }
+            let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
+            return Self.blockElements.contains(tag)
+                ? [.text(" ", style)] + content + [.text(" ", style)] : content
         }
 
         /// A link to `href`, resolved against the base URL; nil for scripts

@@ -750,3 +750,23 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(converted == expected)
     }
 }
+
+/// A long article converts well within a paste's time budget (paste
+/// intent, Goals 4: under 50 ms). Measured 2026-10-21 on an M-series Mac:
+/// help.md's 30 KB of HTML in 11 ms (release) / 21 ms (debug).
+@Suite struct HTMLToMarkdownPerformanceTests {
+    @Test func longArticleConvertsUnder50Milliseconds() throws {
+        let help = try #require(try Corpus.all().first { $0.name == "help.md" })
+        let html = MarkdownDocumentModel(help.text, options: .init()).body
+        let converter = HTMLToMarkdown(options: pasteTestOptions)
+        // The best of a few runs, so other suites running alongside don't
+        // count.
+        var best = Duration.seconds(1)
+        for _ in 0..<5 {
+            let start = ContinuousClock.now
+            _ = converter.convert(html)
+            best = min(best, ContinuousClock.now - start)
+        }
+        #expect(best < .milliseconds(50), "converted in \(best)")
+    }
+}
