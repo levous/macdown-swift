@@ -176,6 +176,15 @@ The new model (`Sources/MacDownKit/Document/Model`):
 Dated, newest first. The migration intent has the full list for the engine
 work.
 
+**Paste conversion parses HTML with `XMLDocument` (2026-10-21).** Pasting
+formatted text converts the clipboard's HTML (or RTF, via AppKit's HTML
+export) to Markdown. Foundation's `XMLDocument` with `.documentTidyHTML`
+parses it, so there's no new dependency: a spike over clipboard fixtures from
+Google Docs, Word, browsers, MacDown's preview and code editors kept all their
+text. Tidy only knows HTML 4, so HTML5 block elements are renamed to `div`
+before parsing. Details are in
+[the paste intent](intents/paste-formatted-text.md#decisions).
+
 **Highlight before drawing, then the rest when idle (2026-10-12).** The
 editor used to style the visible range 100 ms after scrolling stopped, so a
 continuous scroll showed unstyled text. Now newly visible text, with a

@@ -172,6 +172,16 @@ When the clipboard holds image data and no HTML, RTF or text (a screenshot copie
 
 Dated, newest first.
 
+**Parser: Foundation's `XMLDocument` with `.documentTidyHTML` (2026-10-21).** The Phase 0 spike parsed every synthetic fixture (Google Docs, Word, MacDown's preview, a browser fragment, VS Code, and AppKit's HTML for TextEdit and Xcode RTF) and kept all visible text. Findings:
+
+- **Google Docs:** Tidy repairs the `<b style="font-weight:normal">` wrapper by copying it, with its style, into every block, so the "normal weight cancels bold" rule still works. A `ul` directly inside a `ul` becomes `<li style="list-style: none"><ul>…</ul></li>`: the converter treats an item holding only a list as a nested list of the previous item.
+- **Word:** `o:p` elements and the `<![if !supportLists]>` markers are dropped, the conditional comment in `head` goes with the head, and the list bullet stays as text in `<span style="mso-list:Ignore">`, which the converter skips. `mso-list: lN levelM` survives in `style`.
+- **HTML5 elements:** Tidy's HTML 4 grammar drops unknown elements (`nav`, `article`, `section`, `header`, `footer`, `main`, `aside`, `figure`, `figcaption`, `picture`, `source`, `mark`, `details`, `summary`) and keeps their content, so block boundaries are lost (a `figcaption` runs into the preceding image). The converter renames block-level HTML5 elements to `div` and `mark` to `span` before parsing.
+- **Text with no tags** parses to a document without a `body`; the converter wraps such input in a `body`.
+- **Everything else works:** unclosed tags are closed (`<p>a <b>b<p>c` → two paragraphs), orphan `td`/`li` get a `table`/`ul`, entities are decoded (`&nbsp;` → U+00A0, `&#8617;` → ↩), non-ASCII text is kept, `pre` keeps its newlines and spaces, comments become comment nodes, `<meta charset>` fragments parse, and empty icon-font elements (`<i class="fa …">`) are dropped.
+
+SwiftSoup (a new dependency) isn't needed.
+
 **Plain-text button lifetime and quality check (2026-10-21).**
 
 - The "Paste as Plain Text" button stays until the next edit, a selection change outside the pasted range, scrolling it out of view, Escape or another paste. There's no timeout.
