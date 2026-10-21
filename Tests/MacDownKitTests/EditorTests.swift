@@ -49,9 +49,18 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
             // As after a parse: spans arrive once the text is laid out.
             highlighter.update(highlightElements(textView.string, engine: engine))
         }
-        let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
-                                                    effectiveRange: nil) as? NSColor
-        #expect(color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0)
+        func red() -> CGFloat? {
+            let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
+                                                        effectiveRange: nil) as? NSColor
+            return color?.usingColorSpace(.deviceRGB)?.redComponent
+        }
+        // The hoedown engine parses in the background, which can take longer
+        // than the first wait while the rest of the suite runs in parallel.
+        let deadline = ContinuousClock.now + .seconds(5)
+        while red() != 1.0, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(red() == 1.0)
     }
 }
 
