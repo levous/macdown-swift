@@ -1,0 +1,16 @@
+{
+  "source": "synthetic-word",
+  "synthetic": true,
+  "types": [
+    {
+      "file": "public.html",
+      "size": 3047,
+      "type": "public.html"
+    },
+    {
+      "file": "public.utf8-plain-text",
+      "size": 164,
+      "type": "public.utf8-plain-text"
+    }
+  ]
+}

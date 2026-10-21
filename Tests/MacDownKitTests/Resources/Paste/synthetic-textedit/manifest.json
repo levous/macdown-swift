@@ -1,0 +1,16 @@
+{
+  "source": "synthetic-textedit",
+  "synthetic": true,
+  "types": [
+    {
+      "file": "public.rtf",
+      "size": 1755,
+      "type": "public.rtf"
+    },
+    {
+      "file": "public.utf8-plain-text",
+      "size": 145,
+      "type": "public.utf8-plain-text"
+    }
+  ]
+}

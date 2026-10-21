@@ -1,0 +1,10 @@
+# Paste Sample
+
+A sentence with **bold text**, *italic text*, ~~struck text~~ and `inline code`.
+
+- First bullet
+    - Nested bullet
+- Second bullet
+
+3. Third step
+4. Fourth step

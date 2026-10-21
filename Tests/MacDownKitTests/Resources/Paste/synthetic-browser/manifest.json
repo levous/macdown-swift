@@ -1,0 +1,21 @@
+{
+  "source": "synthetic-browser",
+  "synthetic": true,
+  "types": [
+    {
+      "file": "org.chromium.source-url",
+      "size": 36,
+      "type": "org.chromium.source-url"
+    },
+    {
+      "file": "public.html",
+      "size": 913,
+      "type": "public.html"
+    },
+    {
+      "file": "public.utf8-plain-text",
+      "size": 141,
+      "type": "public.utf8-plain-text"
+    }
+  ]
+}
