@@ -9,7 +9,6 @@
 //
 
 import AppKit
-import CPegMarkdown
 import Foundation
 import Testing
 @testable import MacDownKit
@@ -23,27 +22,22 @@ enum HelpDocument {
 }
 
 @MainActor @Suite struct HelpDocumentRenderingTests {
-    /// Renders the help with preferences in a throwaway suite, with either
-    /// engine. Entities are decoded so hoedown's `&ldquo;` and cmark-gfm's
-    /// `“` compare alike.
-    func render(_ engine: MarkdownEngine,
-                _ configure: (Preferences) -> Void = { _ in }) throws -> String {
+    /// Renders the help with preferences in a throwaway suite, entities
+    /// decoded.
+    func render(_ configure: (Preferences) -> Void = { _ in }) throws -> String {
         let suite = "MacDownHelpTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = Preferences(defaults: defaults)    // fresh-install defaults
         configure(preferences)
         let settings = preferences.renderSettings.parse
-        let html = switch engine {
-        case .hoedown: MarkdownParser.parse(try HelpDocument.text(), settings: settings).body
-        case .cmarkGfm: MarkdownDocumentModel(try HelpDocument.text(), options: .init(settings)).body
-        }
+        let html = MarkdownDocumentModel(try HelpDocument.text(), options: .init(settings)).body
         return HTMLDiff.decodeEntities(html)
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func standardMarkdownRendersWithDefaultSettings(_ engine: MarkdownEngine) throws {
-        let html = try render(engine)
+    @Test
+    func standardMarkdownRendersWithDefaultSettings() throws {
+        let html = try render()
         for element in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6", "<strong>", "<em>",
                         "<u>Underline</u>", "<code>Inline code</code>", "<pre>",
                         "<blockquote>", "<ol>", "<ul>", "<hr>", "<table>",
@@ -74,9 +68,9 @@ enum HelpDocument {
     // The live examples in "Inline Formatting" use their own text: the table
     // above them shows each result as literal HTML.
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func extendedSyntaxStaysPlainUntilTurnedOn(_ engine: MarkdownEngine) throws {
-        let html = try render(engine)
+    @Test
+    func extendedSyntaxStaysPlainUntilTurnedOn() throws {
+        let html = try render()
         for element in ["<mark>highlighted</mark>", "y<sup>3</sup>", #"<a href="https://example.org">"#, "<q>"] {
             #expect(!html.contains(element), "\(element) without its setting")
         }
@@ -86,9 +80,9 @@ enum HelpDocument {
         }
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func everyOptionRendersItsExample(_ engine: MarkdownEngine) throws {
-        let html = try render(engine) { p in
+    @Test
+    func everyOptionRendersItsExample() throws {
+        let html = try render { p in
             p.extensionHighlight = true
             p.extensionSuperscript = true
             p.extensionAutolink = true
@@ -113,28 +107,20 @@ enum HelpDocument {
 }
 
 @Suite struct HelpDocumentHighlightingTests {
-    @Test(arguments: MarkdownEngine.allCases)
-    func editorHighlightsEveryElementType(_ engine: MarkdownEngine) throws {
-        let elements = highlightElements(try HelpDocument.text(), engine: engine)
-        var types: [(String, pmh_element_type)] = [
-            ("H1", pmh_H1), ("H2", pmh_H2), ("H3", pmh_H3), ("H4", pmh_H4),
-            ("H5", pmh_H5), ("H6", pmh_H6), ("EMPH", pmh_EMPH), ("STRONG", pmh_STRONG),
-            ("CODE", pmh_CODE), ("VERBATIM", pmh_VERBATIM), ("LINK", pmh_LINK),
-            ("AUTO_LINK_URL", pmh_AUTO_LINK_URL), ("AUTO_LINK_EMAIL", pmh_AUTO_LINK_EMAIL),
-            ("IMAGE", pmh_IMAGE), ("REFERENCE", pmh_REFERENCE), ("BLOCKQUOTE", pmh_BLOCKQUOTE),
-            ("LIST_BULLET", pmh_LIST_BULLET), ("LIST_ENUMERATOR", pmh_LIST_ENUMERATOR),
-            ("HRULE", pmh_HRULE), ("HTML", pmh_HTML), ("HTML_ENTITY", pmh_HTML_ENTITY),
-            ("COMMENT", pmh_COMMENT),
+    @Test
+    func editorHighlightsEveryElementType() throws {
+        let elements = highlightElements(try HelpDocument.text())
+        let types: [HighlightElement] = [
+            .h1, .h2, .h3, .h4, .h5, .h6, .emph, .strong, .code, .verbatim, .link,
+            .autoLinkURL, .autoLinkEmail, .image, .reference, .blockquote, .listBullet,
+            .listEnumerator, .hrule, .html, .htmlEntity, .comment, .note,
         ]
-        // PEG Markdown Highlight defines NOTE but never emits it; the new
-        // engine colors footnotes.
-        if engine == .cmarkGfm { types.append(("NOTE", pmh_NOTE)) }
-        for (name, type) in types {
-            #expect(!elements.spans[Int(type.rawValue)].isEmpty, "no \(name) spans")
+        for type in types {
+            #expect(!elements.spans[type.rawValue].isEmpty, "no \(type) spans")
         }
     }
 
-    /// The opt-in types appear with their settings on (new engine only).
+    /// The opt-in types appear with their settings on.
     @Test func optInTypesWithTheirSettings() throws {
         let model = MarkdownDocumentModel(try HelpDocument.text(), options: .init(
             math: true, inlineDollar: true, highlight: true, superscript: true))
@@ -156,20 +142,15 @@ extension LiveDocumentTests {
         return false
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func previewRunsEveryExample(_ engine: MarkdownEngine) async throws {
+    @Test
+    func previewRunsEveryExample() async throws {
         let p = Preferences.shared
-        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine,
-                     p.htmlTaskListToggling)
+        let saved = (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.htmlTaskListToggling)
         p.htmlSyntaxHighlighting = true
         p.htmlMermaid = true
         p.htmlGraphviz = true
-        p.markdownEngine = engine
         p.htmlTaskListToggling = true
-        defer {
-            (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.markdownEngine,
-             p.htmlTaskListToggling) = saved
-        }
+        defer { (p.htmlSyntaxHighlighting, p.htmlMermaid, p.htmlGraphviz, p.htmlTaskListToggling) = saved }
         let controller = DocumentController(
             document: MarkdownDocument(text: try HelpDocument.text()), fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
@@ -208,10 +189,9 @@ extension LiveDocumentTests {
         }
         #expect(images)
         #expect(await count("img") == 2)
-        // Task list checkboxes are shown, and can be clicked (hoedown's have
-        // no source lines to edit, so they stay disabled).
+        // Task list checkboxes are shown, and can be clicked.
         #expect(await count("input[type=checkbox]") == 4)
-        #expect(await count("input[type=checkbox]:disabled") == (engine == .hoedown ? 4 : 0))
+        #expect(await count("input[type=checkbox]:disabled") == 0)
     }
 }
 }

@@ -215,7 +215,7 @@ struct HTMLRenderer {
         while output.hasSuffix("\n") { output.removeLast() }
     }
 
-    /// MacDown's Prism-compatible block code (hoedown_html_patch.c).
+    /// MacDown's Prism-compatible block code (as its hoedown patch wrote it).
     private mutating func codeBlock(_ node: CMarkNode) {
         newline()
         var language = (node.fenceInfo ?? "").split(whereSeparator: \.isWhitespace).first.map(String.init) ?? ""
@@ -394,7 +394,7 @@ struct HTMLRenderer {
         pattern: "<p.*?>\\s*\\[TOC\\]\\s*</p>", options: .caseInsensitive)
 
     /// hoedown's TOC (with MacDown's "toc" class on the outer list) in place
-    /// of every `[TOC]` paragraph, as MarkdownParser did.
+    /// of every `[TOC]` paragraph.
     private mutating func insertTableOfContents() {
         guard output.contains("TOC]") else { return }
         var toc = ""

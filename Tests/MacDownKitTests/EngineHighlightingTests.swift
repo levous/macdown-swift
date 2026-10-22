@@ -2,8 +2,8 @@
 //  EngineHighlightingTests.swift
 //  MacDownKitTests
 //
-//  With the swift-markdown engine, the editor is highlighted from the
-//  renderer's document model instead of its own PEG parse (FR-1, FR-26).
+//  The editor is highlighted from the renderer's document model, the same
+//  cmark-gfm parse as the preview (FR-1, FR-26).
 //
 
 import AppKit
@@ -42,21 +42,13 @@ extension LiveDocumentTests {
                                                         effectiveRange: nil) as? NSColor
     }
 
-    /// `#Not a header` isn't one in CommonMark, but PEG colored it; both
-    /// color a real header.
-    @Test(arguments: [MarkdownEngine.hoedown, .cmarkGfm])
-    func highlightsFromTheEngine(_ engine: MarkdownEngine) async {
-        let preferences = Preferences.shared
-        let saved = preferences.markdownEngine
-        preferences.markdownEngine = engine
-        defer { preferences.markdownEngine = saved }
-
+    /// A real header is colored; `#Not a header` isn't one in CommonMark
+    /// (PEG Markdown Highlight colored it).
+    @Test func highlightsFromTheModel() async {
         let (controller, window) = makeController("Plain text.\n\n## Real\n\n#Not a header\n")
         defer { controller.tearDown(); window.close() }
-        #expect(controller.highlighter.usesExternalElements == (engine == .cmarkGfm))
         #expect(await waitUntil { color(controller, at: "Real") != color(controller, at: "Plain") })
-        let notHeader = color(controller, at: "Not a header") != color(controller, at: "Plain")
-        #expect(notHeader == (engine == .hoedown))
+        #expect(color(controller, at: "Not a header") == color(controller, at: "Plain"))
     }
 
     /// Edits re-highlight from the new model, also with the preview's
@@ -64,10 +56,9 @@ extension LiveDocumentTests {
     @Test(arguments: [false, true])
     func editsRehighlight(manualRender: Bool) async {
         let preferences = Preferences.shared
-        let saved = (preferences.markdownEngine, preferences.markdownManualRender)
-        preferences.markdownEngine = .cmarkGfm
+        let saved = preferences.markdownManualRender
         preferences.markdownManualRender = manualRender
-        defer { (preferences.markdownEngine, preferences.markdownManualRender) = saved }
+        defer { preferences.markdownManualRender = saved }
 
         let (controller, window) = makeController("Plain text.\n")
         defer { controller.tearDown(); window.close() }
@@ -82,15 +73,11 @@ extension LiveDocumentTests {
 }
 
 extension LiveDocumentTests {
-/// With the new engine the preview carries data-source-line; HTML and PDF
-/// exports don't (FR-18).
+/// The preview carries data-source-line; HTML and PDF exports don't
+/// (FR-18).
 @MainActor @Suite(.serialized) struct EngineExportTests {
     @Test func exportsHaveNoSourceLines() async throws {
         let preferences = Preferences.shared
-        let saved = preferences.markdownEngine
-        preferences.markdownEngine = .cmarkGfm
-        defer { preferences.markdownEngine = saved }
-
         let controller = DocumentController(document: MarkdownDocument(text: "# Title\n\nSome text.\n"),
                                             fileURL: nil)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),

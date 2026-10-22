@@ -2,14 +2,13 @@
 //  MarkdownDocumentModel.swift
 //  MacDownKit
 //
-//  One parse of a document with swift-markdown, shared by the preview, the
+//  One parse of a document with cmark-gfm, shared by the preview, the
 //  editor highlighting and scroll sync (FR-1 to FR-3). The cmark-gfm tree
 //  (Decision 10) isn't Sendable, so the model is built where the parse runs
 //  (a detached task) and keeps only what's produced from the tree. Only this
 //  folder uses the cmark-gfm API (TR-2).
 //
 
-import CHoedown
 import Foundation
 
 public struct MarkdownDocumentModel: Sendable {
@@ -43,16 +42,16 @@ public struct MarkdownDocumentModel: Sendable {
         }
 
         public init(_ settings: ParseSettings) {
-            math = settings.extensionFlags & HOEDOWN_EXT_MATH.rawValue != 0
-            inlineDollar = math && settings.extensionFlags & HOEDOWN_EXT_MATH_EXPLICIT.rawValue != 0
-            smartPunctuation = settings.smartyPants
-            highlight = settings.extensionFlags & HOEDOWN_EXT_HIGHLIGHT.rawValue != 0
-            superscript = settings.extensionFlags & HOEDOWN_EXT_SUPERSCRIPT.rawValue != 0
-            autolink = settings.extensionFlags & HOEDOWN_EXT_AUTOLINK.rawValue != 0
-            lineNumbers = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) != 0
-            blockCodeInformation = settings.rendererFlags & UInt32(HOEDOWN_HTML_BLOCKCODE_INFORMATION) != 0
+            math = settings.math
+            inlineDollar = settings.math && settings.inlineDollar
+            smartPunctuation = settings.smartPunctuation
+            highlight = settings.highlight
+            superscript = settings.superscript
+            autolink = settings.autolink
+            lineNumbers = settings.lineNumbers
+            blockCodeInformation = settings.blockCodeInformation
             rendersTOC = settings.rendersTOC
-            hardWrap = settings.rendererFlags & HOEDOWN_HTML_HARD_WRAP.rawValue != 0
+            hardWrap = settings.hardWrap
         }
     }
 
@@ -78,7 +77,7 @@ public struct MarkdownDocumentModel: Sendable {
     public let math: [NSRange]
     /// Blocks in document order (parents before their children).
     public let blocks: [Block]
-    /// Editor highlighting, by PEG element type (`ThemeStyle.elementNames`).
+    /// Editor highlighting, by `HighlightElement` (`ThemeStyle.elementNames`).
     let highlights: HighlightElements
     /// The preview's HTML body, and the Prism languages its code uses.
     public let body: String

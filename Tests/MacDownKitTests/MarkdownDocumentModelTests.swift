@@ -3,7 +3,6 @@
 //  MacDownKitTests
 //
 
-import CHoedown
 import Foundation
 import Testing
 @testable import MacDownKit
@@ -56,14 +55,19 @@ import Testing
     @Test func optionsFollowParseSettings() {
         var settings = ParseSettings()
         #expect(MarkdownDocumentModel.Options(settings) == .init())
-        settings.extensionFlags = HOEDOWN_EXT_MATH.rawValue | HOEDOWN_EXT_MATH_EXPLICIT.rawValue
-        settings.smartyPants = true
+        settings.math = true
+        settings.inlineDollar = true
+        settings.smartPunctuation = true
         #expect(MarkdownDocumentModel.Options(settings)
                 == .init(math: true, inlineDollar: true, smartPunctuation: true))
-        settings.extensionFlags |= HOEDOWN_EXT_HIGHLIGHT.rawValue | HOEDOWN_EXT_SUPERSCRIPT.rawValue
+        settings.highlight = true
+        settings.superscript = true
         #expect(MarkdownDocumentModel.Options(settings)
                 == .init(math: true, inlineDollar: true, smartPunctuation: true,
                          highlight: true, superscript: true))
+        // Inline dollars only count with math on.
+        settings.math = false
+        #expect(!MarkdownDocumentModel.Options(settings).inlineDollar)
     }
 
     @Test(arguments: try Corpus.all())
@@ -78,26 +82,28 @@ import Testing
     }
 }
 
-/// The hidden engine setting routes parses through the model (FR-2).
+/// Parses go through the document model (FR-2).
 @MainActor @Suite struct RendererEngineTests {
-    @Test func renderSettingsCarryTheEngine() throws {
+    @Test func renderSettingsFollowPreferences() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = Preferences(defaults: defaults)
-        #expect(preferences.renderSettings.parse.engine == .cmarkGfm)
-        preferences.markdownEngine = .hoedown
-        #expect(preferences.renderSettings.parse.engine == .hoedown)
+        #expect(preferences.renderSettings.parse == ParseSettings())
+        preferences.extensionAutolink = true
+        preferences.htmlMathJax = true
+        preferences.htmlCodeBlockAccessory = CodeBlockAccessoryType.custom.rawValue
+        var expected = ParseSettings()
+        expected.autolink = true
+        expected.math = true
+        expected.blockCodeInformation = true
+        #expect(preferences.renderSettings.parse == expected)
     }
 
-    @Test func cmarkGfmBuildsTheModel() async {
+    @Test func buildsTheModel() async {
         let renderer = Renderer()
-        var settings = ParseSettings()
-        settings.engine = .hoedown
-        renderer.parseNow("# A\n", settings: settings)
+        let settings = ParseSettings()
         #expect(renderer.model == nil)
-
-        settings.engine = .cmarkGfm
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model?.blocks.map(\.kind) == [.heading(level: 1)])
         // The preview's HTML is the model's, with source lines (FR-20).
@@ -108,16 +114,12 @@ import Testing
             renderer.parse("# B\n\nText\n", settings: settings) { done.resume() }
         }
         #expect(renderer.model?.source == "# B\n\nText\n")
-        settings.engine = .hoedown
-        renderer.parseNow("# A\n", settings: settings)
-        #expect(renderer.model == nil)
     }
 
     /// Only the newest of several background parses lands.
     @Test func stalePassesAreDiscarded() async {
         let renderer = Renderer()
-        var settings = ParseSettings()
-        settings.engine = .cmarkGfm
+        let settings = ParseSettings()
         var completions = 0
         renderer.parse(Corpus.generated(lines: 5_000), settings: settings) { completions += 1 }
         await withCheckedContinuation { done in

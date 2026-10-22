@@ -86,7 +86,7 @@ enum Corpus {
     }()
 
     func render(_ text: String) -> String {
-        MarkdownParser.parse(text, settings: Self.settings).body
+        MarkdownDocumentModel(text, options: .init(Self.settings)).body
     }
 
     @Test func coversEveryArea() throws {
@@ -97,7 +97,7 @@ enum Corpus {
     }
 
     @Test(arguments: try Corpus.all())
-    func everyDocumentParsesWithBothEngines(_ document: Corpus.Document) {
+    func everyDocumentRenders(_ document: Corpus.Document) {
         #expect(!render(document.text).isEmpty)
         #expect(CMarkTree(document.text).withRoot { !$0.children.isEmpty })
     }

@@ -425,14 +425,10 @@ extension LiveDocumentTests {
 
     @Test func clickingTaskListCheckboxesEditsTheMarkdown() async throws {
         let preferences = Preferences.shared
-        let (engine, toggling, autosaves) = (preferences.markdownEngine,
-                                              preferences.htmlTaskListToggling,
-                                              preferences.autosavesDocuments)
-        preferences.markdownEngine = .cmarkGfm
+        let (toggling, autosaves) = (preferences.htmlTaskListToggling, preferences.autosavesDocuments)
         preferences.htmlTaskListToggling = true
         preferences.autosavesDocuments = false
         defer {
-            preferences.markdownEngine = engine
             preferences.htmlTaskListToggling = toggling
             preferences.autosavesDocuments = autosaves
         }

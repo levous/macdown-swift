@@ -4,7 +4,6 @@
 //
 
 import AppKit
-import CPegMarkdown
 import Testing
 
 @testable import MacDownKit
@@ -16,57 +15,74 @@ func isPureRed(_ color: NSColor?) -> Bool {
     return color.redComponent == 1 && color.greenComponent == 0 && color.blueComponent == 0
 }
 
-/// Highlight spans from either engine: PEG, or the swift-markdown model.
-func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
-    switch engine {
-    case .hoedown: HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue))
-    case .cmarkGfm: MarkdownDocumentModel(text, options: .init()).highlights
-    }
+/// The document model's highlight spans for `text`.
+func highlightElements(_ text: String) -> HighlightElements {
+    MarkdownDocumentModel(text, options: .init()).highlights
 }
 
 @Suite struct HighlighterTests {
-    @Test(arguments: MarkdownEngine.allCases)
-    func parsesElements(_ engine: MarkdownEngine) {
-        let elements = highlightElements("# Title\n\n*em* and **strong**\n", engine: engine)
-        #expect(elements.spans[Int(pmh_H1.rawValue)].count == 1)
-        #expect(elements.spans[Int(pmh_EMPH.rawValue)].count == 1)
-        #expect(elements.spans[Int(pmh_STRONG.rawValue)].count == 1)
+    @Test
+    func parsesElements() {
+        let elements = highlightElements("# Title\n\n*em* and **strong**\n")
+        #expect(elements.spans[HighlightElement.h1.rawValue].count == 1)
+        #expect(elements.spans[HighlightElement.emph.rawValue].count == 1)
+        #expect(elements.spans[HighlightElement.strong.rawValue].count == 1)
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func convertsSurrogatePairOffsets(_ engine: MarkdownEngine) {
-        let elements = highlightElements("😀 *em*\n", engine: engine)
-        let span = elements.spans[Int(pmh_EMPH.rawValue)].first
+    /// The element types index the themes' element names.
+    @Test func elementTypesFollowTheThemeNames() {
+        #expect(HighlightElement.allCases.count == ThemeStyle.elementNames.count)
+        for (element, name) in [(HighlightElement.link, "LINK"), (.autoLinkEmail, "AUTO_LINK_EMAIL"),
+                                (.h1, "H1"), (.h6, "H6"), (.htmlBlock, "HTMLBLOCK"), (.note, "NOTE"),
+                                (.superscript, "SUPERSCRIPT")] {
+            #expect(ThemeStyle.elementNames[element.rawValue] == name)
+        }
+    }
+
+    /// Footnotes are standard, so they're always highlighted.
+    @Test func footnotes() {
+        #expect(!highlightElements("a[^1]\n\n[^1]: b\n").spans[HighlightElement.note.rawValue].isEmpty)
+    }
+
+    @Test
+    func convertsSurrogatePairOffsets() {
+        let elements = highlightElements("😀 *em*\n")
+        let span = elements.spans[HighlightElement.emph.rawValue].first
         // "😀" is two UTF-16 units; "*em*" starts at UTF-16 offset 3.
         #expect(span?.pos == 3)
         #expect(span?.end == 7)
     }
 
-    @MainActor @Test(arguments: MarkdownEngine.allCases)
-    func appliesStylesToTextView(_ engine: MarkdownEngine) async throws {
+    @MainActor @Test
+    func appliesStylesToTextView() async throws {
         let (_, textView) = EditorTextView.makeScrollableEditor()
         textView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         textView.string = "# Title\n\n*em*\n"
         let highlighter = MarkdownHighlighter(textView: textView)
         let errors = highlighter.applyStyles(fromStylesheet: "H1\nforeground: ff0000\n")
         #expect(errors.isEmpty)
-        highlighter.usesExternalElements = engine == .cmarkGfm
         highlighter.activate()
-        try await Task.sleep(for: .milliseconds(500))
-        if engine == .cmarkGfm {
-            // As after a parse: spans arrive once the text is laid out.
-            highlighter.update(highlightElements(textView.string, engine: engine))
-        }
+        // As after a parse: spans arrive once the text is laid out.
+        highlighter.update(highlightElements(textView.string))
         func red() -> Bool {
             isPureRed(textView.textStorage?.attribute(.foregroundColor, at: 2, effectiveRange: nil) as? NSColor)
         }
-        // The hoedown engine parses in the background, which can take longer
-        // than the first wait while the rest of the suite runs in parallel.
-        let deadline = ContinuousClock.now + .seconds(5)
-        while !red(), ContinuousClock.now < deadline {
-            try await Task.sleep(for: .milliseconds(50))
+        // Off screen nothing is visible, so the idle pass styles the text.
+        func waitForRed() async throws -> Bool {
+            let deadline = ContinuousClock.now + .seconds(5)
+            while !red(), ContinuousClock.now < deadline {
+                try await Task.sleep(for: .milliseconds(50))
+            }
+            return red()
         }
-        #expect(red())
+        #expect(try await waitForRed())
+        // Settings changes deactivate and reactivate the highlighter, which
+        // restyles from the spans it has (there's no parse of its own).
+        highlighter.deactivate()
+        highlighter.clearHighlighting()
+        #expect(!red())
+        highlighter.activate()
+        #expect(try await waitForRed())
     }
 }
 
@@ -88,7 +104,6 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         textView.string = Self.text
         let highlighter = MarkdownHighlighter(textView: textView)
         highlighter.applyStyles(fromStylesheet: stylesheet)
-        highlighter.usesExternalElements = true
         highlighter.activate()
         return (highlighter, scrollView, textView, window)
     }
@@ -112,7 +127,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         let (highlighter, scrollView, textView, window) = makeHighlighter()
         defer { withExtendedLifetime(window) {} }
         highlighter.idleStartDate = .distantFuture    // No idle pass.
-        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        highlighter.update(highlightElements(Self.text))
         let far = location(of: "# Heading 150\n") + 2
         #expect(!isRed(textView, at: far))
 
@@ -129,7 +144,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         defer { withExtendedLifetime(window) {} }
         var finished = 0
         highlighter.onIdlePassFinished = { finished += 1 }
-        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        highlighter.update(highlightElements(Self.text))
         let length = (Self.text as NSString).length
         #expect(highlighter.highlightedRanges.count < length / 4)
         try await waitForIdlePass(highlighter, length: length)
@@ -143,7 +158,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         let (highlighter, _, textView, window) = makeHighlighter()
         defer { withExtendedLifetime(window) {} }
         highlighter.idleStartDate = .distantFuture
-        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        highlighter.update(highlightElements(Self.text))
         #expect(!highlighter.highlightedRanges.isEmpty)
         // Directly, as typing would also scroll, and so highlight what's
         // visible again.
@@ -156,7 +171,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         defer { withExtendedLifetime(window) {} }
         scrollView.removeFromSuperview()
         scrollView.frame = .zero
-        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        highlighter.update(highlightElements(Self.text))
         #expect(highlighter.highlightedRanges.isEmpty)
         let length = (Self.text as NSString).length
         try await waitForIdlePass(highlighter, length: length)
@@ -175,7 +190,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
             return layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil).minY
                 - scrollView.contentView.bounds.minY
         }
-        highlighter.update(highlightElements(Self.text, engine: .cmarkGfm))
+        highlighter.update(highlightElements(Self.text))
         let before = top()
         try await waitForIdlePass(highlighter, length: (Self.text as NSString).length)
         // The headings above grew, yet the line stays where it was on screen.
@@ -215,7 +230,7 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
             .first(where: { if case .backgroundColor = $0.value { true } else { false } })?.value
         else { Issue.record("no editor background"); return }
         #expect(textView.backgroundColor == HighlightingStyle.color(background))
-        let h1 = try #require(highlighter.styles.first { $0.elementType == Int(pmh_H1.rawValue) })
+        let h1 = try #require(highlighter.styles.first { $0.elementType == HighlightElement.h1.rawValue })
         let rule = try #require(theme.elements.first { $0.element == "H1" })
         let foreground = rule.attributes.compactMap { attribute -> ThemeStyle.Color? in
             if case .foregroundColor(let c) = attribute.value { c } else { nil }
@@ -355,20 +370,6 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
         #expect(tv.unindentForSpaces(before: 8))
         #expect(tv.string == "    x")
     }
-}
-
-extension LiveDocumentTests {
-@MainActor @Suite struct EditorHighlightingSetupTests {
-    /// Footnotes are standard, so the editor always parses them (the old
-    /// `extensionFootnotes` setting had this inverted).
-    @Test func highlighterAlwaysParsesFootnotes() {
-        let controller = DocumentController(document: MarkdownDocument(text: "a[^1]\n\n[^1]: b\n"),
-                                            fileURL: nil)
-        defer { controller.tearDown() }
-        controller.setupEditor(nil)
-        #expect(controller.highlighter.extensions == Int32(pmh_EXT_NOTES.rawValue))
-    }
-}
 }
 
 /// Images embedded as data URIs (dropped files, pasted data; FR-33).

@@ -8,7 +8,6 @@
 import AppKit
 import Foundation
 import Testing
-import CHoedown
 @testable import MacDownKit
 
 private func fixture(_ name: String, _ ext: String) -> URL {
@@ -252,9 +251,9 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defaults.set(true, forKey: .extensionUnderline)
         let preferences = Preferences(defaults: defaults)
         preferences.extensionHighlight = true
-        let html = MarkdownParser.parse(
+        let html = MarkdownDocumentModel(
             "_italic_ __bold__ *italic* **bold** <u>under</u> ==mark==\n",
-            settings: preferences.renderSettings.parse).body
+            options: .init(preferences.renderSettings.parse)).body
         #expect(html.contains("<em>italic</em> <strong>bold</strong> <em>italic</em> <strong>bold</strong>"))
         #expect(html.contains("<u>under</u>"))
         #expect(html.contains("<mark>mark</mark>"))
@@ -291,14 +290,16 @@ private func fixture(_ name: String, _ ext: String) -> URL {
             defaults.set(false, forKey: key)
         }
         defaults.set(true, forKey: .extensionQuote)
-        let flags = Preferences(defaults: defaults).extensionFlags
-        for flag in [HOEDOWN_EXT_TABLES, HOEDOWN_EXT_FENCED_CODE, HOEDOWN_EXT_FOOTNOTES,
-                     HOEDOWN_EXT_STRIKETHROUGH] {
-            #expect(flags & flag.rawValue != 0, "\(flag) is off")
+        let settings = Preferences(defaults: defaults).renderSettings.parse
+        #expect(settings == ParseSettings())
+        let html = MarkdownDocumentModel(
+            "| a |\n|---|\n| 1 |\n\n```\ncode\n```\n\nn[^1] ~~x~~ in*tra*word \"q\"\n\n[^1]: N.\n",
+            options: .init(settings)).body
+        for element in ["<table>", "<pre>", "class=\"footnotes\"", "<del>x</del>", "in<em>tra</em>word"] {
+            #expect(html.contains(element), "missing \(element)")
         }
-        // Intra-word emphasis on (no NO_INTRA_EMPHASIS); Quote is dropped.
-        #expect(flags & HOEDOWN_EXT_NO_INTRA_EMPHASIS.rawValue == 0)
-        #expect(flags & HOEDOWN_EXT_QUOTE.rawValue == 0)
+        // Quote is dropped.
+        #expect(!html.contains("<q>"))
     }
 
     /// Converting pasted formatting is on for new installs and for existing
@@ -314,22 +315,6 @@ private func fixture(_ name: String, _ ext: String) -> URL {
             preferences.editorConvertsPastedFormatting = false
             #expect(!Preferences(defaults: defaults).editorConvertsPastedFormatting)
         }
-    }
-
-    /// The hidden engine switch for the swift-markdown migration (FR-32).
-    @Test func markdownEngine() throws {
-        let suite = "MacDownTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        // cmark-gfm ("cmarkGfm") is the default; hoedown stays selectable.
-        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
-        defaults.set("hoedown", forKey: .markdownEngine)
-        #expect(Preferences(defaults: defaults).markdownEngine == .hoedown)
-        defaults.set("bogus", forKey: .markdownEngine)
-        #expect(Preferences(defaults: defaults).markdownEngine == .cmarkGfm)
-        let preferences = Preferences(defaults: defaults)
-        preferences.markdownEngine = .hoedown
-        #expect(defaults.string(forKey: .markdownEngine) == "hoedown")
     }
 
     /// New installs follow common Markdown editing conventions.
@@ -405,41 +390,35 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         defaults.set(false, forKey: .htmlTaskList)
         defaults.set(false, forKey: .htmlDetectFrontMatter)
         let settings = Preferences(defaults: defaults).renderSettings
-        #expect(settings.parse.rendererFlags & UInt32(HOEDOWN_HTML_USE_TASK_LIST) != 0)
         #expect(settings.page.taskList)    // The checkbox script.
-        #expect(settings.parse.detectsFrontMatter)
 
-        let html = MarkdownParser.parse("---\ntitle: Notes\n---\n\n- [x] done\n",
-                                        settings: settings.parse).body
+        let html = MarkdownDocumentModel("---\ntitle: Notes\n---\n\n- [x] done\n",
+                                         options: .init(settings.parse)).body
         #expect(html.contains("<table>") && html.contains("Notes"))
         #expect(html.contains(#"type="checkbox""#))
     }
 }
 
 @Suite struct RendererTests {
-    func parse(_ engine: MarkdownEngine, _ text: String, ext: UInt32 = 0x7 | (1 << 4),
-               renderer: UInt32 = 0, toc: Bool = false, frontMatter: Bool = false) -> ParseResult {
-        let settings = ParseSettings(extensionFlags: ext, rendererFlags: renderer,
-                                     rendersTOC: toc, detectsFrontMatter: frontMatter)
-        switch engine {
-        case .hoedown:
-            return MarkdownParser.parse(text, settings: settings)
-        case .cmarkGfm:
-            let model = MarkdownDocumentModel(text, options: .init(settings))
-            return ParseResult(body: model.body, languages: model.languages)
-        }
+    func parse(_ text: String, codeInformation: Bool = false, toc: Bool = false) -> ParseResult {
+        var settings = ParseSettings()
+        settings.lineNumbers = codeInformation
+        settings.blockCodeInformation = codeInformation
+        settings.rendersTOC = toc
+        let model = MarkdownDocumentModel(text, options: .init(settings))
+        return ParseResult(body: model.body, languages: model.languages)
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func basic(_ engine: MarkdownEngine) {
-        let result = parse(engine, "# Hello\n\n*world*")
+    @Test
+    func basic() {
+        let result = parse("# Hello\n\n*world*")
         #expect(result.body.contains("<h1 id=\"toc_0\">Hello</h1>"))
         #expect(result.body.contains("<em>world</em>"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func fencedCodeMapsAliasesAndCollectsLanguages(_ engine: MarkdownEngine) {
-        let result = parse(engine, "```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
+    @Test
+    func fencedCodeMapsAliasesAndCollectsLanguages() {
+        let result = parse("```js\nvar a = 1;\n```\n\n```c++\nint x;\n```\n")
         #expect(result.body.contains("<code class=\"language-javascript\">var a = 1;</code>"))
         #expect(result.body.contains("<div><pre><code class=\"language-cpp\">"))
         #expect(result.languages.contains("javascript"))
@@ -478,9 +457,8 @@ private func fixture(_ name: String, _ ext: String) -> URL {
 
             [^n]: The note.
             """
-        // Both engines.
-        for html in [MarkdownParser.parse(text, settings: settings).body,
-                     MarkdownDocumentModel(text, options: .init(settings)).body] {
+        do {
+            let html = MarkdownDocumentModel(text, options: .init(settings)).body
             for element in ["<td>Standard</td>", "<table>", "<th>a</th>", "<td>1</td>",
                             #"<code class="language-swift">"#, "<del>gone</del>",
                             #"<div class="footnotes">"#, #"type="checkbox""#,
@@ -491,55 +469,54 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         }
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func noLanguage(_ engine: MarkdownEngine) {
-        let result = parse(engine, "```\nplain\n```\n")
+    @Test
+    func noLanguage() {
+        let result = parse("```\nplain\n```\n")
         #expect(result.body.contains("<code class=\"language-none\">plain</code>"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func taskList(_ engine: MarkdownEngine) {
-        let result = parse(engine, "- [ ] todo\n- [x] done\n", renderer: 1 << 4)
+    @Test
+    func taskList() {
+        let result = parse("- [ ] todo\n- [x] done\n")
         #expect(result.body.contains("<li class=\"task-list-item\"><input type=\"checkbox\"> todo"))
         #expect(result.body.contains("<input type=\"checkbox\" checked> done"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func lineNumbersAndInformation(_ engine: MarkdownEngine) {
-        let result = parse(engine, "```python:example.py\nprint(1)\n```\n",
-                           renderer: (1 << 5) | (1 << 6))
+    @Test
+    func lineNumbersAndInformation() {
+        let result = parse("```python:example.py\nprint(1)\n```\n", codeInformation: true)
         #expect(result.body.contains(
             "<pre class=\"line-numbers\" data-information=\"example.py\"><code class=\"language-python\">"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func tableOfContents(_ engine: MarkdownEngine) {
-        let result = parse(engine, "[TOC]\n\n# One\n\n## Two\n", toc: true)
+    @Test
+    func tableOfContents() {
+        let result = parse("[TOC]\n\n# One\n\n## Two\n", toc: true)
         #expect(result.body.contains("<ul class=\"toc\">"))
         #expect(result.body.contains("<a href=\"#toc_1\">Two</a>"))
         #expect(!result.body.contains("[TOC]"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func frontMatter(_ engine: MarkdownEngine) {
-        let result = parse(engine, "---\ntitle: Test\n---\nBody", frontMatter: true)
+    @Test
+    func frontMatter() {
+        let result = parse("---\ntitle: Test\n---\nBody")
         #expect(result.body.hasPrefix(
             "<table><thead><tr><th>title</th></tr></thead><tbody><tr><td>Test</td></tr></tbody></table>\n"))
         #expect(result.body.contains("<p>Body</p>"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func unicode(_ engine: MarkdownEngine) {
-        let result = parse(engine, "# 中文 😀\n")
+    @Test
+    func unicode() {
+        let result = parse("# 中文 😀\n")
         #expect(result.body.contains("中文 😀"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func previewPage(_ engine: MarkdownEngine) {
+    @Test
+    func previewPage() {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
         settings.lineNumbers = true
-        let result = parse(engine, "```swift\nlet a = 1\n```\n")
+        let result = parse("```swift\nlet a = 1\n```\n")
         let html = PageBuilder.previewHTML(title: "Doc", result: result,
                                            settings: settings)
         #expect(html.contains("<title>Doc</title>"))
@@ -549,11 +526,11 @@ private func fixture(_ name: String, _ ext: String) -> URL {
         #expect(html.contains("prism.css"))
     }
 
-    @Test(arguments: MarkdownEngine.allCases)
-    func exportPageIsSelfContained(_ engine: MarkdownEngine) {
+    @Test
+    func exportPageIsSelfContained() {
         var settings = PageSettings()
         settings.syntaxHighlighting = true
-        let result = parse(engine, "```swift\nlet a = 1\n```\n")
+        let result = parse("```swift\nlet a = 1\n```\n")
         let html = PageBuilder.exportHTML(title: nil, result: result,
                                           settings: settings, withStyles: false,
                                           withHighlighting: true)

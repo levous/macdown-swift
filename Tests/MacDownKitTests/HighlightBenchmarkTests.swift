@@ -2,9 +2,10 @@
 //  HighlightBenchmarkTests.swift
 //  MacDownKitTests
 //
-//  NFR-1: edit → highlight spans on a 10,000-line document, PEG against the
-//  swift-markdown model, with the stages broken down and, for comparison,
-//  cmark-gfm used directly. Run optimized, on demand:
+//  NFR-1: edit → highlight spans on a 10,000-line document with the
+//  document model, the stages broken down and, for comparison, cmark-gfm
+//  walked directly, against PEG Markdown Highlight's recorded time (it's no
+//  longer built). Run optimized, on demand:
 //
 //    MACDOWN_BENCHMARK=1 swift test -c release -Xswiftc -enable-testing \
 //      --filter HighlightBenchmarkTests
@@ -12,7 +13,6 @@
 //  Results are recorded in docs/intents/swift-markdown-migration.md (F8).
 //
 
-import CPegMarkdown
 import Foundation
 import Testing
 import cmark_gfm
@@ -21,6 +21,10 @@ import cmark_gfm_extensions
 
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["MACDOWN_BENCHMARK"] != nil))
 @MainActor struct HighlightBenchmarkTests {
+    /// PEG Markdown Highlight's median for the same document, release build,
+    /// on the Mac the migration was measured on (F8: 19.3 to 20.1 ms).
+    static let pegMilliseconds = 20.0
+
     /// The median of several runs, in milliseconds.
     func median(_ runs: Int = 9, _ body: () -> Void) -> Double {
         body()    // warm up
@@ -62,9 +66,7 @@ import cmark_gfm_extensions
         let text = Corpus.generated(lines: 10_000)
         let index = LineIndex(text)
         let tree = CMarkTree(text)
-        let freshInstall = CorpusTests.settings
-
-        let peg = median { _ = HighlightElements.parse(text, extensions: Int32(pmh_EXT_NOTES.rawValue)) }
+        let peg = Self.pegMilliseconds
         // As the app builds it: preview HTML with source lines too.
         var defaults = MarkdownDocumentModel.Options()
         defaults.sourceLines = true
@@ -78,13 +80,12 @@ import cmark_gfm_extensions
                                                       options: .init()) }
         let protectMath = median { _ = ProtectedSource(text, math: true, inlineDollar: true) }
         let direct = median { _ = cmarkDirect(text) }
-        let hoedown = median { _ = MarkdownParser.parse(text, settings: freshInstall) }
 
         print(String(format: """
-            BENCHMARK 10k lines (median ms): PEG %.1f | model %.1f, with math and opt-ins %.1f \
+            BENCHMARK 10k lines (median ms): model %.1f, with math and opt-ins %.1f \
             | stages: cmark parse %.1f, mapper %.1f, protection with math %.1f \
-            | bare cmark parse+walk %.1f | hoedown HTML %.1f
-            """, peg, model, modelAll, parse, mapper, protectMath, direct, hoedown))
+            | bare cmark parse+walk %.1f | PEG (recorded) %.1f
+            """, model, modelAll, parse, mapper, protectMath, direct, peg))
 
         // NFR-1: highlighting is no slower than PEG.
         #expect(model <= peg * 1.1, "model \(model) ms vs PEG \(peg) ms")

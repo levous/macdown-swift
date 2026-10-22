@@ -23,8 +23,6 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     case extensionHighlight
     case extensionSmartyPants
     case markdownManualRender
-    /// Hidden: the Markdown engine (cmark-gfm or hoedown).
-    case markdownEngine
 
     // MARK: Editor
     case editorBaseFontInfo

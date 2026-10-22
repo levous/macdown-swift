@@ -6,7 +6,6 @@
 //  hoedown's recorded output (EngineSnapshots).
 //
 
-import CHoedown
 import Foundation
 import Testing
 @testable import MacDownKit
@@ -106,7 +105,7 @@ import Testing
     /// Hard wrap (FR-13): with the setting on, a soft break is <br>.
     @Test func hardWrap() throws {
         var settings = CorpusTests.settings
-        settings.rendererFlags |= HOEDOWN_HTML_HARD_WRAP.rawValue
+        settings.hardWrap = true
         let text = "one\ntwo\nthree\n"
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(cmark == (try EngineSnapshots.value("hard-wrap")))
@@ -122,8 +121,8 @@ import Testing
     @Test(arguments: [false, true])
     func math(inlineDollar: Bool) throws {
         var settings = CorpusTests.settings
-        settings.extensionFlags |= HOEDOWN_EXT_MATH.rawValue
-        if inlineDollar { settings.extensionFlags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
+        settings.math = true
+        settings.inlineDollar = inlineDollar
         for (index, text) in Self.mathTexts.enumerated() {
             let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
             #expect(cmark == (try EngineSnapshots.value("math/\(inlineDollar)/\(index)")), "\(text.debugDescription)")
@@ -137,7 +136,7 @@ import Testing
         var settings = CorpusTests.settings
         let off = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(off.components(separatedBy: "<a href").count == 2)    // just <https://x.org>
-        settings.extensionFlags |= HOEDOWN_EXT_AUTOLINK.rawValue
+        settings.autolink = true
         let on = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(on == (try EngineSnapshots.value("autolink")))
     }
@@ -149,7 +148,7 @@ import Testing
         let text = Self.smartText
         var settings = CorpusTests.settings
         #expect(MarkdownDocumentModel(text, options: .init(settings)).body.contains("&quot;Double,&quot;"))
-        settings.smartyPants = true
+        settings.smartPunctuation = true
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(cmark.contains("“Double,” ‘single,’ it’s, en – dash, em — dash…"))
         #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(try EngineSnapshots.value("smart-punctuation")))
@@ -161,7 +160,8 @@ import Testing
         let text = Self.markText
         var settings = CorpusTests.settings
         #expect(!MarkdownDocumentModel(text, options: .init(settings)).body.contains("<mark>"))
-        settings.extensionFlags |= HOEDOWN_EXT_HIGHLIGHT.rawValue | HOEDOWN_EXT_SUPERSCRIPT.rawValue
+        settings.highlight = true
+        settings.superscript = true
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(cmark == (try EngineSnapshots.value("highlight-superscript")))
     }
