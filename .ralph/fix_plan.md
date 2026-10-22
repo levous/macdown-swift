@@ -1,6 +1,6 @@
 # Ralph Fix Plan: Paste Formatted Text as Markdown
 
-Branch: `feature/paste-formatted`
+Branch: `feature/markdown-action-selection`
 
 Source: `docs/prd/paste-formatted-text-prd.md` (PRD, Draft 2026-10-21) and
 `docs/intents/paste-formatted-text.md` (intent, Accepted; engineering source of truth).
@@ -23,7 +23,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 ### Phase 0: Fixtures and parser decision
 - [x] `Tools/capture-pasteboard.swift`: dump every type on `NSPasteboard.general` (raw data per type, plus `manifest.json` listing types, sizes and the source app name passed as an argument) into `Tests/MacDownKitTests/Resources/Paste/<source>/`
 - [x] Generated sample source document for captures (`Tests/MacDownKitTests/Resources/Paste/sample.md` + instructions in the tool's header): headings 1–3, bold/italic/strikethrough, inline code, a fenced code block with a language, links (absolute, relative, `#anchor`), an image, nested bulleted and numbered lists (start ≠ 1), a task list, a block quote, a rule, a simple table and a merged-cell table
-- [ ] HUMAN: copy the sample in Safari, Chrome, Google Docs, Word, Pages, TextEdit, Notion, VS Code, Xcode, Terminal and MacDown's preview, and run `capture-pasteboard.swift` for each
+- [x] HUMAN: copy the sample in Safari, Chrome, Google Docs, Word, Pages, TextEdit and MacDown's preview, and run `capture-pasteboard.swift` for each (2026-10-22; Notion skipped and dropped; VS Code, Xcode and Terminal skipped, covered by the synthetic fixtures and `codeEditors`). The user name in file paths and the Google Doc's ID were replaced with same-length placeholders (`sampleuser00`, `SAMPLE-DOCUMENT-ID…`)
 - [x] Synthetic fixtures (hand-authored HTML, so Phases 1–3 aren't blocked on captures): Google Docs wrapper `<b style="font-weight:normal" id="docs-internal-guid-…">` with styled spans; Word `mso-list` paragraphs, `o:p`, `<!--[if …]>`; AppKit RTF export (`p.p1`/`span.s1` + `<style>`, `ul`/`ol`); MacDown preview body (Prism spans, `data-source-line`, task checkboxes, footnotes); browser fragment with relative links, `<picture>`/`srcset`, nav `div`s, and `<base href>`; a VS Code/Xcode all-monospace colored snippet. Each with an expected `.md`
 - [x] Fixture loader helper for tests (`Paste/<source>/` → types + expected `.md`); the test target already bundles all of `Resources` (`.copy("Resources")`), so no `Package.swift` change is needed
 - [x] Spike: `XMLDocument(xmlString:options: [.documentTidyHTML])` over every fixture: HTML5 elements, unclosed tags, Word namespaces (`o:p`), conditional comments, `<meta charset>` fragments, non-ASCII text and entities. Record per-fixture findings (dropped/changed content, compare visible text) in the intent's "Decisions"
@@ -80,17 +80,22 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Web pages (FR-25): resolve relative `href`/`src` against the source URL (`public.url`, `org.chromium.source-url`, `<base href>`); `<picture>`/`srcset` → `img src`; skip icon-font glyphs; in-page `#anchor` links text only
 - [x] MacDown preview (FR-26): Prism token spans → code text, language kept from the `pre`/`code` class; task checkboxes restored; footnote markup → plain text without links, and the `rev="footnote"` back-link (↩) dropped entirely, as the fixture's `expected.md` has it; `data-source-line` ignored; test by rendering `help.md` sections and converting back
 - [x] Code editors (FR-6): fixture tests for VS Code, Xcode, Terminal (and JetBrains if captured) paste exactly the plain text
-- [ ] Notion and Safari/Chrome real captures: add expected `.md` and make them pass (BLOCKED: awaiting HUMAN clipboard captures in Phase 0)
+- [x] Real captures: `expected.md` for all seven (what the clipboard holds, written as Markdown); `google-docs` passes and is in `PasteFixtureConversionTests.fixture`. The tasks below make the others pass; add each fixture to that test's arguments when it does
+- [ ] Table header cells (preview, Safari, Chrome): browsers copy `th` with an inline `font-weight: bold`, so headers come out as `| **Name** |` and `<th><strong>Region</strong></th>`. Ignore bold on `th` (and inside it), since header cells are bold already; bold `td`s (Google Docs, Word, Pages, TextEdit) keep it. Makes `chrome` pass
+- [ ] In-page links from Safari and MacDown's preview: WebKit writes `#lists` as an absolute URL (`file:///…/sample.html#lists`, `x-macdown-preview://local/…/sample.md#lists`), so the "in-page `#anchor` → text only" rule misses it. Treat a link as in-page when it's the source page's URL plus a fragment. Neither puts `public.url` or `org.chromium.source-url` on the clipboard; check whether the page URL can come from `com.apple.webarchive` (`WebMainResource` → `WebResourceURL`) or the HTML's `<base href>`. Makes `safari` pass
+- [ ] Links copied from MacDown's preview use the preview's internal scheme (`x-macdown-preview://local/<path>`); map them back to `file:///<path>` (the inverse of `PreviewURL`) before writing Markdown, as Safari's copy of the exported page has them. With the in-page task, makes `macdown-preview` pass
+- [ ] Word for the web lists: each item is its own `ul`/`ol` in a `ListContainerWrapper`, with `data-listid`, `data-aria-level` and `aria-posinset` on the `li`. Join consecutive items with the same list ID into one list, nested by `data-aria-level`, keeping `ol start`; different IDs stay separate lists (alternating `.`/`)` as now). Desktop Word's `mso-list` handling is separate and unchanged. Makes `word` pass
+- [ ] RTF numbered lists (Pages, TextEdit): the RTF has the start number (`\levelstartat3`) and a numbered list nested in a numbered list (`\ilvl1`), but the converted Markdown restarts at 1 and un-nests the sub-steps. Check whether AppKit's RTF → HTML keeps `NSTextList.startingItemNumber` and the nesting (bulleted nesting already works) and fix the HTML walk or read the lists from the attributed string. Makes `pages` and `textedit` pass
 
 ## Low Priority
 
 ### Release
 - [x] Gate: `swift build`, `swift test`, `xcodegen generate` + `xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build` all pass
-- [ ] HUMAN: human verification on the built app: paste real copies from Safari, Chrome, Google Docs, Word, Pages, TextEdit, Notion, VS Code, Xcode, Terminal and MacDown's preview; check rendering against the source, code unchanged, plain-text button, screenshot paste shows in the preview. Each problem found becomes a new fixture task above
+- [ ] HUMAN: human verification on the built app: paste real copies from Safari, Chrome, Google Docs, Word, Pages, TextEdit, VS Code, Xcode, Terminal and MacDown's preview; check rendering against the source, code unchanged, plain-text button, screenshot paste shows in the preview. Each problem found becomes a new fixture task above
 - [ ] HUMAN: release notes mention paste conversion (on by default for existing installs), the setting, Paste as Markdown, and image paste
 
 ### Decisions needed
-(None yet. Add here if the Phase 0 spike finds `XMLDocument` tidy inadequate: SwiftSoup vs a hand-written parser.)
+- [ ] Infer headings from font size? RTF (Pages, TextEdit) and Word for the web have no heading markup, only larger, bold text (Word: 16.5pt title, 13.5pt/13pt section headings over 12pt body), so headings paste as plain paragraphs. Inferring them (e.g. bold and clearly larger than the body text, on a line of its own) recovers headings but can turn emphasized short paragraphs into headings. A yes changes the `word`, `pages` and `textedit` `expected.md` files; no leaves them as they are
 
 ### Future (out of scope; do not implement)
 - Importing dropped/opened `.docx`/`.html`/`.rtf` files with the same converter
@@ -111,3 +116,4 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - Tests that touch `Preferences.shared` or the general pasteboard go in the serialized `LiveDocumentTests` suite; prefer private named pasteboards in unit tests.
 - The migration plan's remaining (blocked) items are in `.ralph/swift-markdown-fix_plan.md`.
 - `.ralph/` is gitignored; commit this plan file with `git add -f`.
+- Real captures (2026-10-22): the `word` capture is Word for the web (Office Online markup, no `mso-*`), not desktop Word. Google Docs drops strikethrough, the relative and in-page links, task checkboxes and quotes before copying; Word for the web, Pages and TextEdit drop the relative and in-page links, quotes, rule and image (Word also nests the sub-steps as a separate list); none of that is a converter bug. WebKit copies text with CSS `text-transform` applied, so the preview and Safari captures say "Quotes And Rules".

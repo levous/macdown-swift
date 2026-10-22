@@ -98,9 +98,10 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 }
 
-/// Each source app's clipboard pastes as its expected Markdown (paste
-/// intent, "Source quirks"): converted as the editor does, from HTML or
-/// rich text, or as plain text when it's code.
+/// Each source app's clipboard pastes as its expected Markdown: converted as
+/// the editor does, from HTML or rich text, or as plain text when it's code.
+/// An expected file is what the clipboard holds, written as Markdown, so
+/// formatting the source app dropped before copying is missing there too.
 @MainActor @Suite struct PasteFixtureConversionTests {
     /// What pasting the fixture inserts.
     static func pasted(_ fixture: PasteFixture) throws -> String {
@@ -122,7 +123,7 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 
     @Test(arguments: ["synthetic-google-docs", "synthetic-word", "synthetic-textedit", "synthetic-browser",
-                      "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode"])
+                      "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode", "google-docs"])
     func fixture(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         #expect(try Self.pasted(fixture) == fixture.expected)
