@@ -488,6 +488,16 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
                     == "in-page [other](file:///Users/me/other.html#lists) [self](file:///Users/me/sample.html)")
     }
 
+    /// MacDown's preview serves local files through its own scheme, which
+    /// means nothing outside the app, so links and images copied from it
+    /// get their file addresses back.
+    @Test func previewAddressesBecomeFileAddresses() {
+        var options = pasteTestOptions
+        options.baseURL = URL(string: "x-macdown-preview://local/Users/me/notes/doc.md")
+        #expect(markdown(#"<p><a href="x-macdown-preview://local/Users/me/notes/next.html">next</a> <a href="../a%20b.md#top">up</a> <img src="x-macdown-preview://local/Users/me/notes/i.png" alt="i"> <a href="x-macdown-preview://local/Users/me/notes/doc.md#lists">here</a></p>"#, options)
+                    == "[next](file:///Users/me/notes/next.html) [up](file:///Users/me/a%20b.md#top) ![i](file:///Users/me/notes/i.png) here")
+    }
+
     @Test func linkContent() {
         #expect(markdown(#"<p><a href="u"><b>bold</b> link</a></p>"#) == "[**bold** link](u)")
         #expect(markdown(#"<p><a href="u">[1]</a></p>"#) == #"[\[1\]](u)"#)

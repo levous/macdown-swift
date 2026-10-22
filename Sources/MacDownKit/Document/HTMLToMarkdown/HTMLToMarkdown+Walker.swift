@@ -352,6 +352,10 @@ extension HTMLToMarkdown {
                 }
                 url = resolved.absoluteString
             }
+            // The preview's own scheme for local files means nothing outside it.
+            if let parsed = URL(string: url), parsed.scheme == PreviewURL.scheme {
+                url = PreviewURL.fileURL(for: parsed).absoluteString
+            }
             let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
             return Link(url: url, title: title?.isEmpty == false ? title : nil)
         }
