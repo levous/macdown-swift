@@ -8,8 +8,9 @@
 //  text mixes sizes, so the most common one can be smaller than the body).
 //  A paragraph is a heading when all its text is one size clearly larger
 //  than that, on one short line that doesn't end like a sentence; the
-//  largest heading size is `#`, the next `##`, the rest `###`. HTML with
-//  real headings is left alone.
+//  largest heading size is `#`, the next `##`, the rest `###`. Only HTML
+//  from AppKit or Word for the web, without real headings, is read this
+//  way: on a web page a larger short paragraph is usually just that.
 //
 
 import Foundation

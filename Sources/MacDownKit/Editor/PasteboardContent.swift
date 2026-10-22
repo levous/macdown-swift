@@ -96,7 +96,7 @@ enum PasteboardContent: Equatable {
     /// `ul`/`ol` for each list a paragraph is in that the paragraph before
     /// wasn't, in order, so the tags match those lists one to one; if they
     /// don't, the HTML is left as it is.
-    private static func withListStarts(_ html: String, from text: NSAttributedString) -> String {
+    static func withListStarts(_ html: String, from text: NSAttributedString) -> String {
         var opened: [NSTextList] = []
         var previous: [NSTextList] = []
         (text.string as NSString).enumerateSubstrings(in: NSRange(location: 0, length: text.length),

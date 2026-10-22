@@ -316,11 +316,14 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
+/// What AppKit's HTML export for rich text starts with.
+let cocoaGenerator = #"<meta name="Generator" content="Cocoa HTML Writer">"#
+
 /// Rich text and Word for the web mark headings only with a larger font.
 @Suite struct HTMLToMarkdownFontSizeHeadingTests {
     /// AppKit's HTML for rich text: sizes in `<style>` classes, with runs of
     /// a smaller size inside larger paragraphs.
-    static let richText = """
+    static let richText = cocoaGenerator + """
         <style>p.p1 {font: 22.5px 'Helvetica Light'} p.p2 {font: 16.0px 'Helvetica Light'}
         p.p3 {font: 18.5px 'Helvetica Light'} p.p5 {font: 17.6px Helvetica} span.s1 {font: 12.0px Helvetica}</style>
         <p class="p1">Title</p>
@@ -360,15 +363,31 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     /// Word for the web: sizes in points on the runs.
     @Test func wordForTheWebHeadings() {
         func paragraph(_ size: Double, _ text: String) -> String {
-            #"<p class="Paragraph"><span class="TextRun" style="font-size: \#(size)pt">\#(text)</span><span class="EOP" style="font-size: 9pt">&nbsp;</span></p>"#
+            #"<p class="Paragraph" paraid="1"><span class="TextRun" style="font-size: \#(size)pt">\#(text)</span><span class="EOP" style="font-size: 9pt">&nbsp;</span></p>"#
         }
         let html = paragraph(16.5, "Title") + paragraph(12, "Body text in twelve point, as most of the document is.")
             + paragraph(13.5, "Section") + paragraph(12, "More body text.") + paragraph(13, "Subsection")
         #expect(markdown(html) == "# Title\n\nBody text in twelve point, as most of the document is.\n\n## Section\n\nMore body text.\n\n### Subsection\n")
     }
 
+    /// On a web page, a larger short paragraph is just that.
+    @Test func onlyRichTextAndWordForTheWeb() {
+        let body = #"<p style="font-size: 16px">Body text that most of the page is in, over a few sentences.</p>"#
+        #expect(markdown(#"<p style="font-size: 1.2em">A larger lead paragraph</p>"# + body + body)
+                    == "A larger lead paragraph\n\nBody text that most of the page is in, over a few sentences.\n\nBody text that most of the page is in, over a few sentences.\n")
+    }
+
+    @Test func headingSizedTextInCellsAndUnsizedBodies() {
+        // A heading-sized cell is a cell.
+        #expect(markdown(cocoaGenerator + #"<p style="font-size: 12px">Body text, the size most of this paste is in, over several sentences.</p><table><tr><td><p style="font-size: 24px">Big</p></td></tr></table>"#)
+                    == "Body text, the size most of this paste is in, over several sentences.\n\n| Big |\n| --- |\n")
+        // Without sizes on the body text, there's nothing to compare with.
+        #expect(markdown(cocoaGenerator + #"<p>Body text with no size of its own, over several sentences.</p><p style="font-size: 24px">Large</p>"#)
+                    == "Body text with no size of its own, over several sentences.\n\nLarge\n")
+    }
+
     @Test func paragraphsThatStayParagraphs() {
-        let body = #"<p style="font-size: 12pt">Body text, the size most of this paste is in, over several sentences.</p>"#
+        let body = cocoaGenerator + #"<p style="font-size: 12pt">Body text, the size most of this paste is in, over several sentences.</p>"#
         // Large but long, or ending like a sentence.
         #expect(markdown(body + #"<p style="font-size: 18pt">A large paragraph that runs on for well over eighty characters of text, so it isn't a heading.</p>"#)
                     == "Body text, the size most of this paste is in, over several sentences.\n\nA large paragraph that runs on for well over eighty characters of text, so it isn't a heading.\n")
@@ -381,7 +400,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(body + #"<h2>Real</h2><p style="font-size: 18pt">Large</p>"#)
                     == "Body text, the size most of this paste is in, over several sentences.\n\n## Real\n\nLarge\n")
         // A paste of one large line has nothing to compare it with.
-        #expect(markdown(#"<p style="font-size: 24pt">Just this</p>"#) == "Just this")
+        #expect(markdown(cocoaGenerator + #"<p style="font-size: 24pt">Just this</p>"#) == "Just this")
     }
 }
 
@@ -625,11 +644,13 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     /// list, and numbering that carries on as a new list. Both join the
     /// list before them, as they read in the document.
     @Test func listsAppKitSplitsAreJoined() {
-        #expect(markdown(#"<ol start="3"><li>x</li><li>y</li></ol><ol><ol><li>a</li><li>b</li></ol></ol><ol start="5"><li>z</li></ol>"#)
-                    == "3. x\n4. y\n    1. a\n    2. b\n5. z\n")
+        let split = #"<ol start="3"><li>x</li><li>y</li></ol><ol><ol><li>a</li><li>b</li></ol></ol><ol start="5"><li>z</li></ol>"#
+        #expect(markdown(cocoaGenerator + split) == "3. x\n4. y\n    1. a\n    2. b\n5. z\n")
         // Numbering that doesn't carry on, or a list of another kind, stays separate.
-        #expect(markdown(#"<ol><li>x</li></ol><ol start="5"><li>z</li></ol><ul><li>b</li></ul>"#)
+        #expect(markdown(cocoaGenerator + #"<ol><li>x</li></ol><ol start="5"><li>z</li></ol><ul><li>b</li></ul>"#)
                     == "1. x\n\n5) z\n\n- b\n")
+        // In other HTML, two lists are two lists, even when the numbers run on.
+        #expect(markdown(#"<ol><li>x</li><li>y</li></ol><ol start="3"><li>z</li></ol>"#) == "1. x\n2. y\n\n3) z\n")
     }
 
     @Test func nestingUsesTheIndentSetting() {
@@ -702,12 +723,15 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(#"<ul><li><p><input type="checkbox" checked disabled>Done</p></li></ul>"#) == "- [x] Done\n")
     }
 
-    /// Notion copies a to-do as text: the box as `[x]` or `[ ]` before the item.
+    /// Notion copies a list of to-dos as text: the box as `[x]` or `[ ]`
+    /// before every item.
     @Test func bracketTextTasks() {
         #expect(markdown("<ul><li>[x] Done</li><li>[X] <b>Bold</b> done</li><li>[ ] Open</li></ul>")
                     == "- [x] Done\n- [x] **Bold** done\n- [ ] Open\n")
         // Without the space after it, or not at the start, it's text.
         #expect(markdown("<ul><li>[x]Done</li><li>Item [ ] later</li></ul>") == "- \\[x\\]Done\n- Item \\[ \\] later\n")
+        // One such item among others is text: a list about checklists, say.
+        #expect(markdown("<ul><li>[x] means done</li><li>Plain item</li></ul>") == "- \\[x\\] means done\n- Plain item\n")
     }
 
     @Test func otherInputsAreNotTasks() {

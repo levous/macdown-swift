@@ -107,6 +107,45 @@ import Testing
                     == "- Bullet\n\n3. Third\n4. Fourth\n    1. Sub\n5. Fifth\n")
     }
 
+    /// Rich text whose paragraphs are in `lists`, one paragraph per entry.
+    static func listText(_ paragraphs: [(String, [NSTextList])]) -> NSAttributedString {
+        let text = NSMutableAttributedString()
+        for (line, lists) in paragraphs {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.textLists = lists
+            text.append(NSAttributedString(string: line + "\n", attributes: [
+                .font: NSFont(name: "Helvetica", size: 12)!, .paragraphStyle: paragraph]))
+        }
+        return text
+    }
+
+    /// When the HTML's list tags don't match the rich text's lists one to
+    /// one, the starts can't be placed, so the HTML is left as it is.
+    @Test func listStartsNeedMatchingTags() {
+        let three = NSTextList(markerFormat: .decimal, options: 0)
+        three.startingItemNumber = 3
+        let text = Self.listText([("Third", [three]), ("Fourth", [three])])
+        let html = "<ol><li>Third</li></ol><ol><li>Fourth</li></ol>"
+        #expect(PasteboardContent.withListStarts(html, from: text) == html)
+        #expect(PasteboardContent.withListStarts("<ol><li>Third</li><li>Fourth</li></ol>", from: text)
+                    == #"<ol start="3"><li>Third</li><li>Fourth</li></ol>"#)
+    }
+
+    /// A bulleted list inside a numbered one: only the `ol` gets a start.
+    @Test func bulletsInsideANumberedList() throws {
+        let three = NSTextList(markerFormat: .decimal, options: 0)
+        three.startingItemNumber = 3
+        let bullets = NSTextList(markerFormat: .disc, options: 0)
+        let text = Self.listText([("Third", [three]), ("Point", [three, bullets]), ("Fourth", [three])])
+        let rtf = try #require(text.rtf(from: NSRange(location: 0, length: text.length)))
+        guard case .html(let html, nil)? = read([.rtf: rtf]) else {
+            Issue.record("no HTML")
+            return
+        }
+        #expect(HTMLToMarkdown(options: pasteTestOptions).convert(html)?.markdown
+                    == "3. Third\n    - Point\n4. Fourth\n")
+    }
+
     @Test func imageData() throws {
         let image = NSImage(size: NSSize(width: 2, height: 2), flipped: false) { rect in
             NSColor.red.setFill(); rect.fill(); return true

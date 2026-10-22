@@ -63,6 +63,9 @@ extension HTMLToMarkdown {
         /// Paragraphs that are headings by their font size, and their levels
         /// (see HTMLToMarkdown+FontSizeHeadings.swift).
         var sizeHeadings: [ObjectIdentifier: Int] = [:]
+        /// Join the lists AppKit's HTML for rich text splits (see `isIndentedList`
+        /// and `joiningSplitLists`).
+        var repairsAppKitLists = false
 
         /// Elements that start a block of their own; anything else is inline.
         static let blockElements: Set<String> = [
@@ -129,7 +132,7 @@ extension HTMLToMarkdown {
                         continue
                     }
                     flushWordList()
-                    if Self.isIndentedList(element), case .list(var list)? = blocks.last, !list.items.isEmpty {
+                    if repairsAppKitLists, Self.isIndentedList(element), case .list(var list)? = blocks.last, !list.items.isEmpty {
                         list.items[list.items.count - 1].blocks += block(element, style: elementStyle)
                         blocks[blocks.count - 1] = .list(list)
                         continue
@@ -142,7 +145,7 @@ extension HTMLToMarkdown {
             }
             flush()
             flushWordList()
-            return Self.joiningSplitLists(blocks)
+            return repairsAppKitLists ? Self.joiningSplitLists(blocks) : blocks
         }
 
         /// Whether an element is Tidy's repair of a list directly inside a
@@ -225,17 +228,26 @@ extension HTMLToMarkdown {
             for child in element.children ?? [] {
                 guard let child = child as? XMLElement else { continue }
                 let childStyle = self.style(of: child, inheriting: style)
-                var blocks = child.localName?.lowercased() == "li"
+                let blocks = child.localName?.lowercased() == "li"
                     ? self.blocks(in: child, style: childStyle) : block(child, style: childStyle)
                 guard !blocks.isEmpty else { continue }
                 if !items.isEmpty, blocks.allSatisfy(\.isList) {
                     items[items.count - 1].blocks += blocks
                 } else {
-                    let task = Self.taskState(child) ?? Self.removeTaskText(from: &blocks)
-                    items.append(ListItem(blocks: blocks, task: task, spaced: hasSpacedParagraph(child)))
+                    items.append(ListItem(blocks: blocks, task: Self.taskState(child),
+                                          spaced: hasSpacedParagraph(child)))
                 }
             }
             guard !items.isEmpty else { return [] }
+            // Notion copies a list of to-dos as text, every item starting with
+            // its box. One such item among others is just text.
+            if items.allSatisfy({ $0.task == nil }) {
+                var tasks = items
+                for index in tasks.indices {
+                    tasks[index].task = Self.removeTaskText(from: &tasks[index].blocks)
+                }
+                if tasks.allSatisfy({ $0.task != nil }) { items = tasks }
+            }
             let ordered = element.localName?.lowercased() == "ol"
             let start = ordered ? element.attribute(forName: "start")?.stringValue
                 .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1 : 1
@@ -285,9 +297,9 @@ extension HTMLToMarkdown {
             return state
         }
 
-        /// A task written as text before the item, `[x] ` or `[ ] `, as
-        /// Notion copies its to-dos: removes it and returns whether it's
-        /// checked, or nil if the item doesn't start with one.
+        /// A task written as text before an item, `[x] ` or `[ ] `: removes
+        /// it and returns whether it's checked, or nil if the item doesn't
+        /// start with one.
         static func removeTaskText(from blocks: inout [Block]) -> Bool? {
             guard case .paragraph(var inlines)? = blocks.first,
                   let index = inlines.firstIndex(where: {

@@ -82,7 +82,17 @@ public struct HTMLToMarkdown: Sendable {
         guard let (document, body) = parse(html) else { return [] }
         let css = ((try? document.nodes(forXPath: "//style")) ?? []).compactMap(\.stringValue)
         var walker = Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n")), baseURL: baseURL)
-        walker.sizeHeadings = walker.fontSizeHeadings(in: body)
+        // Repairs for what particular writers lose, applied only to their
+        // HTML: elsewhere a larger short paragraph or two lists in a row
+        // mean what they say.
+        let fromAppKit = ((try? document.nodes(forXPath: "//meta")) ?? []).contains {
+            ($0 as? XMLElement)?.attribute(forName: "content")?.stringValue == "Cocoa HTML Writer"
+        }
+        let fromWordForTheWeb = ((try? body.nodes(forXPath: ".//*[@paraid]")) ?? []).isEmpty == false
+        walker.repairsAppKitLists = fromAppKit
+        if fromAppKit || fromWordForTheWeb {
+            walker.sizeHeadings = walker.fontSizeHeadings(in: body)
+        }
         return walker.blocks(in: body)
     }
 
