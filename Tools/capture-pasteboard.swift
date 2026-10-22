@@ -1,8 +1,9 @@
+#!/usr/bin/env swift
 // Saves everything on the clipboard as a paste fixture: one file per type,
 // named after the type identifier, plus a manifest.json listing the types,
 // their sizes and the source app.
 //
-//     swift Tools/capture-pasteboard.swift <source> [output directory] [--pasteboard <name>]
+//     Tools/capture-pasteboard.swift <source> [output directory] [--pasteboard <name>]
 //
 // The output directory defaults to Tests/MacDownKitTests/Resources/Paste/<source>
 // (relative to the current directory, so run it from the repository root).
