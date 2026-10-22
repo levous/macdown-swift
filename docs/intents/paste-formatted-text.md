@@ -172,6 +172,15 @@ When the clipboard holds image data and no HTML, RTF or text (a screenshot copie
 
 Dated, newest first.
 
+**Pasted images stay data URIs; large ones are slow (2026-10-21).** Measured in a release build on an M-series Mac, with a document open in the editor and preview:
+
+| Image | PNG | Data URI | Paste | Parse | Each keystroke (parse, off the main actor) | Preview shows it |
+|---|---|---|---|---|---|---|
+| Retina window screenshot, 2952×1922 | 0.5 MB | 0.7 M characters | 322 ms | 36 ms | 28 ms | 383 ms |
+| Worst case: 2880×1800 random noise (doesn't compress) | 15.6 MB | 20.8 M characters | 9.1 s | 1.1 s | 0.8 s | 14.6 s |
+
+A typical screenshot is fine. Time grows with the image's size, so a large, detailed one (a photo or a busy full-screen capture, several MB) makes pasting take seconds and slows every preview update while it's in the document; typing itself stays fast (2 ms per keystroke in the first case, 29 ms in the worst). This is the trade-off already accepted for dropped images. Saving images as files next to the document (see Future considerations in the PRD) is the fix if it matters in practice.
+
 **Bold keywords don't stop code detection (2026-10-21).** "Code editors" above says emphasis makes content not code. But JetBrains IDEs, and some Xcode themes, bold keywords, so their code would be converted, which the code-safety requirement rules out. Content is treated as code when all its visible text is monospace (or in code blocks) and it has no links, images, headings, lists, quotes or tables; bold, italic and colors don't count. A document set entirely in a monospace font with bold words then pastes as plain text, which is the safer mistake.
 
 **Conversion stays on the main actor (2026-10-21).** Measured in a release build on an M-series Mac: `help.md`'s rendered HTML (30 KB, a long article) converts in 11 ms, and 40 copies of the Google Docs fixture (360 KB of HTML, about 3,000 styled spans) in 44 ms. Both are under the 50 ms goal, so pastes convert synchronously and there's no off-main-actor path. Most of the time was parsing `style` attributes; reading only the properties the converter uses, from the raw bytes, took the Google Docs case from 106 ms to 44 ms.
