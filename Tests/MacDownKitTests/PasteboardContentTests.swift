@@ -81,6 +81,32 @@ import Testing
         #expect(HTMLToMarkdown(options: pasteTestOptions).convert(fromRTFD)?.markdown == "plain **bold**")
     }
 
+    /// AppKit's export leaves out where numbered lists start; the reader
+    /// puts it back from the rich text's lists.
+    @Test func richTextListsKeepTheirStart() throws {
+        let bullets = NSTextList(markerFormat: .disc, options: 0)
+        let three = NSTextList(markerFormat: .decimal, options: 0)
+        three.startingItemNumber = 3
+        let inner = NSTextList(markerFormat: .decimal, options: 0)
+        let five = NSTextList(markerFormat: .decimal, options: 0)
+        five.startingItemNumber = 5
+        let text = NSMutableAttributedString()
+        for (line, lists) in [("Bullet", [bullets]), ("Third", [three]), ("Fourth", [three]),
+                              ("Sub", [three, inner]), ("Fifth", [five])] {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.textLists = lists
+            text.append(NSAttributedString(string: line + "\n", attributes: [
+                .font: NSFont(name: "Helvetica", size: 12)!, .paragraphStyle: paragraph]))
+        }
+        let rtf = try #require(text.rtf(from: NSRange(location: 0, length: text.length)))
+        guard case .html(let html, nil)? = read([.rtf: rtf]) else {
+            Issue.record("no HTML")
+            return
+        }
+        #expect(HTMLToMarkdown(options: pasteTestOptions).convert(html)?.markdown
+                    == "- Bullet\n\n3. Third\n4. Fourth\n    1. Sub\n5. Fifth\n")
+    }
+
     @Test func imageData() throws {
         let image = NSImage(size: NSSize(width: 2, height: 2), flipped: false) { rect in
             NSColor.red.setFill(); rect.fill(); return true

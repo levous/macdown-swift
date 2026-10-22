@@ -131,7 +131,7 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
 
     /// Captures whose headings are only a larger font: everything but the
     /// headings matches until those are recognized.
-    @Test(arguments: ["word"])
+    @Test(arguments: ["word", "pages", "textedit"])
     func fixtureApartFromHeadings(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         let expected = try #require(fixture.expected).split(separator: "\n", omittingEmptySubsequences: false)

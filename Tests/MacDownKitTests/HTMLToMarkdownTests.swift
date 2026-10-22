@@ -551,6 +551,18 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown("<ol><li>x</li></ol>") == "1. x\n")
     }
 
+    /// AppKit's HTML for rich text closes a list before a sublist that
+    /// belongs to another list object, writing it as a list holding only a
+    /// list, and numbering that carries on as a new list. Both join the
+    /// list before them, as they read in the document.
+    @Test func listsAppKitSplitsAreJoined() {
+        #expect(markdown(#"<ol start="3"><li>x</li><li>y</li></ol><ol><ol><li>a</li><li>b</li></ol></ol><ol start="5"><li>z</li></ol>"#)
+                    == "3. x\n4. y\n    1. a\n    2. b\n5. z\n")
+        // Numbering that doesn't carry on, or a list of another kind, stays separate.
+        #expect(markdown(#"<ol><li>x</li></ol><ol start="5"><li>z</li></ol><ul><li>b</li></ul>"#)
+                    == "1. x\n\n5) z\n\n- b\n")
+    }
+
     @Test func nestingUsesTheIndentSetting() {
         let html = "<ul><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li><li>d</li></ul>"
         #expect(markdown(html) == "- a\n    - b\n        1. c\n- d\n")

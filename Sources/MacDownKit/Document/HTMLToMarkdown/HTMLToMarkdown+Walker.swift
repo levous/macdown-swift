@@ -126,6 +126,11 @@ extension HTMLToMarkdown {
                         continue
                     }
                     flushWordList()
+                    if Self.isIndentedList(element), case .list(var list)? = blocks.last, !list.items.isEmpty {
+                        list.items[list.items.count - 1].blocks += block(element, style: elementStyle)
+                        blocks[blocks.count - 1] = .list(list)
+                        continue
+                    }
                     blocks += block(element, style: elementStyle)
                 } else {
                     flushWordList()
@@ -134,7 +139,37 @@ extension HTMLToMarkdown {
             }
             flush()
             flushWordList()
-            return blocks
+            return Self.joiningSplitLists(blocks)
+        }
+
+        /// Whether an element is Tidy's repair of a list directly inside a
+        /// list (`<ol><ol>`, as AppKit writes a sublist in another list
+        /// object than its parent): an indented `div` holding only the list.
+        static func isIndentedList(_ element: XMLElement) -> Bool {
+            guard element.localName?.lowercased() == "div",
+                  element.attribute(forName: "style")?.stringValue
+                    .map({ StyleSheet.declarations($0)["margin-left"] != nil }) == true
+            else { return false }
+            let children = element.children ?? []
+            return children.count == 1 && ["ul", "ol"].contains(children[0].localName?.lowercased() ?? "")
+        }
+
+        /// Adjacent ordered lists whose numbering carries on read as one
+        /// list; AppKit's HTML for rich text splits a list this way after a
+        /// sublist in another list object.
+        static func joiningSplitLists(_ blocks: [Block]) -> [Block] {
+            var result: [Block] = []
+            for block in blocks {
+                if case .list(let next) = block, case .list(var list)? = result.last,
+                   list.ordered, next.ordered, !list.items.isEmpty,
+                   next.start == list.start + list.items.count {
+                    list.items += next.items
+                    result[result.count - 1] = .list(list)
+                } else {
+                    result.append(block)
+                }
+            }
+            return result
         }
 
         /// A block element's blocks.

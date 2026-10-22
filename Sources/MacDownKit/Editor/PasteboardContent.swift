@@ -87,6 +87,34 @@ enum PasteboardContent: Equatable {
               let html = try? text.data(from: NSRange(location: 0, length: text.length),
                                         documentAttributes: [.documentType: NSAttributedString.DocumentType.html])
         else { return nil }
-        return String(decoding: html, as: UTF8.self)
+        return withListStarts(String(decoding: html, as: UTF8.self), from: text)
+    }
+
+    private static let listTag = try! NSRegularExpression(pattern: "<(ol|ul)\\b", options: .caseInsensitive)
+
+    /// AppKit's HTML export drops where numbered lists start. It opens a
+    /// `ul`/`ol` for each list a paragraph is in that the paragraph before
+    /// wasn't, in order, so the tags match those lists one to one; if they
+    /// don't, the HTML is left as it is.
+    private static func withListStarts(_ html: String, from text: NSAttributedString) -> String {
+        var opened: [NSTextList] = []
+        var previous: [NSTextList] = []
+        (text.string as NSString).enumerateSubstrings(in: NSRange(location: 0, length: text.length),
+                                                      options: [.byParagraphs, .substringNotRequired]) { _, range, _, _ in
+            let style = range.length > 0
+                ? text.attribute(.paragraphStyle, at: range.location, effectiveRange: nil) as? NSParagraphStyle : nil
+            let lists = style?.textLists ?? []
+            let common = zip(lists, previous).prefix { $0 === $1 }.count
+            opened += lists[common...]
+            previous = lists
+        }
+        let tags = listTag.matches(in: html, range: NSRange(html.startIndex..., in: html))
+        guard tags.count == opened.count, opened.contains(where: { $0.startingItemNumber != 1 }) else { return html }
+        var result = html
+        for (match, list) in zip(tags, opened).reversed() where list.startingItemNumber != 1 {
+            guard let range = Range(match.range, in: result), result[range].lowercased() == "<ol" else { continue }
+            result.replaceSubrange(range, with: "<ol start=\"\(list.startingItemNumber)\"")
+        }
+        return result
     }
 }
