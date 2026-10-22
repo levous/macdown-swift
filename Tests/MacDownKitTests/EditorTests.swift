@@ -6,7 +6,15 @@
 import AppKit
 import CPegMarkdown
 import Testing
+
 @testable import MacDownKit
+
+/// Whether a color is the stylesheets' ff0000. Checking only the red
+/// component would also match white, the default text color in Dark Mode.
+func isPureRed(_ color: NSColor?) -> Bool {
+    guard let color = color?.usingColorSpace(.deviceRGB) else { return false }
+    return color.redComponent == 1 && color.greenComponent == 0 && color.blueComponent == 0
+}
 
 /// Highlight spans from either engine: PEG, or the swift-markdown model.
 func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightElements {
@@ -49,9 +57,16 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
             // As after a parse: spans arrive once the text is laid out.
             highlighter.update(highlightElements(textView.string, engine: engine))
         }
-        let color = textView.textStorage?.attribute(.foregroundColor, at: 2,
-                                                    effectiveRange: nil) as? NSColor
-        #expect(color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0)
+        func red() -> Bool {
+            isPureRed(textView.textStorage?.attribute(.foregroundColor, at: 2, effectiveRange: nil) as? NSColor)
+        }
+        // The hoedown engine parses in the background, which can take longer
+        // than the first wait while the rest of the suite runs in parallel.
+        let deadline = ContinuousClock.now + .seconds(5)
+        while !red(), ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(red())
     }
 }
 
@@ -79,9 +94,8 @@ func highlightElements(_ text: String, engine: MarkdownEngine) -> HighlightEleme
     }
 
     func isRed(_ textView: NSTextView, at location: Int) -> Bool {
-        let color = textView.textStorage?.attribute(.foregroundColor, at: location,
-                                                    effectiveRange: nil) as? NSColor
-        return color?.usingColorSpace(.deviceRGB)?.redComponent == 1.0
+        isPureRed(textView.textStorage?.attribute(.foregroundColor, at: location,
+                                                  effectiveRange: nil) as? NSColor)
     }
 
     func location(of string: String) -> Int {
@@ -355,4 +369,373 @@ extension LiveDocumentTests {
         #expect(controller.highlighter.extensions == Int32(pmh_EXT_NOTES.rawValue))
     }
 }
+}
+
+/// Images embedded as data URIs (dropped files, pasted data; FR-33).
+@Suite struct ImageMarkupTests {
+    @Test func dataURI() {
+        #expect(ImageMarkup.dataURI(Data([1, 2, 3]), mime: "image/png") == "![](data:image/png;base64,AQID)")
+    }
+
+    @Test func filesAreTypedByExtension() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        for (name, mime) in [("a.png", "image/png"), ("b.JPG", "image/jpeg"), ("c.gif", "image/gif"),
+                             ("d", "image/jpeg")] {
+            let url = directory.appending(path: name)
+            try Data([0xFF]).write(to: url)
+            #expect(ImageMarkup.dataURI(contentsOf: url) == "![](data:\(mime);base64,/w==)")
+        }
+        #expect(ImageMarkup.dataURI(contentsOf: directory.appending(path: "missing.png")) == nil)
+    }
+}
+
+/// Pasting inside a code block pastes plain text (FR-5): the editor knows
+/// where code blocks are from the latest parse, or by scanning for fences
+/// when the parse is behind the text.
+@MainActor @Suite struct EditorCodeBlockTests {
+    func editor(_ text: String, parsed: String? = nil) -> EditorTextView {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let editor = textView as! EditorTextView
+        editor.string = text
+        if let parsed {
+            editor.documentBlocks = (parsed, MarkdownDocumentModel(parsed, options: .init()).blocks)
+        }
+        return editor
+    }
+
+    func location(of marker: String, in text: String) -> Int {
+        (text as NSString).range(of: marker).location
+    }
+
+    static let text = "Intro\n\n```swift\nlet a = 1\n\nlet b = 2\n```\n\nOutside\n\n    indented code\n\n~~~\nTILDE\n````\nstill\n~~~\nafter\n"
+
+    @Test(arguments: [true, false])
+    func fencedBlocks(parsed: Bool) {
+        let text = Self.text
+        let editor = editor(text, parsed: parsed ? text : "stale")
+        #expect(editor.isInCodeBlock(location(of: "let a", in: text)))
+        #expect(editor.isInCodeBlock(location(of: "\nlet b", in: text)))    // the blank line
+        #expect(!editor.isInCodeBlock(location(of: "Intro", in: text)))
+        #expect(!editor.isInCodeBlock(location(of: "Outside", in: text)))
+        // A fence closes only with its own character, at least as long.
+        #expect(editor.isInCodeBlock(location(of: "TILDE", in: text)))
+        #expect(editor.isInCodeBlock(location(of: "still", in: text)))
+        #expect(!editor.isInCodeBlock(location(of: "after", in: text)))
+    }
+
+    /// Indented code is known from the parse.
+    @Test func indentedBlocks() {
+        let text = Self.text
+        #expect(editor(text, parsed: text).isInCodeBlock(location(of: "indented code", in: text)))
+    }
+
+    /// A fence just typed, before the parse catches up, runs to the end.
+    @Test func unclosedFenceJustTyped() {
+        let text = "Before\n\n```\n"
+        let editor = editor(text, parsed: "Before\n\n")
+        #expect(editor.isInCodeBlock((text as NSString).length))
+        #expect(!editor.isInCodeBlock(0))
+    }
+}
+
+extension EditorCodeBlockTests {
+    @Test func unclosedFenceFromTheParse() {
+        let text = "Before\n\n```\ncode"
+        #expect(editor(text, parsed: text).isInCodeBlock((text as NSString).length))
+    }
+}
+
+/// Pasting formatted text and images (FR-1 to FR-3, FR-6, FR-9, FR-33,
+/// FR-34). Each test uses its own named pasteboard.
+@MainActor @Suite struct EditorPasteTests {
+    func editor(_ text: String, selection: NSRange? = nil) -> EditorTextView {
+        let (_, textView) = EditorTextView.makeScrollableEditor()
+        let editor = textView as! EditorTextView
+        editor.string = text
+        editor.pasteOptions = pasteTestOptions
+        editor.setSelectedRange(selection ?? NSRange(location: (text as NSString).length, length: 0))
+        return editor
+    }
+
+    func pasteboard(_ types: [NSPasteboard.PasteboardType: String]) -> NSPasteboard {
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        pasteboard.clearContents()
+        let item = NSPasteboardItem()
+        for (type, string) in types { item.setString(string, forType: type) }
+        pasteboard.writeObjects([item])
+        return pasteboard
+    }
+
+    /// Pastes `types` into `editor`; whether it was converted.
+    func paste(_ types: [NSPasteboard.PasteboardType: String], into editor: EditorTextView) -> Bool {
+        let pasteboard = pasteboard(types)
+        defer { pasteboard.releaseGlobally() }
+        return editor.pasteConverted(from: pasteboard)
+    }
+
+    @Test func inlineParagraph() {
+        let editor = editor("Say ")
+        #expect(paste([.html: "<p><b>hello</b> world</p>", .string: "hello world"], into: editor))
+        #expect(editor.string == "Say **hello** world")
+        #expect(editor.selectedRange() == NSRange(location: editor.string.utf16.count, length: 0))
+    }
+
+    @Test func replacesTheSelection() {
+        let editor = editor("one two three", selection: NSRange(location: 4, length: 3))
+        #expect(paste([.html: "<i>2</i>", .string: "2"], into: editor))
+        #expect(editor.string == "one *2* three")
+    }
+
+    /// Blocks are set off from the text around them by blank lines.
+    @Test func blocksGetBlankLines() {
+        let html = "<h1>T</h1><p>p</p>"
+        var editor = editor("Foo")
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "Foo\n\n# T\n\np\n")
+        editor = self.editor("A\n\nB", selection: NSRange(location: 3, length: 0))
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "A\n\n# T\n\np\n\nB")
+        editor = self.editor("")
+        #expect(paste([.html: html, .string: "T p"], into: editor))
+        #expect(editor.string == "# T\n\np\n")
+    }
+
+    @Test func usesTheEditingSettingsAndBaseURL() {
+        let editor = editor("")
+        editor.pasteOptions = .init(listMarker: "+", indent: "\t")
+        #expect(paste([.html: #"<ul><li><a href="x.html">a</a><ul><li>b</li></ul></li></ul>"#,
+                       .init("org.chromium.source-url"): "https://e.com/d/page.html", .string: "a b"], into: editor))
+        #expect(editor.string == "+ [a](https://e.com/d/x.html)\n\t+ b\n")
+    }
+
+    /// Plain text, code and code blocks are left to the usual paste.
+    @Test func notConverted() throws {
+        #expect(!paste([.string: "plain"], into: editor("")))
+        #expect(!paste([.html: try #require(try PasteFixture.load("synthetic-vscode").html), .string: "let"],
+                       into: editor("")))
+        #expect(!paste([.html: "<b>x</b>", .string: "x"], into: editor("```\ncode\n")))
+        let off = editor("")
+        off.convertsPastedFormatting = false
+        #expect(!paste([.html: "<b>x</b>", .string: "x"], into: off))
+        #expect(off.string == "")
+    }
+
+    /// Services and drops from other apps read through readSelection, as
+    /// Paste does (FR-8); Paste and Match Style reads plain text (FR-4).
+    @Test func readSelectionConverts() {
+        let types: [NSPasteboard.PasteboardType: String] = [.html: "<b>x</b>", .string: "x"]
+        var editor = editor("")
+        var pasteboard = pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard))
+        #expect(editor.string == "**x**")
+        pasteboard.releaseGlobally()
+
+        editor = self.editor("")
+        pasteboard = self.pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard, type: .string))
+        #expect(editor.string == "**x**")
+        pasteboard.releaseGlobally()
+
+        editor = self.editor("")
+        editor.pastesPlainText = true
+        pasteboard = self.pasteboard(types)
+        #expect(editor.readSelection(from: pasteboard, type: .string))
+        #expect(editor.string == "x")
+        pasteboard.releaseGlobally()
+    }
+
+    /// Formatted text dropped from another app is converted where it's
+    /// dropped (FR-8).
+    @Test func dropsConvert() {
+        let (scrollView, textView) = EditorTextView.makeScrollableEditor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        defer { withExtendedLifetime(window) {} }
+        window.contentView = scrollView
+        let editor = textView as! EditorTextView
+        editor.string = "first line\nsecond line"
+        editor.pasteOptions = pasteTestOptions
+        let pasteboard = pasteboard([.html: "<b>x</b>", .string: "x"])
+        defer { pasteboard.releaseGlobally() }
+        let drop = Drop(pasteboard, at: editor.convert(NSPoint(x: 2, y: 2), to: nil))
+        #expect(editor.draggingEntered(drop) != [])
+        #expect(editor.performDragOperation(drop))
+        #expect(editor.string == "**x**first line\nsecond line")
+    }
+
+    /// After a converted paste, a button offers the plain text instead
+    /// (FR-31).
+    @Test func plainTextButton() throws {
+        let editor = editor("Intro\n\n")
+        #expect(paste([.html: "<p><b>bold</b> text</p>", .string: "bold text"], into: editor))
+        let button = try #require(editor.plainTextButton)
+        #expect(button.superview === editor && !button.isHidden)
+        #expect(button.refusesFirstResponder)
+        #expect(button.accessibilityLabel() == "Paste as Plain Text")
+        // Just below the pasted line.
+        let lineRect = editor.layoutManager!.lineFragmentRect(
+            forGlyphAt: editor.layoutManager!.glyphIndexForCharacter(at: 8), effectiveRange: nil)
+        #expect(button.frame.minY >= lineRect.maxY + editor.textContainerOrigin.y - 1)
+        #expect(button.frame.minY <= lineRect.maxY + editor.textContainerOrigin.y + 10)
+
+        button.performClick(nil)
+        #expect(editor.string == "Intro\n\nbold text")
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// The whole insertion, blank lines included, becomes the plain text.
+    @Test func plainTextReplacesBlockPaddingToo() throws {
+        let editor = editor("Foo")
+        #expect(paste([.html: "<h1>T</h1><p>p</p>", .string: "T\np"], into: editor))
+        #expect(editor.string == "Foo\n\n# T\n\np\n")
+        try #require(editor.plainTextButton).performClick(nil)
+        #expect(editor.string == "FooT\np")
+    }
+
+    /// No button when there's nothing different to offer.
+    @Test func noPlainTextButton() {
+        var editor = editor("")
+        #expect(paste([.html: "<p>same</p>", .string: "same"], into: editor))
+        #expect(editor.plainTextButton == nil)
+        editor = self.editor("")
+        #expect(paste([.html: "<b>no plain text</b>"], into: editor))
+        #expect(editor.plainTextButton == nil)
+        editor = self.editor("")
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.setData(Data([0x89, 0x50]), forType: .png)
+        #expect(editor.pasteConverted(from: pasteboard))
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// Pastes bold text after "Intro " and returns the editor showing the
+    /// plain-text button.
+    func editorWithPlainTextButton(_ text: String = "Intro ") throws -> EditorTextView {
+        let editor = editor(text)
+        #expect(paste([.html: "<b>bold</b>", .string: "bold"], into: editor))
+        try #require(editor.plainTextButton != nil)
+        return editor
+    }
+
+    /// Typing dismisses the button, and the keystroke goes into the text
+    /// (FR-32).
+    @Test func typingDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.insertText("!", replacementRange: editor.selectedRange())
+        #expect(editor.plainTextButton == nil && editor.pastedPlainText == nil)
+        #expect(editor.string == "Intro **bold**!")
+    }
+
+    /// Escape dismisses the button.
+    @Test func escapeDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.doCommand(by: #selector(NSResponder.cancelOperation(_:)))
+        #expect(editor.plainTextButton == nil)
+        #expect(editor.string == "Intro **bold**")
+    }
+
+    /// Moving the selection within the pasted text keeps the button; out of
+    /// it, dismisses it.
+    @Test func selectionOutsideDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.setSelectedRange(NSRange(location: 8, length: 2))
+        #expect(editor.plainTextButton != nil)
+        editor.setSelectedRange(NSRange(location: 0, length: 0))
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// Scrolling the pasted text out of view dismisses the button.
+    @Test func scrollingAwayDismissesThePlainTextButton() throws {
+        let (scrollView, textView) = EditorTextView.makeScrollableEditor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        defer { withExtendedLifetime(window) {} }
+        window.contentView = scrollView
+        let editor = textView as! EditorTextView
+        editor.pasteOptions = pasteTestOptions
+        editor.string = "Intro \n" + String(repeating: "line\n", count: 300)
+        editor.setSelectedRange(NSRange(location: 6, length: 0))
+        #expect(paste([.html: "<b>bold</b>", .string: "bold"], into: editor))
+        #expect(editor.plainTextButton != nil)
+        editor.layoutManager!.ensureLayout(for: editor.textContainer!)
+        editor.sizeToFit()
+        editor.scroll(NSPoint(x: 0, y: 5))
+        #expect(editor.plainTextButton != nil)
+        editor.scroll(NSPoint(x: 0, y: editor.frame.height - 100))
+        #expect(editor.plainTextButton == nil, "frame \(editor.frame) visible \(editor.visibleRect) button \(editor.plainTextButton?.frame ?? .zero)")
+    }
+
+    /// Another paste, or replacing the text, dismisses the button.
+    @Test func otherChangesDismissThePlainTextButton() throws {
+        var editor = try editorWithPlainTextButton()
+        let pasteboard = pasteboard([.html: "<i>again</i>", .string: "again"])
+        defer { pasteboard.releaseGlobally() }
+        #expect(editor.pasteConverted(from: pasteboard))
+        #expect(editor.pastedPlainText?.text == "again")
+        editor = try editorWithPlainTextButton()
+        editor.string = "reloaded"
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// A click after the pasted text changed some other way does nothing.
+    @Test func plainTextButtonChecksThePastedText() throws {
+        let editor = try editorWithPlainTextButton()
+        let button = try #require(editor.plainTextButton)
+        editor.textStorage?.replaceCharacters(in: NSRange(location: 6, length: 2), with: "__")
+        button.performClick(nil)
+        #expect(editor.string == "Intro __bold**")
+    }
+
+    /// Paste as Markdown converts with the setting off (FR-28).
+    @Test func pasteAsMarkdownIgnoresTheSetting() {
+        let editor = editor("")
+        editor.convertsPastedFormatting = false
+        let pasteboard = pasteboard([.html: "<b>x</b>", .string: "x"])
+        defer { pasteboard.releaseGlobally() }
+        #expect(editor.pasteConverted(from: pasteboard, convertsFormatting: true))
+        #expect(editor.string == "**x**")
+        #expect(editor.responds(to: #selector(EditorTextView.pasteAsMarkdown(_:))))
+    }
+
+    /// Image data is pasted as a data URI, whatever the setting (FR-34).
+    @Test func images() {
+        for converts in [true, false] {
+            let editor = editor("See ")
+            editor.convertsPastedFormatting = converts
+            let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+            defer { pasteboard.releaseGlobally() }
+            pasteboard.clearContents()
+            pasteboard.setData(Data([0x89, 0x50, 0x4E, 0x47]), forType: .png)
+            #expect(editor.pasteConverted(from: pasteboard))
+            #expect(editor.string == "See ![](data:image/png;base64,iVBORw==)")
+        }
+    }
+}
+
+/// A drop of `draggingPasteboard` at a window location.
+@MainActor final class Drop: NSObject, @MainActor NSDraggingInfo {
+    let draggingPasteboard: NSPasteboard
+    let draggingLocation: NSPoint
+    init(_ pasteboard: NSPasteboard, at location: NSPoint) {
+        draggingPasteboard = pasteboard
+        draggingLocation = location
+    }
+    var draggingDestinationWindow: NSWindow? { nil }
+    var draggingSourceOperationMask: NSDragOperation { .copy }
+    var draggedImageLocation: NSPoint { draggingLocation }
+    var draggedImage: NSImage? { nil }
+    var draggingSource: Any? { nil }
+    var draggingSequenceNumber: Int { 1 }
+    func slideDraggedImage(to screenPoint: NSPoint) {}
+    var draggingFormation: NSDraggingFormation = .default
+    var animatesToDestination = false
+    var numberOfValidItemsForDrop = 1
+    func enumerateDraggingItems(options: NSDraggingItemEnumerationOptions = [], for view: NSView?,
+                                classes: [AnyClass], searchOptions: [NSPasteboard.ReadingOptionKey: Any] = [:],
+                                using block: (NSDraggingItem, Int, UnsafeMutablePointer<ObjCBool>) -> Void) {}
+    var springLoadingHighlight: NSSpringLoadingHighlight { .none }
+    func resetSpringLoading() {}
 }

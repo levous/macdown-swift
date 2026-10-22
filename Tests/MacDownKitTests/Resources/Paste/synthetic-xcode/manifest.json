@@ -1,0 +1,16 @@
+{
+  "source": "synthetic-xcode",
+  "synthetic": true,
+  "types": [
+    {
+      "file": "public.rtf",
+      "size": 657,
+      "type": "public.rtf"
+    },
+    {
+      "file": "public.utf8-plain-text",
+      "size": 38,
+      "type": "public.utf8-plain-text"
+    }
+  ]
+}

@@ -38,6 +38,23 @@ public struct MacDownCommands: Commands {
         TextEditingCommands()
         ToolbarCommands()
 
+        // SwiftUI's Edit menu has no Paste and Match Style, the way to paste
+        // plain text when Paste converts formatting (paste intent, FR-4).
+        // With "Convert formatted text to Markdown when pasting" off, Paste
+        // pastes plain text and Paste as Markdown converts (FR-28).
+        CommandGroup(after: .pasteboard) {
+            Button("Paste and Match Style") {
+                NSApp.sendAction(#selector(NSTextView.pasteAsPlainText(_:)), to: nil, from: nil)
+            }
+            .keyboardShortcut("v", modifiers: [.command, .option, .shift])
+            .disabled(controller == nil)
+            Button("Paste as Markdown") {
+                NSApp.sendAction(#selector(EditorTextView.pasteAsMarkdown(_:)), to: nil, from: nil)
+            }
+            .keyboardShortcut("v", modifiers: [.command, .option])
+            .disabled(controller == nil || Preferences.shared.editorConvertsPastedFormatting)
+        }
+
         CommandGroup(before: .toolbar) {
             Button("Render Markdown") { controller?.renderNow() }
                 .keyboardShortcut("r")

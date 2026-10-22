@@ -27,6 +27,22 @@ public final class EditorTextView: NSTextView {
     /// Called when the frame changes (used to apply width limiting).
     public var frameDidChange: ((EditorTextView) -> Void)?
 
+    /// The latest parse's blocks, and the text they're from, for knowing
+    /// where code blocks are when pasting (see EditorTextView+Paste.swift).
+    var documentBlocks: (source: String, blocks: [MarkdownDocumentModel.Block])?
+
+    /// Whether Paste converts formatted text to Markdown (FR-27), and how
+    /// it writes it: the writer's list marker and indentation.
+    public var convertsPastedFormatting = true
+    public var pasteOptions = HTMLToMarkdown.Options()
+    /// Set during Paste and Match Style, which reads through the same
+    /// method as Paste but always pastes plain text (FR-4).
+    var pastesPlainText = false
+    /// After a converted paste: the "Paste as Plain Text" button, and what
+    /// the paste inserted and the plain text to put there instead (FR-31).
+    var plainTextButton: NSButton?
+    var pastedPlainText: (range: NSRange, inserted: String, text: String)?
+
     private var storedContentRect: NSRect = .zero
     private var trailingHeight: CGFloat = 0
 
@@ -85,11 +101,15 @@ public final class EditorTextView: NSTextView {
         }
         let widthChanged = size.width != frame.size.width
         super.setFrameSize(size)
-        if widthChanged { frameDidChange?(self) }
+        if widthChanged {
+            frameDidChange?(self)
+            positionPlainTextButton()
+        }
     }
 
     public override var string: String {
         didSet {
+            dismissPlainTextButton()
             if scrollsPastEnd {
                 DispatchQueue.main.async { [weak self] in
                     self?.updateContentGeometry()
@@ -100,6 +120,8 @@ public final class EditorTextView: NSTextView {
 
     public override func didChangeText() {
         super.didChangeText()
+        // Any edit after a converted paste dismisses its plain-text button.
+        dismissPlainTextButton()
         if scrollsPastEnd { updateContentGeometry() }
     }
 
@@ -120,12 +142,7 @@ public final class EditorTextView: NSTextView {
         guard let url = urls.first else {
             return super.performDragOperation(sender)
         }
-        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else {
-            return false
-        }
-        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
-            ?? "image/jpeg"
-        let markup = "![](data:\(mime);base64,\(data.base64EncodedString()))"
+        guard let markup = ImageMarkup.dataURI(contentsOf: url) else { return false }
         let point = convert(sender.draggingLocation, from: nil)
         let index = characterIndexForInsertion(at: point)
         insertText(markup, replacementRange: NSRange(location: index, length: 0))

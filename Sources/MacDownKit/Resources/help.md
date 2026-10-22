@@ -19,6 +19,20 @@ By default, edits stay in the window until you save, like a classic Mac document
 * If you close a window or quit with unsaved changes, I ask: **Save** (or **Save and Quit**), **Discard**, or **Cancel**.
 * Prefer saving as you type? Turn on **Save changes automatically** in the [**General** settings](#general-pane).
 
+## Pasting from other apps
+
+Copy formatted text from a web page, Google Docs, Word, Pages, Notion or my own preview, paste it here, and I write it as Markdown: headings, bold, italic, strikethrough, links, images, lists, task lists, quotes, code and tables become the Markdown for them.
+
+* Formatting Markdown doesn’t have, like colors, fonts, sizes and underline, is left out; the text stays.
+* Tables with merged cells stay as HTML, so nothing is lost.
+* Code copied from a code editor or Terminal pastes exactly as you copied it, and so does anything you paste inside a code block.
+* Lists use your **List marker** and **Insert spaces instead of tabs** settings.
+* Right after a converted paste, a **Paste as Plain Text** button appears below it: click it to get the plain text instead (Undo brings the Markdown back). It goes away when you type, move elsewhere, or press Escape.
+* **Edit ▸ Paste and Match Style** (Command-Option-Shift-V) always pastes plain text.
+* A screenshot or an image you copied is pasted as an image, embedded in the document.
+
+Prefer plain text? Turn off **Convert formatted text to Markdown when pasting** in the [**Editor** settings](#editor-pane). Then **Edit ▸ Paste as Markdown** (Command-Option-V) converts when you want it to.
+
 ## The Basics
 
 Before I tell you about all the extra syntax and capabilities I have, here are the basics of standard Markdown. If you already know them, skip to the [standard extensions](#standard-extensions).
@@ -488,6 +502,7 @@ This is where I keep settings for the editing pane: **MacDown ▸ Settings… �
 * **Auto-increment numbering in ordered lists** numbers new ordered list items.
 * **Insert spaces instead of tabs** for the Tab key.
 * **Auto-complete matching characters** closes brackets and quotes, and wraps a selection in them.
+* **Convert formatted text to Markdown when pasting** writes formatted text you paste as Markdown (see Pasting from other apps, above).
 * **⌘← jumps to first non-whitespace character in line** skips indentation.
 * **Scroll past end** lets the last line scroll up to the middle of the window.
 * **Ensure newline at end of file on save** adds a final newline to the saved file.
@@ -514,6 +529,8 @@ Hide or Restore Preview Pane | Command-Shift-H
 Hide or Restore Editor Pane | Command-Shift-E
 Editor and preview side by side (1:1) | Command-Shift-0
 Copy HTML | Command-Option-C
+Paste and Match Style | Command-Option-Shift-V
+Paste as Markdown | Command-Option-V
 Export HTML, Export PDF | Command-Option-E, Command-Option-P
 Print | Command-P
 

@@ -178,6 +178,8 @@ struct EditorSettingsView: View {
                 Toggle("Insert spaces instead of tabs", isOn: $preferences.editorConvertTabs)
                 Toggle("Auto-complete matching characters",
                        isOn: $preferences.editorCompleteMatchingCharacters)
+                Toggle("Convert formatted text to Markdown when pasting",
+                       isOn: $preferences.editorConvertsPastedFormatting)
                 Toggle("⌘← jumps to first non-whitespace character in line",
                        isOn: $preferences.editorSmartHome)
                 Toggle("Scroll past end", isOn: $preferences.editorScrollsPastEnd)

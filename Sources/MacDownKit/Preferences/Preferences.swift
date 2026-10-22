@@ -120,6 +120,7 @@ public final class Preferences {
     public var editorScrollsPastEnd = false { didSet { save(editorScrollsPastEnd, .editorScrollsPastEnd) } }
     public var editorEnsuresNewlineAtEndOfFile = false { didSet { save(editorEnsuresNewlineAtEndOfFile, .editorEnsuresNewlineAtEndOfFile) } }
     public var editorUnorderedListMarkerType = 0 { didSet { save(editorUnorderedListMarkerType, .editorUnorderedListMarkerType) } }
+    public var editorConvertsPastedFormatting = false { didSet { save(editorConvertsPastedFormatting, .editorConvertsPastedFormatting) } }
 
     public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, .previewZoomRelativeToBaseFontSize) } }
 
@@ -286,6 +287,7 @@ public final class Preferences {
         editorScrollsPastEnd = d.bool(forKey: .editorScrollsPastEnd)
         editorEnsuresNewlineAtEndOfFile = d.bool(forKey: .editorEnsuresNewlineAtEndOfFile)
         editorUnorderedListMarkerType = d.integer(forKey: .editorUnorderedListMarkerType)
+        editorConvertsPastedFormatting = d.bool(forKey: .editorConvertsPastedFormatting)
         previewZoomRelativeToBaseFontSize = d.bool(forKey: .previewZoomRelativeToBaseFontSize)
 
         markdownEngine = d.string(forKey: .markdownEngine).flatMap(MarkdownEngine.init) ?? .cmarkGfm
@@ -365,6 +367,9 @@ public final class Preferences {
         }
         if defaults.object(forKey: .htmlTaskListToggling) == nil {
             htmlTaskListToggling = true
+        }
+        if defaults.object(forKey: .editorConvertsPastedFormatting) == nil {
+            editorConvertsPastedFormatting = true
         }
     }
 }

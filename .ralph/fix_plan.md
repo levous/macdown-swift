@@ -1,151 +1,113 @@
-# Ralph Fix Plan: Migrate Markdown Parsing to swift-markdown
+# Ralph Fix Plan: Paste Formatted Text as Markdown
 
-Source: `docs/prd/swift-markdown-migration-prd.md` (PRD, Draft 2026-10-09) and
-`docs/intents/swift-markdown-migration.md` (intent, Accepted).
-Detailed spec: `.ralph/specs/swift-markdown-migration-requirements.md`.
+Branch: `feature/paste-formatted`
 
-Work top to bottom. Each phase lands behind the hidden `markdownEngine` setting
-(default `hoedown`) until Phase 5. Every change that touches a documented feature
-updates `Sources/MacDownKit/Resources/help.md` in the same commit, and
-`HelpDocumentTests` must pass after every task (`swift test`).
+Source: `docs/prd/paste-formatted-text-prd.md` (PRD, Draft 2026-10-21) and
+`docs/intents/paste-formatted-text.md` (intent, Accepted; engineering source of truth).
+Detailed spec: `.ralph/specs/paste-formatted-text-requirements.md`.
+Run with `/goal` (or `/goal all`).
+
+Work top to bottom. `swift test` must pass after every task (including
+`HelpDocumentTests`). No new dependencies and no C. Fixtures are generated
+sample content only, never real documents. UI strings use `String(localized:)`.
 
 **Verify everything yourself.** Every task is verified with tests and, when it
-changes anything visible, in the running app: build a throwaway copy, launch it
-with fixture documents, capture its window with
-`swift Tools/capture-window.swift MacDown <out.png> [title]`, and look at the
-screenshot (and exported HTML/PDF where relevant). Stop only when something
-can't be verified with the available capabilities; then ask the user to enable
-what's missing (see the first task).
+changes anything visible, in the running app: build a throwaway copy, launch it,
+capture its window with `swift Tools/capture-window.swift MacDown <out.png> [title]`,
+and look at the screenshot. UI control through System Events was not authorized
+as of 2026-10-09; drive the app with temporary environment-gated probes, and if a
+task can only be verified by UI control, stop and ask the user to enable it.
 
 ## High Priority
 
-### Prerequisite: verification capabilities
-- [x] Screen capture of app windows works (checked 2026-10-09: `Tools/capture-window.swift` captured a throwaway MacDown build's window showing a fixture document)
-- [ ] UI control (clicks, keystrokes, menus in MacDown through System Events) is **not authorized** (2026-10-09: "Not authorized to send Apple events to System Events"). Until enabled, drive the app with temporary environment-gated probes (see `.claude/commands/goal.md`). If a task can only be verified by UI control, stop and ask the user to allow the host app under System Settings ▸ Privacy & Security ▸ Automation (System Events) and ▸ Accessibility
+### Phase 0: Fixtures and parser decision
+- [x] `Tools/capture-pasteboard.swift`: dump every type on `NSPasteboard.general` (raw data per type, plus `manifest.json` listing types, sizes and the source app name passed as an argument) into `Tests/MacDownKitTests/Resources/Paste/<source>/`
+- [x] Generated sample source document for captures (`Tests/MacDownKitTests/Resources/Paste/sample.md` + instructions in the tool's header): headings 1–3, bold/italic/strikethrough, inline code, a fenced code block with a language, links (absolute, relative, `#anchor`), an image, nested bulleted and numbered lists (start ≠ 1), a task list, a block quote, a rule, a simple table and a merged-cell table
+- [ ] HUMAN: copy the sample in Safari, Chrome, Google Docs, Word, Pages, TextEdit, Notion, VS Code, Xcode, Terminal and MacDown's preview, and run `capture-pasteboard.swift` for each
+- [x] Synthetic fixtures (hand-authored HTML, so Phases 1–3 aren't blocked on captures): Google Docs wrapper `<b style="font-weight:normal" id="docs-internal-guid-…">` with styled spans; Word `mso-list` paragraphs, `o:p`, `<!--[if …]>`; AppKit RTF export (`p.p1`/`span.s1` + `<style>`, `ul`/`ol`); MacDown preview body (Prism spans, `data-source-line`, task checkboxes, footnotes); browser fragment with relative links, `<picture>`/`srcset`, nav `div`s, and `<base href>`; a VS Code/Xcode all-monospace colored snippet. Each with an expected `.md`
+- [x] Fixture loader helper for tests (`Paste/<source>/` → types + expected `.md`); the test target already bundles all of `Resources` (`.copy("Resources")`), so no `Package.swift` change is needed
+- [x] Spike: `XMLDocument(xmlString:options: [.documentTidyHTML])` over every fixture: HTML5 elements, unclosed tags, Word namespaces (`o:p`), conditional comments, `<meta charset>` fragments, non-ASCII text and entities. Record per-fixture findings (dropped/changed content, compare visible text) in the intent's "Decisions"
+- [x] Record the parser decision (XMLDocument) in the intent "Decisions" and docs/ARCHITECTURE.md "Decisions" if the spike passes; if it doesn't, add an item under "Decisions needed" below and stop (SwiftSoup is a new dependency, so it's the user's call)
 
-### Early step: settings and defaults on hoedown (FR-35, FR-35a, FR-36; optional but recommended first)
-- [x] `Renderer.swift` (`Preferences.renderSettings` / hoedown flag mapping): always set tables, fenced code, footnotes, strikethrough, intra-word emphasis; never set quote
-- [x] `Renderer.swift` / `MarkdownParser.swift`: always render task lists and always detect Jekyll front matter (no longer read `htmlTaskList`, `htmlDetectFrontMatter`)
-- [x] `Preferences.swift`: remove properties `extensionTables`, `extensionFencedCode`, `extensionFootnotes`, `extensionStrikethough`, `extensionIntraEmphasis`, `extensionQuote`, `htmlTaskList`, `htmlDetectFrontMatter`; do NOT delete their keys from user defaults (FR-36), and drop them from any `keysToRemove`-style cleanup if listed there
-- [x] `DocumentController.swift` (~line 764): highlighter footnote extension always on; drop the `extensionFootnotes` observation and its entry in the observed-keys list (~line 107)
-- [x] `SettingsView.swift`: `MarkdownSettingsView` shows only Highlight, Superscript, Autolink, and "Smart punctuation" (relabeled Smartypants, key `extensionSmartyPants`); Rendering pane drops Task list syntax and Detect Jekyll front-matter
-- [x] Add new/changed UI strings via `String(localized:)` to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available (NFR-6)
-- [x] `Preferences.loadDefaultPreferences` (fresh install only): `editorUnorderedListMarkerType = .minusSign`, `editorEnsuresNewlineAtEndOfFile = true`, `editorConvertTabs = true`; remove now-dead `extensionFootnotes = true` default
-- [x] Tests (`PreferencesTests` in `CoreTests.swift`): fresh install gets new editing defaults; existing install keeps values; removed keys remain in defaults
-- [x] Tests (`RendererTests`): standard formatting (table, fence, strikethrough, footnote, task list, front matter) renders with empty user defaults; `"text"` renders as typed (no `<q>`)
-- [x] `help.md`: rewrite "The Markdown Preference Pane", Inline Formatting table and Quote footnote, Smartypants paragraph, Rendering pane section (task lists, front matter); update `HelpDocumentTests` expectations
-- [x] docs/MACDOWN-PORT.md "Differences from the original": note always-on standard features, dropped Quote, new editing defaults (removing "Regenerating the highlighter parser" waits for the hoedown/PEG removal)
-- [x] Front matter detection: require the closing `---`/`...` on its own line and a YAML mapping, so a document that opens with a thematic break isn't swallowed now that detection is always on (found by the corpus, 2026-10-09)
-
-### Phase 0: Spike and parity harness (TR-1, TR-8, TR-9)
-- [x] Add `swift-markdown` to `Package.swift` pinned with `.exact(...)` (0.9.0; swift-cmark resolves to 0.9.0); add `.product(name: "Markdown", package: "swift-markdown")` to `MacDownKit`; confirm `swift build` and the Xcode build under strict concurrency (NFR-8)
-- [x] Spike: confirm swift-markdown exposes cmark-gfm footnotes. **Answer (F1): not exposed**; the syntax stays literal text, and cmark-gfm parses footnotes directly with `CMARK_OPT_FOOTNOTES`. The fallback choice is PRD Open Question 1, still open (now three options, including cmark-gfm directly)
-- [x] Spike: can GFM autolinks (bare URLs/emails) be disabled at parse time? **Answer (F2): they are never parsed**, so nothing to disable; the Autolink setting needs our own text-run pass (or cmark-gfm's `autolink` extension)
-- [x] Spike: native support for smart punctuation, `==highlight==`, `^superscript`? **Answer (F3, F4): smart punctuation native; highlight and superscript need our own pass**
-- [x] Spike: does swift-markdown/cmark apply smart punctuation BY DEFAULT (look for a `disableSmartOpts`-style `ParseOptions` flag)? If so, FR-17 requires passing the disable option whenever the setting is off **Answer (F3): yes**; pass `.disableSmartOpts` whenever the setting is off
-- [x] Spike: does every block node carry a `SourceRange`? Is `Markdown.Document` `Sendable` / usable from a detached task under Swift 6? (`Markup` is a struct over a class-backed tree; verify specifically, it decides the Phase 1 model shape) **Answer (F5, F6): yes, every block has a range (UTF-8 columns); `Document` is NOT `Sendable`**, so the model holds visitor outputs
-- [x] Record all spike answers in "Decisions" of `docs/intents/swift-markdown-migration.md` (findings F1–F6 under "Phase 0 findings")
-- [x] Add hidden `markdownEngine` user default (`hoedown` | `swiftMarkdown`, default `hoedown`) in `Preferences.swift`, not shown in Settings (FR-32)
-- [x] Generate the corpus in `Tests/MacDownKitTests/Resources/Corpus/` (TR-9): purpose-written Markdown, one file per area, each with edge cases — inline (emphasis/strong nesting, intra-word `*` and `_`, escapes, code spans with backticks), blocks (setext/ATX headers, lists: nested, mixed markers, ordered start numbers, loose/tight, list items with code), block quotes (nested, lazy), code (indented, fenced with ``` and ~~~, longer/shorter closing fences, fences inside code spans as in help.md, info strings `lang:label`), links and images (inline, reference, titles, `<url>`, emails, relative paths, image-only paragraphs, images in links), tables (alignment, escaped pipes, inline formatting), HTML (inline, blocks, comments, entities), footnotes, front matter (valid, invalid YAML, leading `---` rule), task lists, `[TOC]`, math (`$`, `$$`, `\(`, currency `$`, escaped `\$`, math in code), the opt-in syntax (`==`, `^`, bare URLs, smart quotes/dashes), Mermaid/Graphviz blocks, Unicode/emoji/CRLF, an image-heavy document for scroll sync; plus a 10k-line document generated in the test. Keep `help.md` as a corpus document. No real user documents or other docs
-- [x] HTML diff harness (Swift Testing suite or `Tools/` script): corpus loader, whitespace/attribute-order normalizer, report format, settings matrix (always-on set plus each opt-in off and on); prove it on hoedown vs hoedown (or vs swift-markdown's built-in HTML formatter if the spike finds one). The real hoedown-vs-`HTMLRenderer` run happens at the end of Phase 3
-- [x] Highlight-span diff harness: per-element-type span comparison and report, proven on PEG vs PEG. The real PEG-vs-`HighlightMapper` run happens at the end of Phase 2
-- [x] Expected-diff list file: diffs caused by dropped features (Quote) listed once, not per document (`Tests/MacDownKitTests/Resources/expected-html-diffs.json`; Quote no longer differs since the early step removed it from hoedown, so it starts with the CommonMark intra-word underscore rules)
-- [x] Wire both harnesses into CI (or document the `swift test --filter` invocation if no CI exists) (no CI; documented in README "Migration diff harnesses" and CLAUDE.md); they gain the swift-markdown side as Phases 2 and 3 land
-
-### Phase 1: Shared model (FR-1 to FR-6, TR-2, TR-3)
-- [x] `LineIndex` (value type, `Sendable`): UTF-8 line/column (swift-markdown `SourceLocation`) to UTF-16 offset and `NSRange`; handles emoji, surrogate pairs, CRLF
-- [x] Tests: `LineIndex` for ASCII, emoji, surrogate pairs, CRLF
-- [x] Protection pass: find `$$…$$`, `\[…\]`, `\(…\)`, and `$…$` only when inline dollars are on; skip code spans and fenced code blocks; replace with same-UTF-8-length filler with no Markdown meaning
-- [x] Front matter: valid leading YAML block blanked with same-length filler (not cut); invalid YAML left untouched
-- [x] Tests: byte offsets unchanged after protection; math with `_`, `*`, `\` survives emphasis-heavy content; escaped `\$`, `$` in code and currency amounts are not math
-- [x] `MarkdownDocumentModel` (`Sendable`): source, `LineIndex`, protected source, protected math/front-matter ranges, `Markdown.Document`; only this file area imports `Markdown` (TR-2)
-  - Shape depends on the Phase 0 Sendable spike: if `Markdown.Document` is not `Sendable`, run all three visitors inside the detached task and have the model hold their `Sendable` outputs (body HTML, `[HighlightSpan]`, source-line anchors), not the tree
-- [x] `Renderer.parse`: when `markdownEngine == swiftMarkdown`, build the model in the existing detached task and keep the generation counter that discards stale results (FR-2, NFR-2)
+### Phase 1: Converter (`Sources/MacDownKit/Document/HTMLToMarkdown.swift`)
+- [x] `HTMLToMarkdown` skeleton: `Sendable` struct, `Options` (`listMarker`, `indent`, `baseURL`), `convert(_ html: String) -> String` (plus a single-inline-paragraph flag for FR-9); parse with tidy after renaming HTML5 block elements (`nav`, `article`, `section`, `header`, `footer`, `main`, `aside`, `figure`, `figcaption`, `details`, `summary`) to `div` and `mark` to `span`, wrapping tagless input in a `body` (spike findings), return nil/empty on failure so callers fall back to plain text; recursive visitor with block context (list depth/kind, quote, pre, table) and inline context (bold, italic, strike, code, link)
+- [x] Effective styles: before the walk, parse `<style>` blocks (AppKit's `p.pN`/`span.sN` classes) and merge class rules with inline `style` attributes into each element's effective `font-weight`, `font-style`, `text-decoration`, `font-family`; the emphasis, inline-code and code-editor rules read only effective styles (needed by FR-6 for Xcode/Terminal, which write RTF only, and by FR-22/FR-24); tests
+- [x] Text handling (FR-20): browser whitespace collapse outside `pre`, entity decoding (`&nbsp;` → space), trailing-space trim; tests
+- [x] Escaping (FR-20): `\ * _ [ ] < > ` `` ` `` `~` in text runs; `# > + - =` and `1.`/`1)` only at line start; `|` in table cells; tests for under- and over-escaping (no `1\.` mid-sentence)
+- [x] Output rules (FR-21, FR-9): one blank line between blocks, no leading blank lines, trailing newline only after a block, single-paragraph result flagged inline; tests
+- [x] Headings and paragraphs (FR-10): `h1`–`h6` → ATX; `p`/text-bearing `div` → paragraphs; `br` → backslash hard break; tests
+- [x] Emphasis (FR-11): `strong`/`b`/`font-weight ≥ 600` → `**`; `em`/`i`/`font-style: italic` → `*`; `del`/`s`/`strike`/`line-through` → `~~`; `font-weight: normal` cancels an outer bold; adjacent/nested runs merge cleanly, whitespace moved outside markers; tests
+- [x] Inline code (FR-12): `code`, `kbd`, monospace `font-family` → backtick spans sized past embedded backtick runs, space padding when content starts/ends with a backtick; no escaping inside; tests
+- [x] Code blocks (FR-13): `pre`/`pre > code` → fenced, language from `language-x`/`lang-x`, fence longer than any internal backtick run, text kept verbatim; tests
+- [x] Links (FR-14): `[text](url "title")`, `<url>` when text equals URL, text only for `javascript:` and in-page `#anchor`; URLs with spaces/parens wrapped or encoded; tests
+- [x] Images (FR-15, FR-34): `![alt](src "title")`, `src` kept, never fetched; tests
+- [x] Lists (FR-16): nested `ul`/`ol`, user marker, `start` number, continuation lines at content column, nesting by `indent` option, loose vs tight items, block content in items; tests for each marker setting and tabs vs spaces
+- [x] Task lists (FR-16): `input type=checkbox` in `li` → `[ ]`/`[x]` after the marker; tests
+- [x] Block quotes and rules (FR-17): nested `> `; `hr` → `---`, or `***` when the marker is `-`; tests
+- [x] Tables (FR-18): pipe table when cells are inline-only and no `rowspan`/`colspan`; header from `thead`/`th` or first row; alignment from `align`/`text-align`; `|` escaped; otherwise raw HTML block; tests for simple and fallback tables
+- [x] Dropped elements (FR-19): `sup`/`sub`/`mark`/`u` → text; `script`/`style`/`head`/`title`/comments/`meta`/`link` dropped; test that visible text is preserved
+- [x] Round-trip harness (`Tests/MacDownKitTests/PasteRoundTripTests.swift`): for each `Resources/Corpus` document, render with `HTMLRenderer`, convert, render again, compare bodies ignoring `data-source-line` (reuse `HTMLDiffHarness` normalization); unreviewed differences fail; `MACDOWN_DIFF_REPORT` writes a report
+- [x] Review round-trip differences; fix real bugs; list expected ones (extended syntax, footnotes) in `Tests/MacDownKitTests/Resources/reviewed-paste-diffs.json`
+- [x] Performance test: long-article fixture converts in < 50 ms; record the number. If over, add the off-main-actor path for pastes above a size threshold (NFR Performance)
 
 ## Medium Priority
 
-### Phase 2: Highlighter (FR-21 to FR-27, NFR-1)
-- [x] `ThemeStyleParser`: Swift port of `Sources/CPegMarkdown/pmh_styleparser.c` (same element names, attributes, colors, font traits, error messages)
-- [x] Test: `ThemeStyleParser` output equals `pmh_styleparser.c` output for all 15 themes in `Resources/Themes`
-- [x] `MarkdownHighlighter.applyStyles(fromStylesheet:)` uses `ThemeStyleParser` instead of `pmh_parse_styles` (needed before Phase 5 removes CPegMarkdown; same error strings)
-- [x] `HighlightMapper` (`MarkupWalker`, pure): spans for `H1`…`H6`, `EMPH`, `STRONG`, `HRULE`, `LINK`, `AUTO_LINK_URL`, `AUTO_LINK_EMAIL`, `IMAGE`, `CODE`, `VERBATIM`, `BLOCKQUOTE`, `HTMLBLOCK`, and the rest of the PEG set used by themes
-- [x] Source scans for gaps: `REFERENCE` definitions, `HTML_ENTITY`, `LIST_BULLET`/`LIST_ENUMERATOR` markers, `<!-- -->` `COMMENT`
-- [x] `NOTE` spans for footnote references and definitions (FR-27)
-- [x] New highlight types: math (FR-23), highlight `==…==` and superscript `^` (only with their settings on); themes without a style leave them uncolored
-- [x] `DocumentController`: hand the latest model (or its spans) from `Renderer.parse` to `MarkdownHighlighter` when engine is `swiftMarkdown`; Phase 4 reuses this path for scroll sync (FR-1)
-- [x] `MarkdownHighlighter`: take spans from the model when engine is `swiftMarkdown`; keep debounce and visible-range styling (FR-26); stop its own parse
-- [x] Port `HighlighterTests` (`EditorTests.swift`) and `HelpDocumentHighlightingTests` to run on the new engine
-- [x] Benchmark: re-highlight time on a 10k-line document vs PEG baseline on the same machine; record numbers (NFR-1). **Recorded (F8): PEG 20.1 ms, model 73.3 ms (124.7 with math and opt-ins), cmark-gfm direct 4.5 ms. NFR-1 not met; PRD Open Question 2 (relax NFR-1, or cmark-gfm directly) must be decided before Phase 3**
-- [x] Run the span-diff harness PEG vs `HighlightMapper` on the corpus and review; only intended differences remain (reviewed list in `HighlightDiffHarnessTests.reviewed`; a new difference fails the test)
-  - Done: a header inside a block quote is colored (`HighlightMapperTests.headerInBlockQuote`)
+### Phase 2: Paste in the editor
+- [x] Preference: `PreferenceSettingKey.editorConvertsPastedFormatting`; `Preferences.editorConvertsPastedFormatting` with save/load; default on via nil-check in `loadDefaultUserDefaults()` (existing installs too, FR-27); tests in `PreferencesTests` (fresh install on, existing install without the key on, stored off stays off)
+- [x] `ImageMarkup` helper (`Editor/` or `Utility/`): `![](data:<mime>;base64,…)`; refactor `EditorTextView.performDragOperation` to use it; test
+- [x] `PasteboardContent` reader (pure where possible): HTML from `.html`; RTF/RTFD → HTML via `NSAttributedString` + `data(from:documentAttributes: [.documentType: .html])`; image data only (PNG/JPEG kept, TIFF → PNG via `NSBitmapImageRep`); source URL from `public.url`, `org.chromium.source-url`, `<base href>`; tests using a private `NSPasteboard(name:)`
+- [x] Code-editor detection (FR-6, uses the Phase 1 effective-styles pass): all visible text monospace and no headings/lists/links/tables/emphasis → plain; tests with the VS Code/Xcode synthetic fixtures
+- [x] Code-block check (FR-5): give `EditorTextView` the latest `MarkdownDocumentModel.Block`s from `DocumentController` (alongside the highlight spans); selection inside a `.codeBlock` range → plain; when the model is stale for the current text, fall back to a local fence scan above the caret; tests (fenced, indented, unclosed fence just typed)
+- [x] `EditorTextView.paste(_:)` (FR-1 to FR-3, FR-7, FR-9): setting off or in code → `super`; else HTML → RTF → image → `super`; convert with options from `Preferences` (marker, `editorConvertTabs` indent, base URL); insert with `insertText(_:replacementRange:)`, calling `breakUndoCoalescing()` before and after so the paste is its own undo group (not merged with preceding typing); plain-text fallback on failure
+- [x] `pasteAsPlainText(_:)` always `super` (FR-4); `@objc pasteAsMarkdown(_:)` converts regardless of the setting (FR-28)
+- [x] `readSelection(from:type:)` and readable types so Services and text drags from other apps convert under the same rules (FR-8); image-file drags keep their path
+- [x] Editor tests in `LiveDocumentTests` (serialized): type text, paste converted Markdown, Undo once: only the paste is removed and the typed text remains; document marked changed; Paste and Match Style plain; inside a fence plain; setting off → plain, Paste as Markdown converts; single paragraph inline; PNG/JPEG/TIFF data paste as data URIs, regardless of setting
+- [x] Edit ▸ Paste as Markdown (⌥⌘V) in `App/MacDownCommands.swift` via `CommandGroup(after: .pasteboard)`, enabled only while the setting is off, dispatched to the editor; verify the shortcut doesn't clash with existing items
+- [x] Edit ▸ Paste and Match Style (⌥⇧⌘V): SwiftUI's Edit menu (TextEditingCommands) has no such item, so FR-4's plain-text escape can't be reached from the menu or keyboard; add it next to Paste as Markdown, sending `pasteAsPlainText:` down the responder chain; verify in the running app (found 2026-10-21 while checking the Edit menu)
+- [x] `SettingsView`: "Convert formatted text to Markdown when pasting" toggle (Editor pane); verify in the running app with a screenshot
+- [x] Inline "Paste as Plain Text" button (FR-31): shown after a converted paste when the result differs from the plain text, positioned just below the end of the pasted range, `refusesFirstResponder`, accessibility label; click replaces the range with the plain text as one undoable change, its own undo group separate from the paste (Undo restores the Markdown)
+- [x] Button dismissal (FR-32): next edit, selection change outside the range, range scrolled out of view, Escape (via `cancelOperation:`, otherwise normal behavior), another paste; pasted range and plain text released on dismissal; no timeout
+- [x] Button tests: appears after converted paste only; click swaps and Undo restores; typing dismisses without losing the keystroke; Escape dismisses; verify placement in the running app with a screenshot
+- [x] Large image paste: measure editor and preview responsiveness with a multi-MB data URI (Retina screenshot size); record numbers in the intent "Decisions"
+- [x] Localization (FR-29): add "Convert formatted text to Markdown when pasting", "Paste as Markdown", "Paste as Plain Text" to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available; add translations to `Tools/port_translations.json` where possible
+- [x] `Resources/help.md` (FR-30): section on pasting formatted text (what converts, what's dropped, code safety, setting, Paste as Markdown, Paste and Match Style, plain-text button, image paste); update `HelpDocumentTests` expectations if needed
+- [x] Docs: `docs/MACDOWN-PORT.md` "Differences from the original" (paste conversion, new setting, image paste); `docs/ARCHITECTURE.md` (code layout, "Editor and highlighting" paste path, Tests section for the round-trip harness, dated "Decisions" entry); `CLAUDE.md` Editor section if the paste path warrants a line
 
-### Phase 2b: Move onto cmark-gfm (Decision 10)
-- [x] `Package.swift`: MacDownKit depends on swift-cmark's `cmark-gfm` and `cmark-gfm-extensions` (exact 0.9.0)
-- [x] `CMarkTree` (in `Document/Model`): parse with `CMARK_OPT_SOURCEPOS | CMARK_OPT_FOOTNOTES` (+ `CMARK_OPT_SMART` when on), extensions `table`, `strikethrough`, `tasklist` (+ `autolink` when on); node type, children, literal, positions (cmark end columns are inclusive); frees the tree; never leaves the parse task
-- [x] `ProtectedSource`: code and raw HTML ranges from one cmark parse instead of swift-markdown
-- [x] `MarkdownDocumentModel`: blocks from cmark nodes, in the same walk as highlighting (one walk)
-- [x] `HighlightMapper` on cmark nodes: same spans and extents (all existing tests pass); NOTE from footnote nodes; AUTO_LINK_URL/EMAIL also for extension autolinks when Autolink is on; update the reviewed PEG diff list
-- [x] Remove swift-markdown: dependency, imports, swift-markdown spike tests (findings stay recorded in the intent); `LineIndexTests` corpus check uses cmark positions
-- [x] Benchmark: NFR-1 met on 10k lines (remove the known issue); record numbers in F8. **Recorded: 14.6 ms vs PEG 19.7 at defaults; 20.5 ms with math and opt-ins (4% over PEG, within the test's 10% allowance)**
-
-### Phase 3: Renderer (FR-7 to FR-20, TR-4, TR-5)
-
-Built on cmark-gfm's node tree (Decision 10), after Phase 2b.
-- [x] `HTMLRenderer` (pure, walks cmark-gfm nodes inside the parse task): CommonMark core blocks and inlines
-- [x] GFM tables, strikethrough, fenced code always on
-- [x] Code blocks: `<div><pre class="line-numbers" data-information><code class="language-…">`, line-numbers class only when setting on; port `hoedown_html_patch.c` code-block info (FR-9)
-- [x] Prism language list with `languageAddition` alias mapping moved out of `MarkdownParser.swift` (FR-10)
-- [x] Task lists with MacDown's current markup/classes, always on (FR-11)
-- [x] Footnotes always on (FR-16), from cmark-gfm footnote nodes (`CMARK_OPT_FOOTNOTES`), with today's footnote markup
-- [x] Front matter table via Yams before body, always on; invalid YAML renders as Markdown (FR-15)
-- [x] `[TOC]` paragraph replaced by TOC from `Heading` nodes, today's classes and anchors, when setting on (FR-12)
-- [x] Hard wrap: soft breaks as `<br>` when on (FR-13)
-- [x] Math pass-through when MathJax on (FR-14): hoedown's MathJax delimiters, content escaped (the page's MathJax 2 needs `\(` and `\[`; FR-14 updated)
-- [x] Autolink: bare URLs/emails linked only when setting on, by attaching cmark-gfm's `autolink` extension; `<url>` always linked (FR-8a)
-- [x] Smart punctuation when on, never inside code (FR-17), via `CMARK_OPT_SMART`
-- [x] Highlight `<mark>` and superscript `<sup>` (`x^2`, `x^(text)`) when on; plain-text-run scan if not native (FR-19, FR-19a)
-- [x] `data-source-line` on every block element in preview HTML only; export/PDF/Copy HTML clean (FR-18)
-- [x] Route `ParseResult` from the new engine into `PageBuilder` unchanged (FR-20)
-- [x] Tests: `RendererTests` pass on both engines (no expectation needed changing); each CommonMark-changed expectation commented in the test or docs/MACDOWN-PORT.md
-- [x] Tests: `==x==`, `^x`, `"x"` plain text by default; `_x_` is `<em>`; each opt-in off and on; TOC, task list, front matter (valid/invalid), footnotes, code-block markup; standard formatting with empty defaults
-- [x] Test: HTML/PDF export contains no `data-source-line`
-- [x] Live test: Mermaid, Graphviz, MathJax, Prism render in the running app (`LiveDocumentTests`), and a screenshot of the corpus documents in a throwaway build looks right
-- [x] Run the HTML-diff harness hoedown vs `HTMLRenderer` on the corpus (full settings matrix) and review; remaining differences listed in docs/MACDOWN-PORT.md
-
-### Phase 4: Scroll sync by source line (FR-28 to FR-31)
-- [x] `PreviewController.fetchMetrics` JS: report `[sourceLine, y]` pairs from `[data-source-line]` elements instead of `h`/`i` kinds
-- [x] `DocumentController`: pass the model's source-line data to scroll sync via the Phase 2 model hand-off (not needed: the editor computes the preview's lines from its own text)
-- [x] `SourceAnchors`: editor maps source line to y via `LineIndex` and the text layout
-- [x] Replace `ScrollAnchors.scan` and kind matching with a source-line map feeding the existing `ScrollMap`; keep `ScrollGeometry` and `ScrollMap` (with the new engine; `scan` stays for hoedown until Phase 5 removes it)
-- [x] Update `ScrollAnchorsTests` / `ScrollSyncIntegrationTests` for source-line anchors
-- [x] Verify `help.md` (code-fence case) and an image-heavy document stay aligned with unequal pane widths, both scroll directions
+### Phase 3: Source quirks (each with its fixture test)
+- [x] Google Docs (FR-22): wrapper bold cancelled by `font-weight:normal`; styles on spans for bold/italic/strike/monospace; real `h*` headings; nested lists
+- [x] Word HTML (FR-23): drop `mso-*`, conditional comments, `o:p`; rebuild nested bulleted/numbered lists from `mso-list: lN levelM` paragraphs, dropping the hidden bullet span
+- [x] Pages / TextEdit via RTF (FR-24): fixture tests over the Phase 1 effective-styles pass (class-based bold, italic, monospace); AppKit `ul`/`ol` lists for `NSTextList`
+- [x] Web pages (FR-25): resolve relative `href`/`src` against the source URL (`public.url`, `org.chromium.source-url`, `<base href>`); `<picture>`/`srcset` → `img src`; skip icon-font glyphs; in-page `#anchor` links text only
+- [x] MacDown preview (FR-26): Prism token spans → code text, language kept from the `pre`/`code` class; task checkboxes restored; footnote markup → plain text without links, and the `rev="footnote"` back-link (↩) dropped entirely, as the fixture's `expected.md` has it; `data-source-line` ignored; test by rendering `help.md` sections and converting back
+- [x] Code editors (FR-6): fixture tests for VS Code, Xcode, Terminal (and JetBrains if captured) paste exactly the plain text
+- [ ] Notion and Safari/Chrome real captures: add expected `.md` and make them pass (BLOCKED: awaiting HUMAN clipboard captures in Phase 0)
 
 ## Low Priority
 
-### Phase 5: Switch and remove (FR-33, FR-34, FR-37, FR-38)
-- [x] Default `markdownEngine` to `swiftMarkdown`, `hoedown` still selectable (ship one release; human release gate). **Default switched 2026-10-09; shipping the release is the user's step**
-- [ ] After that release: remove `Sources/CHoedown`, `Sources/CPegMarkdown`, their `Package.swift` targets/dependencies, the hidden setting, and `ScrollAnchors.scan` (BLOCKED: awaiting the release with cmark-gfm as default)
-  - With it go: the `.hoedown` arguments in engine-parameterized tests, the hoedown-pinned scroll tests (`anchorsMatchAndAlignAtCenter`, `helpDocumentAnchorsMatch`) with `ScrollAnchors.scan`, `HTMLEscapingTests`' comparison with hoedown's C escaping, the PEG baseline in `HighlightBenchmarkTests`, `MarkdownParser`, and the hoedown/PEG sides of both diff harnesses (the reviewed-diff lists become a historical record in docs/MACDOWN-PORT.md, not tests). `ParseSettings` can then hold plain options instead of hoedown flags
-- [x] Apply early-step settings/defaults here if the early step didn't ship (not needed: the early step is done)
-- [ ] `Licenses/`: remove `hoedown.txt`, `peg-markdown-highlight.txt` (check whether `hoextdown.txt` is only needed for hoedown patches; remove if so); add swift-markdown and swift-cmark licenses (cmark-gfm.txt added 2026-10-09; the removals are BLOCKED: awaiting the hoedown removal)
-- [x] docs/MACDOWN-PORT.md "Differences from the original" (CommonMark output, always-on, opt-in, dropped syntax, plain-text-run limit for highlight/superscript); docs/ARCHITECTURE.md: layout/class table, Markdown engine section, remove "Regenerating the highlighter parser"
-- [x] CLAUDE.md and docs/ARCHITECTURE.md: render pipeline, Editor, Tests, and drop the byte-identical HTML output goal
-- [x] `help.md`: final pass for footnotes, Inline Formatting, Smart punctuation (also line breaks, emphasis and lists for CommonMark)
-- [ ] `swift build`, `swift test`, `xcodegen generate` + `xcodebuild` all pass (BLOCKED: the gate after the hoedown removal; passes today without it)
+### Release
+- [x] Gate: `swift build`, `swift test`, `xcodegen generate` + `xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build` all pass
+- [ ] HUMAN: human verification on the built app: paste real copies from Safari, Chrome, Google Docs, Word, Pages, TextEdit, Notion, VS Code, Xcode, Terminal and MacDown's preview; check rendering against the source, code unchanged, plain-text button, screenshot paste shows in the preview. Each problem found becomes a new fixture task above
+- [ ] HUMAN: release notes mention paste conversion (on by default for existing installs), the setting, Paste as Markdown, and image paste
+
+### Decisions needed
+(None yet. Add here if the Phase 0 spike finds `XMLDocument` tidy inadequate: SwiftSoup vs a hand-written parser.)
 
 ### Future (out of scope; do not implement)
-- Outline/heading folding, click-to-locate, incremental re-parse, AST export for CLI
+- Importing dropped/opened `.docx`/`.html`/`.rtf` files with the same converter
+- Saving pasted and dropped images as files next to the document instead of embedding them
+- Copy as Markdown; keeping unsupported styling as inline HTML; exact round-tripping of extended syntax and footnotes
 
 ## Completed
 - [x] Project initialization
-- [x] Inline formatter behavior on hoedown checked and recorded (intent doc, "Dropped features" / "Checked 2026-10-09")
-- [x] Underline setting removed; underline is `<u>…</u>` (2026-10-09)
+- [x] Intent accepted and PRD drafted (2026-10-21, commit 94a525c)
 
 ## Notes
-- Principle: standard Markdown (CommonMark + GFM + footnotes + front matter) always on; extended features (highlight, superscript, autolink, smart punctuation, math, `[TOC]`, hard wrap, Graphviz) opt-in, off by default, keeping existing defaults keys.
-- Byte-identical output with the original MacDown is intentionally dropped (overrides CLAUDE.md's current rule once this project lands); differences go in the README.
-- Parser: cmark-gfm used directly (Decision 10, 2026-10-09); resolves Open Questions 1 and 2.
-- Corpus: generated fixtures plus `help.md` only; never real user documents or other docs (decided 2026-10-09).
-- `pmh_parser.c` is generated; never hand-edit it while it still exists.
-- Release notes must call out: strikethrough/task lists/front matter now always on, Quote dropped, new editing defaults for new installs.
-- `.ralph/` is gitignored; plan state is local.
+- Principle: paste what the user sees, written the way they would have typed it. Drop formatting with no Markdown equivalent; never approximate with inline HTML.
+- Decided 2026-10-21: conversion on by default for existing installs too; emphasis always `*`/`**` (no setting); inline "Paste as Plain Text" button with no timeout; image data on the clipboard becomes a data URI, independent of the setting; quality judged by human verification.
+- Rejected: a browser-based (JS) converter, because it makes paste asynchronous and harder to undo.
+- The preference has no original MacDown key; list it under "Differences from the original".
+- Defaults that must reach existing installs go in `Preferences.loadDefaultUserDefaults()` (nil-check), not `loadDefaultPreferences()` (first launch only).
+- The code-block check reads `MarkdownDocumentModel.Block` (`.codeBlock`, UTF-16 `range`); the model can be one parse behind the text.
+- Tests that touch `Preferences.shared` or the general pasteboard go in the serialized `LiveDocumentTests` suite; prefer private named pasteboards in unit tests.
+- The migration plan's remaining (blocked) items are in `.ralph/swift-markdown-fix_plan.md`.
+- `.ralph/` is gitignored; commit this plan file with `git add -f`.

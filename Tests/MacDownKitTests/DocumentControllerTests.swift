@@ -56,6 +56,38 @@ extension LiveDocumentTests {
         #expect(controller.html.contains("id=\"toc_0\">Second</h1>"))
     }
 
+    /// After a parse, the editor knows where the code blocks are (FR-5).
+    @Test func editorLearnsCodeBlocksFromTheParse() async {
+        let text = "Text\n\n    indented code\n"
+        let (controller, window) = makeController(text)
+        defer { window.close() }
+        #expect(await waitUntil { controller.editor.documentBlocks?.source == text })
+        #expect(controller.editor.isInCodeBlock((text as NSString).range(of: "indented").location))
+        #expect(!controller.editor.isInCodeBlock(0))
+    }
+
+    /// The editor pastes with the writer's settings.
+    @Test func pasteSettingsFollowPreferences() {
+        let preferences = Preferences.shared
+        let saved = (preferences.editorConvertsPastedFormatting, preferences.editorUnorderedListMarkerType,
+                     preferences.editorConvertTabs)
+        defer {
+            (preferences.editorConvertsPastedFormatting, preferences.editorUnorderedListMarkerType,
+             preferences.editorConvertTabs) = saved
+        }
+        let (controller, window) = makeController("")
+        defer { window.close() }
+        preferences.editorConvertsPastedFormatting = false
+        preferences.editorUnorderedListMarkerType = UnorderedListMarkerType.plusSign.rawValue
+        preferences.editorConvertTabs = false
+        #expect(!controller.editor.convertsPastedFormatting)
+        #expect(controller.editor.pasteOptions == .init(listMarker: "+", indent: "\t"), "\(controller.editor.pasteOptions)")
+        preferences.editorConvertsPastedFormatting = true
+        preferences.editorConvertTabs = true
+        #expect(controller.editor.convertsPastedFormatting)
+        #expect(controller.editor.pasteOptions.indent == "    ")
+    }
+
     @Test func togglesPanes() {
         let (controller, window) = makeController("text")
         defer { controller.tearDown(); window.close() }

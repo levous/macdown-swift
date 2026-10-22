@@ -96,7 +96,8 @@ public final class DocumentController: NSObject {
         .editorBaseFontInfo, .editorHorizontalInset, .markdownEngine,
         .editorVerticalInset, .editorWidthLimited, .editorMaximumWidth,
         .editorLineSpacing, .editorOnRight, .editorStyleName,
-        .editorShowWordCount, .editorScrollsPastEnd,
+        .editorShowWordCount, .editorScrollsPastEnd, .editorConvertsPastedFormatting,
+        .editorUnorderedListMarkerType, .editorConvertTabs,
     ]
 
     // MARK: - Init
@@ -631,8 +632,12 @@ public final class DocumentController: NSObject {
     }
 
     /// With the swift-markdown engine, the editor is highlighted from the
-    /// renderer's model of the same text (one parse for both, FR-1).
+    /// renderer's model of the same text (one parse for both, FR-1), and
+    /// learns where its code blocks are, for pasting (FR-5).
     private func highlightFromModel() {
+        if let model = renderer.model {
+            editor.documentBlocks = (model.source, model.blocks)
+        }
         guard highlighter.usesExternalElements, let model = renderer.model,
               model.source == editor.string
         else { return }
@@ -854,6 +859,15 @@ public final class DocumentController: NSObject {
 
         if changedKey == nil || changedKey == .editorScrollsPastEnd {
             editor.scrollsPastEnd = preferences.editorScrollsPastEnd
+        }
+
+        if changedKey == nil || [.editorConvertsPastedFormatting, .editorUnorderedListMarkerType,
+                                 .editorConvertTabs].contains(changedKey) {
+            editor.convertsPastedFormatting = preferences.editorConvertsPastedFormatting
+            // The marker setting includes the space after it.
+            editor.pasteOptions = .init(
+                listMarker: preferences.editorUnorderedListMarker.trimmingCharacters(in: .whitespaces),
+                indent: preferences.editorConvertTabs ? "    " : "\t")
         }
 
         if changedKey == nil {
