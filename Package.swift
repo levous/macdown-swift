@@ -22,29 +22,11 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
         // The Markdown parser (docs/intents/swift-markdown-migration.md,
-        // Decision 10), pinned exactly: the diff harnesses compare its output.
+        // Decision 10), pinned exactly: the renderer tests and the paste round
+        // trip compare its output byte for byte.
         .package(url: "https://github.com/swiftlang/swift-cmark.git", exact: "0.9.0"),
     ],
     targets: [
-        // Hoedown 3.0.7 plus MacDown's renderer patches (task lists, code block
-        // information, Prism-compatible code blocks, TOC class).
-        .target(
-            name: "CHoedown",
-            path: "Sources/CHoedown",
-            exclude: ["LICENSE"],
-            cSettings: [
-                .unsafeFlags(["-Wno-everything"]),
-            ]
-        ),
-        // PEG Markdown Highlight. pmh_parser.c is generated from
-        // pmh_grammar.leg with greg; see Vendor/README.md.
-        .target(
-            name: "CPegMarkdown",
-            path: "Sources/CPegMarkdown",
-            cSettings: [
-                .unsafeFlags(["-Wno-everything"]),
-            ]
-        ),
         // Constants shared by the app and the `macdown` command line utility.
         .target(
             name: "MacDownShared",
@@ -53,8 +35,6 @@ let package = Package(
         .target(
             name: "MacDownKit",
             dependencies: [
-                "CHoedown",
-                "CPegMarkdown",
                 "MacDownShared",
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "cmark-gfm", package: "swift-cmark"),
