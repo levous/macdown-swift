@@ -101,6 +101,12 @@ extension EditorTextView {
 
     // MARK: - Paste as Plain Text
 
+    /// Whether a background is dark enough to want light controls on it.
+    static func isDark(_ color: NSColor) -> Bool {
+        guard let rgb = color.usingColorSpace(.sRGB) else { return false }
+        return 0.2126 * rgb.redComponent + 0.7152 * rgb.greenComponent + 0.0722 * rgb.blueComponent < 0.5
+    }
+
     /// Shows a button just below `range`, what a converted paste inserted,
     /// that puts `plainText` there instead. It never takes focus,
     /// so typing goes on in the editor.
@@ -111,6 +117,9 @@ extension EditorTextView {
         button.controlSize = .small
         button.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         button.refusesFirstResponder = true
+        // Editor themes set their own background, whatever the system's
+        // appearance, so a light-mode button can be black on a dark theme.
+        button.appearance = NSAppearance(named: Self.isDark(backgroundColor) ? .darkAqua : .aqua)
         button.setAccessibilityLabel(title)
         button.sizeToFit()
         addSubview(button)

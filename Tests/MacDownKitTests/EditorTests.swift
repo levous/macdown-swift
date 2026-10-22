@@ -655,6 +655,21 @@ extension EditorCodeBlockTests {
         #expect(editor.plainTextButton == nil)
     }
 
+    /// The button is drawn for the editor theme's background, not the
+    /// system's appearance, so it shows on dark themes in light mode.
+    @Test func plainTextButtonMatchesTheEditorBackground() throws {
+        for (background, dark) in [(NSColor(srgbRed: 0.16, green: 0.17, blue: 0.2, alpha: 1), true),
+                                   (NSColor(srgbRed: 0.99, green: 0.97, blue: 0.9, alpha: 1), false)] {
+            let editor = editor("Intro\n\n")
+            editor.appearance = NSAppearance(named: dark ? .aqua : .darkAqua)
+            editor.backgroundColor = background
+            #expect(paste([.html: "<p><b>bold</b> text</p>", .string: "bold text"], into: editor))
+            let button = try #require(editor.plainTextButton)
+            let name = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])
+            #expect(name == (dark ? .darkAqua : .aqua))
+        }
+    }
+
     /// The whole insertion, blank lines included, becomes the plain text.
     @Test func plainTextReplacesBlockPaddingToo() throws {
         let editor = editor("Foo")
