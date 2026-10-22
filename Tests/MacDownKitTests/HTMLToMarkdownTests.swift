@@ -479,6 +479,15 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(#"<p><a href="../ref/api.html">API</a></p>"#) == "[API](../ref/api.html)")
     }
 
+    /// WebKit copies `#lists` as the page's own address plus the fragment;
+    /// that's still a link within the copied page, so only its text is kept.
+    @Test func absoluteLinksIntoTheCopiedPageKeepOnlyTheirText() {
+        var options = pasteTestOptions
+        options.baseURL = URL(string: "file:///Users/me/sample.html")
+        #expect(markdown(#"<p><a href="file:///Users/me/sample.html#lists">in-page</a> <a href="file:///Users/me/other.html#lists">other</a> <a href="file:///Users/me/sample.html">self</a></p>"#, options)
+                    == "in-page [other](file:///Users/me/other.html#lists) [self](file:///Users/me/sample.html)")
+    }
+
     @Test func linkContent() {
         #expect(markdown(#"<p><a href="u"><b>bold</b> link</a></p>"#) == "[**bold** link](u)")
         #expect(markdown(#"<p><a href="u">[1]</a></p>"#) == #"[\[1\]](u)"#)

@@ -2,9 +2,8 @@
 //  PasteboardContent.swift
 //  MacDown
 //
-//  What a paste can convert (paste intent, "Where it hooks in"): formatted
-//  text as HTML, with the address it came from, or an image. Plain text is
-//  left to the text view.
+//  What a paste can convert: formatted text as HTML, with the address it
+//  came from, or an image. Plain text is left to the text view.
 //
 
 import AppKit

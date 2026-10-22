@@ -346,10 +346,19 @@ extension HTMLToMarkdown {
             var url = href
             if let baseURL, let resolved = URL(string: href.replacingOccurrences(of: " ", with: "%20"),
                                                relativeTo: baseURL) {
+                // WebKit writes in-page links as the page's address and a fragment.
+                if resolved.fragment != nil, Self.withoutFragment(resolved) == Self.withoutFragment(baseURL) {
+                    return nil
+                }
                 url = resolved.absoluteString
             }
             let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
             return Link(url: url, title: title?.isEmpty == false ? title : nil)
+        }
+
+        private static func withoutFragment(_ url: URL) -> String {
+            let string = url.absoluteString
+            return string.firstIndex(of: "#").map { String(string[..<$0]) } ?? string
         }
 
         func style(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle {
