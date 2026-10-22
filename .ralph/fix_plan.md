@@ -85,7 +85,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 ## Low Priority
 
 ### Release
-- [ ] Gate: `swift build`, `swift test`, `xcodegen generate` + `xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build` all pass
+- [x] Gate: `swift build`, `swift test`, `xcodegen generate` + `xcodebuild -project MacDown.xcodeproj -scheme MacDown -configuration Debug build` all pass
 - [ ] HUMAN: human verification on the built app: paste real copies from Safari, Chrome, Google Docs, Word, Pages, TextEdit, Notion, VS Code, Xcode, Terminal and MacDown's preview; check rendering against the source, code unchanged, plain-text button, screenshot paste shows in the preview. Each problem found becomes a new fixture task above
 - [ ] HUMAN: release notes mention paste conversion (on by default for existing installs), the setting, Paste as Markdown, and image paste
 
