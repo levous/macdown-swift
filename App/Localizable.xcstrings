@@ -245,6 +245,136 @@
         }
       }
     },
+    "Convert formatted text to Markdown when pasting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Při vkládání převádět formátovaný text na Markdown"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Formatierten Text beim Einsetzen in Markdown umwandeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Convertir texto con formato a Markdown al pegar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teisenda kleepimisel vormindatud tekst Markdowniks"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Muunna muotoiltu teksti Markdowniksi sijoitettaessa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Convertir le texte mis en forme en Markdown lors du collage"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Umbreyta sniðnum texta í Markdown við límingu"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Converti il testo formattato in Markdown quando incolli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ペースト時にフォーマット済みテキストをMarkdownに変換"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "붙여넣을 때 서식 있는 텍스트를 Markdown으로 변환"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formatert tekst til Markdown ved innliming"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zet opgemaakte tekst bij plakken om in Markdown"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Converter texto formatado em Markdown ao colar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Преобразовывать форматированный текст в Markdown при вставке"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pri vkladaní prevádzať formátovaný text na Markdown"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konvertera formaterad text till Markdown vid inklistring"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yapıştırırken biçimli metni Markdown'a dönüştür"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粘贴时将格式化文本转换为 Markdown"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貼上時將格式化文字轉換為 Markdown"
+          }
+        }
+      }
+    },
     "(Default)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -9341,6 +9471,396 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "段落"
+          }
+        }
+      }
+    },
+    "Paste and Match Style" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložit a přizpůsobit styl"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt og tilpas stil"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt og tilpas stil"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Einsetzen und Stil anpassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pegar y adaptar estilo"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kleebi ja sobita stiil"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sijoita ja täsmää tyyli"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Coller et adapter le style"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Líma og samræma stíl"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Incolla e mantieni stile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ペーストしてスタイルを合わせる"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "붙여넣고 스타일 일치시키기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lim inn og bruk samme stil"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Plak en pas stijl aan"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Colar e Manter Estilo"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Вставить и сохранить стиль"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložiť a prispôsobiť štýl"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Klistra in och matcha stil"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yapıştır ve Stili Eşleştir"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粘贴并匹配样式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貼上並符合樣式"
+          }
+        }
+      }
+    },
+    "Paste as Markdown" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložit jako Markdown"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt som Markdown"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt som Markdown"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Als Markdown einsetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pegar como Markdown"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kleebi Markdownina"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sijoita Markdownina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Coller en Markdown"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Líma sem Markdown"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Incolla come Markdown"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Markdownとしてペースト"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Markdown으로 붙여넣기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lim inn som Markdown"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Plak als Markdown"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Colar como Markdown"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Вставить как Markdown"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložiť ako Markdown"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Klistra in som Markdown"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Markdown Olarak Yapıştır"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粘贴为 Markdown"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貼上為 Markdown"
+          }
+        }
+      }
+    },
+    "Paste as Plain Text" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložit jako prostý text"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt som ren tekst"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Indsæt som ren tekst"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Als reinen Text einsetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pegar como texto sin formato"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kleebi lihttekstina"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sijoita pelkkänä tekstinä"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Coller en texte brut"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Líma sem hreinan texta"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Incolla come testo semplice"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プレーンテキストとしてペースト"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "일반 텍스트로 붙여넣기"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lim inn som ren tekst"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Plak als platte tekst"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Colar como Texto Simples"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Вставить как простой текст"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vložiť ako obyčajný text"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Klistra in som ren text"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Düz Metin Olarak Yapıştır"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粘贴为纯文本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貼上為純文字"
           }
         }
       }
