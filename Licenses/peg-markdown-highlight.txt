@@ -1,3 +1,12 @@
+Note for MacDown: the PEG Markdown Highlight library itself is no longer
+used or shipped. MacDown's editor highlighter
+(Sources/MacDownKit/Editor/MarkdownHighlighter.swift, from
+HGMarkdownHighlighter.m and HGMarkdownHighlightingStyle.m) and its theme
+parser (Sources/MacDownKit/Editor/ThemeStyleParser.swift, from
+pmh_styleparser.c) are Swift ports of its code, kept so that the bundled and
+users' `.style` editor themes keep working after the move to cmark-gfm. This
+license covers those ports.
+
 PEG Markdown Highlight
 ======================
 

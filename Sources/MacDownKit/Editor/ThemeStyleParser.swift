@@ -3,8 +3,9 @@
 //  MacDownKit
 //
 //  Parses editor themes (`.style` files) — a Swift port of PEG Markdown
-//  Highlight's pmh_styleparser.c, so the themes keep working once the C
-//  library is gone (swift-markdown migration, Phase 2). Element names,
+//  Highlight's pmh_styleparser.c (Copyright 2011 Ali Rantakari; see
+//  Licenses/peg-markdown-highlight.txt), so the themes keep working without
+//  the C library, which MacDown no longer uses. Element names,
 //  attributes, colors, font traits and error messages are the same, as are
 //  the C parser's quirks: a rule's attributes come out in reverse order,
 //  and a later `editor`, `editor-current-line` or `editor-selection` rule
