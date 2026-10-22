@@ -663,6 +663,22 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
                     == "| **Name** |\n| --- |\n| x *y* z |\n")
     }
 
+    /// Browsers copy header cells with the bold they're displayed in; header
+    /// cells are bold already, so it isn't written. Bold body cells keep it.
+    @Test func boldInHeaderCellsIsDropped() {
+        #expect(markdown(#"<table><tr><th style="font-weight: bold">Name</th><th><strong>Count</strong></th></tr><tr><td style="font-weight: bold">a</td><td>1</td></tr></table>"#)
+                    == "| Name | Count |\n| --- | --- |\n| **a** | 1 |\n")
+        #expect(markdown(#"<table><tr><th style="font-weight: bold">Region</th><th colspan="2"><b>Quarter</b> <i>now</i></th></tr><tr><td><b>N</b></td><td>1</td><td>2</td></tr></table>"#) == """
+            <table>
+            <tbody>
+            <tr><th>Region</th><th colspan="2">Quarter <em>now</em></th></tr>
+            <tr><td><strong>N</strong></td><td>1</td><td>2</td></tr>
+            </tbody>
+            </table>
+
+            """)
+    }
+
     @Test func shortRowsArePadded() {
         #expect(markdown("<table><tr><th>a</th><th>b</th></tr><tr><td>1</td></tr></table>")
                     == "| a | b |\n| --- | --- |\n| 1 |  |\n")
