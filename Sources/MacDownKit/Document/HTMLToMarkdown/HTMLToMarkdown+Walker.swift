@@ -121,6 +121,10 @@ extension HTMLToMarkdown {
                         wordItems.append(item)
                         continue
                     }
+                    if let items = webWordListItems(element, style: elementStyle) {
+                        wordItems += items
+                        continue
+                    }
                     flushWordList()
                     blocks += block(element, style: elementStyle)
                 } else {

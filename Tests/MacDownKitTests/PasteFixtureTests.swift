@@ -129,6 +129,16 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
         #expect(try Self.pasted(fixture) == fixture.expected)
     }
 
+    /// Captures whose headings are only a larger font: everything but the
+    /// headings matches until those are recognized.
+    @Test(arguments: ["word"])
+    func fixtureApartFromHeadings(_ name: String) throws {
+        let fixture = try PasteFixture.load(name)
+        let expected = try #require(fixture.expected).split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.hasPrefix("#") ? $0.drop { $0 == "#" }.dropFirst() : $0 }.joined(separator: "\n")
+        #expect(try Self.pasted(fixture) == expected)
+    }
+
     /// Code from Terminal (RTF in a monospace font, with colors) and
     /// JetBrains IDEs (a styled pre, bold keywords) pastes exactly as copied.
     @Test func codeEditors() throws {

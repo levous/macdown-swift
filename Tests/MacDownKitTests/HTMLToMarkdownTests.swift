@@ -875,6 +875,24 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(html) == "- A\n\nBetween\n\n- B\n\n1. C\n")
     }
 
+    /// Word for the web writes every list item as a list of its own, in a
+    /// wrapper `div`, and says on the item which list it's in and how deep.
+    static func webItem(_ tag: String, list: Int, level: Int, start: Int? = nil, _ text: String) -> String {
+        #"<div class="ListContainerWrapper"><\#(tag) class="BulletListStyle1"\#(start.map { #" start="\#($0)""# } ?? "") role="list">"#
+            + #"<li data-listid="\#(list)" data-aria-level="\#(level)" aria-setsize="-1" role="listitem"><p class="Paragraph"><span class="TextRun">\#(text)</span></p></li>"#
+            + "</\(tag)></div>"
+    }
+
+    @Test func wordForTheWebLists() {
+        let html = Self.webItem("ul", list: 1, level: 1, "One") + Self.webItem("ul", list: 1, level: 2, "Nested")
+            + Self.webItem("ul", list: 1, level: 1, "Two")
+            + Self.webItem("ol", list: 2, level: 1, start: 3, "Third") + Self.webItem("ol", list: 2, level: 1, start: 4, "Fourth")
+            + Self.webItem("ol", list: 2, level: 2, start: 1, "Sub")
+            + Self.webItem("ol", list: 3, level: 1, start: 1, "Other list")
+            + #"<div class="OutlineElement"><p class="Paragraph">After</p></div>"#
+        #expect(markdown(html) == "- One\n    - Nested\n- Two\n\n3. Third\n4. Fourth\n    1. Sub\n\n1) Other list\n\nAfter\n")
+    }
+
     /// Word's empty paragraphs and namespaced elements leave nothing.
     @Test func emptyParagraphs() {
         #expect(markdown("<p class=MsoNormal>One<o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p><p class=MsoNormal>Two</p>")
