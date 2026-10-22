@@ -121,9 +121,46 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
         return result.markdown
     }
 
-    @Test(arguments: ["synthetic-google-docs", "synthetic-word"])
+    @Test(arguments: ["synthetic-google-docs", "synthetic-word", "synthetic-textedit"])
     func fixture(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         #expect(try Self.pasted(fixture) == fixture.expected)
+    }
+
+    /// Pages and TextEdit write RTF; AppKit's HTML for it puts fonts in
+    /// classes and nests lists directly in lists (FR-24).
+    @Test func richTextFromPagesAndTextEdit() throws {
+        let text = NSMutableAttributedString()
+        func add(_ string: String, font: String = "Helvetica", lists: [NSTextList] = []) {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.textLists = lists
+            text.append(NSAttributedString(string: string, attributes: [
+                .font: NSFont(name: font, size: 12)!, .paragraphStyle: paragraph]))
+        }
+        let bullets = NSTextList(markerFormat: .disc, options: 0)
+        let numbers = NSTextList(markerFormat: .decimal, options: 0)
+        add("Plain, ")
+        add("bold", font: "Helvetica-Bold")
+        add(", ")
+        add("italic", font: "Helvetica-Oblique")
+        add(" and ")
+        add("code", font: "Courier")
+        add(".\n")
+        add("\t•\tOuter\n", lists: [bullets])
+        add("\t1.\tInner one\n", lists: [bullets, numbers])
+        add("\t2.\tInner two\n", lists: [bullets, numbers])
+        add("\t•\tOuter two\n", lists: [bullets])
+        let rtf = try #require(text.rtf(from: NSRange(location: 0, length: text.length)))
+        let fixture = PasteFixture(name: "rtf", types: ["public.rtf": rtf, "public.utf8-plain-text": Data(text.string.utf8)],
+                                   expected: nil, synthetic: true)
+        #expect(try Self.pasted(fixture) == """
+            Plain, **bold**, *italic* and `code`.
+
+            - Outer
+                1. Inner one
+                2. Inner two
+            - Outer two
+
+            """)
     }
 }
