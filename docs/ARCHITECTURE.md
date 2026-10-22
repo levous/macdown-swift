@@ -32,7 +32,8 @@ changes, and implements the formatting, saving and export actions.
 | `Sources/MacDownShared` | Constants shared by the app and the shell utility |
 | `Sources/MacDownKit/Document` | Parsing, page assembly, the document model and per-window controller |
 | `Sources/MacDownKit/Document/Model` | The cmark-gfm document model: `CMarkTree`, `LineIndex`, `ProtectedSource`, `MarkdownDocumentModel`, `HighlightMapper` |
-| `Sources/MacDownKit/Editor` | `NSTextView` subclass, editing helpers, syntax highlighter, theme parser |
+| `Sources/MacDownKit/Document/HTMLToMarkdown` | Pasted HTML as Markdown: parsing, styles, the walker, the renderer, tables |
+| `Sources/MacDownKit/Editor` | `NSTextView` subclass, editing helpers, pasting, syntax highlighter, theme parser |
 | `Sources/MacDownKit/Preview` | `WKWebView` preview, custom URL scheme handler |
 | `Sources/MacDownKit/Views` | SwiftUI document window, split view, toolbar |
 | `Sources/MacDownKit/Preferences` | Preferences model and Settings window |
@@ -111,6 +112,31 @@ milliseconds per main queue turn, nearest the visible text first. It starts
 storage edits and runs it once, from `onIdlePassFinished`. Styling text above
 the visible area keeps the visible text in place, because themes can change
 heading font sizes.
+
+### Pasting
+
+Paste, Services and text dropped from other apps all go through
+`EditorTextView.readSelection(from:)` and `readSelection(from:type:)`
+(`EditorTextView+Paste.swift`). `PasteboardContent` reads the clipboard: HTML
+(or a WebKit web archive's page), else RTF or RTFD exported to HTML by AppKit,
+else image data when there's no text, plus the address relative links resolve
+against. `HTMLToMarkdown` (`Document/HTMLToMarkdown`) parses the HTML with
+`XMLDocument` (Tidy), resolves each element's bold, italic, strikethrough and
+monospace from tags, `<style>` classes and inline styles, walks the tree into
+blocks of styled text runs, and renders Markdown with the editing settings
+(list marker, indentation), escaping only what would change the parse. Runs
+are grouped into emphasis markers by the renderer because apps like Google
+Docs write every run as a flat styled span.
+
+The paste is skipped, so the text view pastes plain text, for content that
+looks like code (all monospace, no structure), inside a code block (a fence
+scan above the caret, or the latest parse's blocks for indented code), with
+the setting off (images still paste), and during Paste and Match Style. The
+insertion is its own undo step (`breakUndoCoalescing`), and blocks get blank
+lines around them. A converted paste shows a "Paste as Plain Text" button
+that's dismissed by the next edit, Escape, moving the selection out, or
+scrolling away. The editor's own copies write plain text only, so they're
+never converted.
 
 ## Saving
 
@@ -294,6 +320,16 @@ Intended HTML differences are listed once in
 highlighting differences are in `HighlightDiffHarnessTests.reviewed`. There is
 no CI; run them before merging engine work.
 
+Pasting is checked the same way: `PasteRoundTripTests` renders each corpus
+document, converts the HTML back with `HTMLToMarkdown` and renders that
+again; `Resources/reviewed-paste-diffs.json` lists the reviewed differences
+(rewrites for whole kinds of markup, such as footnotes, and single hunks).
+`MACDOWN_DIFF_REPORT` writes `paste-round-trip.md`. Clipboard fixtures are
+in `Resources/Paste/<source>/` (one file per pasteboard type, a manifest,
+and the expected Markdown); `Tools/capture-pasteboard.swift` saves new ones,
+from generated content only (`Paste/sample.md`). `PasteLiveTests` use the
+real menu actions on the general pasteboard and put back what was there.
+
 ### Checking the running app
 
 Debug builds write a JSON report of each rendered preview (Prism tokens, TOC
@@ -316,6 +352,11 @@ The original's translations (21 locales) were imported by
 new in the port from `Tools/port_translations.json` (marked as needing
 review). Re-run it after adding UI strings:
 `python3 Tools/import_localizations.py /path/to/original/macdown`.
+The script writes the whole catalog in its own JSON layout, while Xcode
+saves it in another (`"key" : value`, its own key order, `extractionState`
+on each entry), so a run after Xcode has saved the catalog rewrites every
+line. If it has, commit only the new entries (2026-10-21: the paste strings
+were added that way).
 
 ### Regenerating the highlighter parser
 

@@ -78,6 +78,19 @@ fresh, and the original's plist can be copied over to migrate.
   default) sets the root `html` font size in the preview and exports, so
   stylesheets in relative units scale with it. The bundled styles size
   text in `px`, so they don't change with it.
+- **Pasting formatted text** (new): Paste turns HTML or rich text on the
+  clipboard (web pages, Google Docs, Word, Pages, MacDown's preview) into
+  Markdown, with the list marker and indentation settings; code from code
+  editors, and pastes into code blocks, stay plain text. After a converted
+  paste, a "Paste as Plain Text" button below it swaps in the plain text.
+  Settings ▸ Editor ▸ "Convert formatted text to Markdown when pasting"
+  (`editorConvertsPastedFormatting`, a new key; on by default, existing
+  installs included) turns it off, and Edit ▸ Paste as Markdown (⌥⌘V) then
+  converts on demand. Edit ▸ Paste and Match Style (⌥⇧⌘V) always pastes
+  plain text. The original only pasted plain text.
+- **Pasting images** (new): image data on the clipboard, such as a
+  screenshot, is pasted as an embedded (data URI) image, as dropped image
+  files already were. The original ignored it.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;
