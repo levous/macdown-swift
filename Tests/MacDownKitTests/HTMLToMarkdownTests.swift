@@ -811,3 +811,38 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(!isCode(#"<h1 style="font-family: Menlo">Title</h1>"#))
     }
 }
+
+/// Word's list paragraphs (FR-23).
+@Suite struct HTMLToMarkdownWordTests {
+    static func item(_ level: Int, _ list: Int = 0, bullet: String, _ text: String) -> String {
+        "<p class=MsoListParagraph style='margin-left:\(level * 36)pt;text-indent:-18pt;mso-list:l\(list) level\(level) lfo1'>"
+            + "<![if !supportLists]><span style='font-family:Symbol'><span style='mso-list:Ignore'>\(bullet)"
+            + "<span style='font:7.0pt \"Times New Roman\"'>&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>"
+            + "\(text)<o:p></o:p></p>"
+    }
+
+    @Test func bulletedAndNested() {
+        let html = Self.item(1, bullet: "&middot;", "One") + Self.item(2, bullet: "o", "Two <b>bold</b>")
+            + Self.item(3, bullet: "&sect;", "Three") + Self.item(1, bullet: "&middot;", "Four")
+        #expect(markdown(html) == "- One\n    - Two **bold**\n        - Three\n- Four\n")
+    }
+
+    @Test func numbered() {
+        let html = Self.item(1, 1, bullet: "3.", "Third") + Self.item(1, 1, bullet: "4.", "Fourth")
+            + Self.item(2, 1, bullet: "a.", "Sub") + Self.item(2, 1, bullet: "b.", "Sub two")
+        #expect(markdown(html) == "3. Third\n4. Fourth\n    1. Sub\n    2. Sub two\n")
+    }
+
+    /// A paragraph between, or another list, ends the list.
+    @Test func separateLists() {
+        let html = Self.item(1, 0, bullet: "&middot;", "A") + "<p class=MsoNormal>Between<o:p></o:p></p>"
+            + Self.item(1, 0, bullet: "&middot;", "B") + Self.item(1, 2, bullet: "1.", "C")
+        #expect(markdown(html) == "- A\n\nBetween\n\n- B\n\n1. C\n")
+    }
+
+    /// Word's empty paragraphs and namespaced elements leave nothing.
+    @Test func emptyParagraphs() {
+        #expect(markdown("<p class=MsoNormal>One<o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p><p class=MsoNormal>Two</p>")
+                    == "One\n\nTwo\n")
+    }
+}

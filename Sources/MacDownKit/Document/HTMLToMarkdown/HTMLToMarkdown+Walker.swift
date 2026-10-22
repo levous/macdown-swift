@@ -87,24 +87,39 @@ extension HTMLToMarkdown {
         func blocks(in container: XMLElement, style: TextStyle = .init()) -> [Block] {
             var blocks: [Block] = []
             var pending: [Inline] = []
+            // Word's list paragraphs, until something else ends the list.
+            var wordItems: [WordListItem] = []
             func flush() {
                 blocks += Self.paragraphs(pending)
                 pending = []
             }
+            func flushWordList() {
+                blocks += Self.wordLists(wordItems[...])
+                wordItems = []
+            }
             for child in container.children ?? [] {
                 guard let element = child as? XMLElement else {
-                    pending += inlines(in: child, style: style)
+                    let inlines = inlines(in: child, style: style)
+                    if !wordItems.isEmpty, !Self.paragraphs(inlines).isEmpty { flushWordList() }
+                    pending += inlines
                     continue
                 }
                 guard let elementStyle = visibleStyle(of: element, inheriting: style) else { continue }
                 if Self.blockElements.contains(element.localName?.lowercased() ?? "") {
                     flush()
+                    if let item = wordListItem(element, style: elementStyle) {
+                        wordItems.append(item)
+                        continue
+                    }
+                    flushWordList()
                     blocks += block(element, style: elementStyle)
                 } else {
+                    flushWordList()
                     pending += inlines(of: element, style: elementStyle)
                 }
             }
             flush()
+            flushWordList()
             return blocks
         }
 

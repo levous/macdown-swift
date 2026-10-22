@@ -82,7 +82,8 @@ extension HTMLToMarkdown {
         /// The properties the converter reads.
         static let properties: Set<String> = [
             "display", "font", "font-family", "font-style", "font-weight", "margin",
-            "margin-bottom", "margin-top", "text-align", "text-decoration", "text-decoration-line",
+            "margin-bottom", "margin-top", "mso-list", "text-align", "text-decoration",
+            "text-decoration-line",
         ]
 
         /// `name: value; …` as a dictionary of lowercased names, keeping
@@ -191,7 +192,9 @@ extension HTMLToMarkdown {
         if let inline = element.attribute(forName: "style")?.stringValue {
             declarations.merge(StyleSheet.declarations(inline)) { $1 }
         }
-        if declarations["display"]?.lowercased() == "none" { return nil }
+        // Hidden, or Word's list bullet (see HTMLToMarkdown+Word.swift).
+        if declarations["display"]?.lowercased() == "none"
+            || declarations["mso-list"]?.lowercased() == "ignore" { return nil }
         var style = parent
         if boldTags.contains(tag) { style.bold = true }
         if italicTags.contains(tag) { style.italic = true }
