@@ -565,6 +565,52 @@ extension EditorCodeBlockTests {
         #expect(editor.string == "**x**first line\nsecond line")
     }
 
+    /// After a converted paste, a button offers the plain text instead
+    /// (FR-31).
+    @Test func plainTextButton() throws {
+        let editor = editor("Intro\n\n")
+        #expect(paste([.html: "<p><b>bold</b> text</p>", .string: "bold text"], into: editor))
+        let button = try #require(editor.plainTextButton)
+        #expect(button.superview === editor && !button.isHidden)
+        #expect(button.refusesFirstResponder)
+        #expect(button.accessibilityLabel() == "Paste as Plain Text")
+        // Just below the pasted line.
+        let lineRect = editor.layoutManager!.lineFragmentRect(
+            forGlyphAt: editor.layoutManager!.glyphIndexForCharacter(at: 8), effectiveRange: nil)
+        #expect(button.frame.minY >= lineRect.maxY + editor.textContainerOrigin.y - 1)
+        #expect(button.frame.minY <= lineRect.maxY + editor.textContainerOrigin.y + 10)
+
+        button.performClick(nil)
+        #expect(editor.string == "Intro\n\nbold text")
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// The whole insertion, blank lines included, becomes the plain text.
+    @Test func plainTextReplacesBlockPaddingToo() throws {
+        let editor = editor("Foo")
+        #expect(paste([.html: "<h1>T</h1><p>p</p>", .string: "T\np"], into: editor))
+        #expect(editor.string == "Foo\n\n# T\n\np\n")
+        try #require(editor.plainTextButton).performClick(nil)
+        #expect(editor.string == "FooT\np")
+    }
+
+    /// No button when there's nothing different to offer.
+    @Test func noPlainTextButton() {
+        var editor = editor("")
+        #expect(paste([.html: "<p>same</p>", .string: "same"], into: editor))
+        #expect(editor.plainTextButton == nil)
+        editor = self.editor("")
+        #expect(paste([.html: "<b>no plain text</b>"], into: editor))
+        #expect(editor.plainTextButton == nil)
+        editor = self.editor("")
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.setData(Data([0x89, 0x50]), forType: .png)
+        #expect(editor.pasteConverted(from: pasteboard))
+        #expect(editor.plainTextButton == nil)
+    }
+
     /// Paste as Markdown converts with the setting off (FR-28).
     @Test func pasteAsMarkdownIgnoresTheSetting() {
         let editor = editor("")

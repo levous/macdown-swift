@@ -85,6 +85,23 @@ extension LiveDocumentTests {
         try? await Task.sleep(for: .milliseconds(20))
     }
 
+    /// The plain-text button's swap is undone on its own: Undo brings
+    /// back the Markdown, then removes the paste (FR-31).
+    @Test func plainTextButtonUndo() async throws {
+        try await withDocument("Intro ") { controller in
+            let editor = controller.editor
+            await withClipboard(Self.bold) { editor.paste(nil) }
+            await Self.nextEvent()
+            try #require(editor.plainTextButton).performClick(nil)
+            await Self.nextEvent()
+            #expect(editor.string == "Intro bold text")
+            controller.undoManager.undo()
+            #expect(editor.string == "Intro **bold** text")
+            controller.undoManager.undo()
+            #expect(editor.string == "Intro ")
+        }
+    }
+
     /// Paste and Match Style pastes the plain text (FR-4).
     @Test func pasteAndMatchStyleIsPlain() async {
         await withDocument("") { controller in

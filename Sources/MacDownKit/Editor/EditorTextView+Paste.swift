@@ -61,6 +61,7 @@ extension EditorTextView {
         else { return false }
         switch content {
         case .image(let data, let mime):
+            dismissPlainTextButton()
             insertPasted(ImageMarkup.dataURI(data, mime: mime), isInline: true)
         case .html(let html, let baseURL):
             guard convertsFormatting ?? convertsPastedFormatting else { return false }
@@ -68,7 +69,13 @@ extension EditorTextView {
             options.baseURL = baseURL
             guard let result = HTMLToMarkdown(options: options).convert(html), !result.isCode
             else { return false }
-            insertPasted(result.markdown, isInline: result.isInline)
+            dismissPlainTextButton()
+            let inserted = insertPasted(result.markdown, isInline: result.isInline)
+            if let plain = pasteboard.string(forType: .string),
+               plain.trimmingCharacters(in: .whitespacesAndNewlines)
+                != result.markdown.trimmingCharacters(in: .whitespacesAndNewlines) {
+                showPlainTextButton(replacing: inserted, with: plain)
+            }
         }
         return true
     }
@@ -77,7 +84,9 @@ extension EditorTextView {
     /// typing before it), through the usual text-change path so the
     /// document sees it like typing (FR-7). Blocks are set off from the
     /// text around them by blank lines.
-    private func insertPasted(_ markdown: String, isInline: Bool) {
+    /// The range of the inserted text.
+    @discardableResult
+    private func insertPasted(_ markdown: String, isInline: Bool) -> NSRange {
         let range = selectedRange()
         var text = markdown
         if !isInline {
@@ -87,6 +96,62 @@ extension EditorTextView {
         breakUndoCoalescing()
         insertText(text, replacementRange: range)
         breakUndoCoalescing()
+        return NSRange(location: range.location, length: (text as NSString).length)
+    }
+
+    // MARK: - Paste as Plain Text
+
+    /// Shows a button just below `range`, what a converted paste inserted,
+    /// that puts `plainText` there instead (FR-31). It never takes focus,
+    /// so typing goes on in the editor.
+    func showPlainTextButton(replacing range: NSRange, with plainText: String) {
+        dismissPlainTextButton()
+        let title = String(localized: "Paste as Plain Text")
+        let button = NSButton(title: title, target: self, action: #selector(pastePlainTextInstead(_:)))
+        button.controlSize = .small
+        button.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        button.refusesFirstResponder = true
+        button.setAccessibilityLabel(title)
+        button.sizeToFit()
+        addSubview(button)
+        plainTextButton = button
+        pastedPlainText = (range, plainText)
+        positionPlainTextButton()
+    }
+
+    /// Puts the button under the last line of the pasted text.
+    func positionPlainTextButton() {
+        guard let button = plainTextButton, let pasted = pastedPlainText,
+              let layoutManager, let textContainer
+        else { return }
+        let text = string as NSString
+        var end = min(NSMaxRange(pasted.range), text.length)
+        while end > pasted.range.location, text.character(at: end - 1) == 0x0A { end -= 1 }
+        let index = max(pasted.range.location, end - 1)
+        var lineRect = NSRect.zero
+        if index < text.length {
+            layoutManager.ensureLayout(forCharacterRange: NSRange(location: index, length: 1))
+            lineRect = layoutManager.lineFragmentRect(
+                forGlyphAt: layoutManager.glyphIndexForCharacter(at: index), effectiveRange: nil)
+        }
+        button.setFrameOrigin(NSPoint(x: textContainerOrigin.x + lineRect.minX + textContainer.lineFragmentPadding,
+                                      y: textContainerOrigin.y + lineRect.maxY + 2))
+    }
+
+    /// Replaces the converted paste with the plain text, as its own undo
+    /// step, so Undo brings back the Markdown.
+    @objc func pastePlainTextInstead(_ sender: Any?) {
+        guard let pasted = pastedPlainText else { return }
+        dismissPlainTextButton()
+        breakUndoCoalescing()
+        insertText(pasted.text, replacementRange: pasted.range)
+        breakUndoCoalescing()
+    }
+
+    func dismissPlainTextButton() {
+        plainTextButton?.removeFromSuperview()
+        plainTextButton = nil
+        pastedPlainText = nil
     }
 
     /// What to add around pasted blocks (ending in a newline) at `range` so
