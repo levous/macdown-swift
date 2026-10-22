@@ -70,7 +70,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Button tests: appears after converted paste only; click swaps and Undo restores; typing dismisses without losing the keystroke; Escape dismisses; verify placement in the running app with a screenshot
 - [x] Large image paste: measure editor and preview responsiveness with a multi-MB data URI (Retina screenshot size); record numbers in the intent "Decisions"
 - [x] Localization (FR-29): add "Convert formatted text to Markdown when pasting", "Paste as Markdown", "Paste as Plain Text" to `App/Localizable.xcstrings`; run `python3 Tools/import_localizations.py <original macdown>` if available; add translations to `Tools/port_translations.json` where possible
-- [ ] `Resources/help.md` (FR-30): section on pasting formatted text (what converts, what's dropped, code safety, setting, Paste as Markdown, Paste and Match Style, plain-text button, image paste); update `HelpDocumentTests` expectations if needed
+- [x] `Resources/help.md` (FR-30): section on pasting formatted text (what converts, what's dropped, code safety, setting, Paste as Markdown, Paste and Match Style, plain-text button, image paste); update `HelpDocumentTests` expectations if needed
 - [ ] Docs: `docs/MACDOWN-PORT.md` "Differences from the original" (paste conversion, new setting, image paste); `docs/ARCHITECTURE.md` (code layout, "Editor and highlighting" paste path, Tests section for the round-trip harness, dated "Decisions" entry); `CLAUDE.md` Editor section if the paste path warrants a line
 
 ### Phase 3: Source quirks (each with its fixture test)
