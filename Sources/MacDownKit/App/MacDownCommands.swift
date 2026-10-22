@@ -38,6 +38,16 @@ public struct MacDownCommands: Commands {
         TextEditingCommands()
         ToolbarCommands()
 
+        // With "Convert formatted text to Markdown when pasting" off, Paste
+        // pastes plain text and this converts (paste intent, FR-28).
+        CommandGroup(after: .pasteboard) {
+            Button("Paste as Markdown") {
+                NSApp.sendAction(#selector(EditorTextView.pasteAsMarkdown(_:)), to: nil, from: nil)
+            }
+            .keyboardShortcut("v", modifiers: [.command, .option])
+            .disabled(controller == nil || Preferences.shared.editorConvertsPastedFormatting)
+        }
+
         CommandGroup(before: .toolbar) {
             Button("Render Markdown") { controller?.renderNow() }
                 .keyboardShortcut("r")
