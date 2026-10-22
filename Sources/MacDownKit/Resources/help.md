@@ -489,6 +489,7 @@ This is where I keep settings for how I behave: **MacDown ▸ Settings… ▸ Ge
 * **Ensure open document on launch** opens an empty document when I start without one.
 * **Automatically create files for link targets**: following a link to a file that doesn’t exist creates it.
 * **Save changes automatically** saves your edits as you type, instead of when you save (see [Writing and saving](#writing-and-saving)).
+* **Check for updates automatically** (on by default) looks for a newer release on GitHub once a day and tells you about each new version once. Nothing is downloaded: I link to the release, or if you installed me with Homebrew, show the `brew upgrade` command. **MacDown ▸ Check for Updates…** checks right away.
 
 ## <a name="editor-pane"></a>The Editor Settings
 

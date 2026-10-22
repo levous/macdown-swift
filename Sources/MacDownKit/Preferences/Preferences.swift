@@ -80,6 +80,8 @@ public final class Preferences {
     /// macOS default for document apps). Off, documents are saved explicitly
     /// and quitting asks about unsaved changes. New in the Swift port.
     public var autosavesDocuments = false { didSet { save(autosavesDocuments, .autosavesDocuments) } }
+    /// Whether to look for a newer release once a day (see UpdateChecker).
+    public var automaticallyChecksForUpdates = false { didSet { save(automaticallyChecksForUpdates, .SUEnableAutomaticChecks) } }
 
     // MARK: Markdown extensions
 
@@ -251,6 +253,7 @@ public final class Preferences {
         supressesUntitledDocumentOnLaunch = d.bool(forKey: .supressesUntitledDocumentOnLaunch)
         createFileForLinkTarget = d.bool(forKey: .createFileForLinkTarget)
         autosavesDocuments = d.bool(forKey: .autosavesDocuments)
+        automaticallyChecksForUpdates = d.bool(forKey: .SUEnableAutomaticChecks)
 
         extensionAutolink = d.bool(forKey: .extensionAutolink)
         extensionSuperscript = d.bool(forKey: .extensionSuperscript)
@@ -359,6 +362,9 @@ public final class Preferences {
         }
         if defaults.object(forKey: .editorConvertsPastedFormatting) == nil {
             editorConvertsPastedFormatting = true
+        }
+        if defaults.object(forKey: .SUEnableAutomaticChecks) == nil {
+            automaticallyChecksForUpdates = true
         }
     }
 }

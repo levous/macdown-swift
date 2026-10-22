@@ -54,6 +54,8 @@ struct GeneralSettingsView: View {
             Toggle("Automatically create files for link targets",
                    isOn: $preferences.createFileForLinkTarget)
             Toggle("Save changes automatically", isOn: $preferences.autosavesDocuments)
+            Toggle("Check for updates automatically",
+                   isOn: $preferences.automaticallyChecksForUpdates)
         }
         .padding(20)
     }

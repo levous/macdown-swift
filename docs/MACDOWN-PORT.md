@@ -101,6 +101,10 @@ fresh, and the original's plist can be copied over to migrate.
 - **Pasting images** (new): image data on the clipboard, such as a
   screenshot, is pasted as an embedded (data URI) image, as dropped image
   files already were. The original ignored it.
+- **Updates** are announced, not installed: a newer GitHub release gets an
+  alert (once per version) with a link to it, or the `brew upgrade` command
+  for a Homebrew install. The original's Sparkle downloaded and installed
+  them. See "Removed rather than ported" below.
 - **Formatting commands on a whole span:** with formatted text selected
   markers and all (`**Header**`), Bold and the other inline formats act as
   they do on the text alone: the same format is removed, others go inside.
@@ -194,5 +198,12 @@ the original was reviewed with diff harnesses (removed with hoedown) and is
 listed under "Markdown differences with the new engine". (See [ARCHITECTURE.md](ARCHITECTURE.md),
 "Markdown engine".)
 
-**Removed rather than ported:** Sparkle updates (releases go through GitHub
-and Homebrew), the Touch Bar, the AppleScript dictionary, and the easter eggs.
+**Removed rather than ported:** Sparkle's downloading and installing of
+updates (releases go through GitHub and Homebrew), the Touch Bar, the
+AppleScript dictionary, and the easter eggs. In its place, a release check
+(`UpdateChecker`) asks GitHub for the latest release once a day and only
+tells the user: it links to the release page, or for a Homebrew install
+shows `brew upgrade --cask levous/tap/macdown-swift`. MacDown ▸ Check for Updates…
+and Settings ▸ General ▸ "Check for updates automatically" keep Sparkle's
+keys (`SUEnableAutomaticChecks`, `SULastCheckTime`, and `SUSkippedVersion`
+for the version last announced).
