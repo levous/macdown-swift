@@ -23,8 +23,6 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     case extensionHighlight
     case extensionSmartyPants
     case markdownManualRender
-    /// Hidden: the Markdown engine (cmark-gfm or hoedown).
-    case markdownEngine
 
     // MARK: Editor
     case editorBaseFontInfo
@@ -84,8 +82,8 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
 
     // MARK: Retired
     // Settings that are no longer read: standard Markdown is always on, and
-    // Quote and Underline are gone. Their saved values are left in place
-    // (FR-36), so a downgrade still finds them.
+    // Quote and Underline are gone. Their saved values are left in place,
+    // so a downgrade still finds them.
     case extensionTables
     case extensionFencedCode
     case extensionFootnotes

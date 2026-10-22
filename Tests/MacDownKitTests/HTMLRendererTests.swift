@@ -2,10 +2,10 @@
 //  HTMLRendererTests.swift
 //  MacDownKitTests
 //
-//  The cmark-gfm renderer writes hoedown's markup (TR-5).
+//  The cmark-gfm renderer writes hoedown's markup, checked against
+//  hoedown's recorded output (EngineSnapshots).
 //
 
-import CHoedown
 import Foundation
 import Testing
 @testable import MacDownKit
@@ -13,23 +13,15 @@ import Testing
 @Suite struct HTMLEscapingTests {
     static let stress = #"a & b < c > d "e" 'f' /g/ \h [i] {j} |k| ~l `m` ^n é 😀 %20 ?x=1&y='2' #frag"#
 
-    func hoedown(_ text: String, _ escape: (UnsafeMutablePointer<hoedown_buffer>?, UnsafePointer<UInt8>, Int) -> Void) -> String {
-        let ob = hoedown_buffer_new(64)
-        defer { hoedown_buffer_free(ob) }
-        let bytes = Array(text.utf8)
-        bytes.withUnsafeBufferPointer { escape(ob, $0.baseAddress!, $0.count) }
-        return String(decoding: UnsafeBufferPointer(start: ob!.pointee.data, count: ob!.pointee.size), as: UTF8.self)
+    @Test func htmlMatchesHoedown() throws {
+        #expect(HTMLEscaping.html(Self.stress) == (try EngineSnapshots.value("escape/html")))
     }
 
-    @Test func htmlMatchesHoedown() {
-        #expect(HTMLEscaping.html(Self.stress) == hoedown(Self.stress) { hoedown_escape_html($0, $1, $2, 0) })
-    }
-
-    @Test func hrefMatchesHoedown() {
-        #expect(HTMLEscaping.href(Self.stress) == hoedown(Self.stress) { hoedown_escape_href($0, $1, $2) })
+    @Test func hrefMatchesHoedown() throws {
+        #expect(HTMLEscaping.href(Self.stress) == (try EngineSnapshots.value("escape/href")))
         // Every byte value.
         let all = String(decoding: (1...127).map { UInt8($0) }, as: UTF8.self)
-        #expect(HTMLEscaping.href(all) == hoedown(all) { hoedown_escape_href($0, $1, $2) })
+        #expect(HTMLEscaping.href(all) == (try EngineSnapshots.value("escape/href-ascii")))
     }
 }
 
@@ -38,14 +30,9 @@ import Testing
         MarkdownDocumentModel(text, options: options).body
     }
 
-    /// hoedown's output with fresh-install settings.
-    func hoedown(_ text: String) -> String {
-        MarkdownParser.parse(text, settings: CorpusTests.settings).body
-    }
-
     /// Where CommonMark and hoedown agree, the output is hoedown's, byte
-    /// for byte (TR-5).
-    @Test(arguments: [
+    /// for byte.
+    nonisolated static let byteForByte = [
         "# One\n\nText *em* **strong** `code`.\n\n## Two\n",
         "- a\n- b\n",
         "- a\n\n- b\n",
@@ -61,17 +48,36 @@ import Testing
         "A[^n] B[^m].\n\n[^m]: Em.\n\n[^n]: En.\n",
         "[a](https://x.org/?a=1&b='2' \"T\") ![alt](i.png \"t\") <https://y.org> <me@z.org> <span>s</span>\n",
         "<div>\nraw\n</div>\n\n---\n",
-    ])
-    func matchesHoedown(_ text: String) {
-        #expect(html(text) == hoedown(text))
+    ]
+
+    static let tocTexts = { () throws -> [String] in
+        [try #require(try Corpus.files().first { $0.name == "13-toc.md" }).text,
+         "## Start\n\n[TOC]\n\n# Higher [link](x) *em*\n\n### Deep\n"]
     }
 
-    /// Front matter (FR-15): a valid YAML block is a table before the body;
+    static let mathTexts = [
+        "$$\n\\int_0^1 x^2 \\, dx < 1\n$$\n",
+        "Inline \\\\( a_1 * b_2 \\\\) and display \\\\[ c_{*} \\\\].\n",
+        "In text $$x_1 * y_2$$ here.\n",
+        "Dollars $A^T_S = B$ and *emphasis*.\n",
+        "# Header $$h_1$$\n\n| $t_1$ |\n|---|\n",
+    ]
+
+    static let autolinkText = "See https://example.org/page?q=1, www.example.org and hello@example.org; <https://x.org>.\n"
+    static let smartText = "\"Double,\" 'single,' it's, en -- dash, em --- dash... `\"code\" --`\n\n```\n\"block\" --\n```\n"
+    static let markText = "==marked== and == spaced == and x^2, 10^(-6), e^(i pi) and a ^ caret. `==no== x^2`\n"
+
+    @Test(arguments: byteForByte)
+    func matchesHoedown(_ text: String) throws {
+        #expect(html(text) == (try EngineSnapshots.value("render/" + text)))
+    }
+
+    /// Front matter: a valid YAML block is a table before the body;
     /// otherwise it's Markdown. Same as hoedown.
     @Test(arguments: ["09-front-matter.md", "11-leading-rule.md"])
     func frontMatter(_ name: String) throws {
         let text = try #require(try Corpus.files().first { $0.name == name }).text
-        #expect(HTMLDiff.normalize(html(text)) == HTMLDiff.normalize(hoedown(text)))
+        #expect(HTMLDiff.normalize(html(text)) == HTMLDiff.normalize(try EngineSnapshots.value("front-matter/" + name)))
     }
 
     /// Invalid front matter is Markdown; in CommonMark a setext header can
@@ -83,27 +89,26 @@ import Testing
         #expect(body.hasPrefix("<hr>\n\n<h2 id=\"toc_0\">title: &quot;unterminated\ntags: [one, two</h2>"))
     }
 
-    /// [TOC] (FR-12) with the setting on: hoedown's nested lists, the
+    /// [TOC] with the setting on: hoedown's nested lists, the
     /// outer one classed "toc", linking to the toc_N header ids.
     @Test func tableOfContents() throws {
         var settings = CorpusTests.settings
         settings.rendersTOC = true
-        for text in [try #require(try Corpus.files().first { $0.name == "13-toc.md" }).text,
-                     "## Start\n\n[TOC]\n\n# Higher [link](x) *em*\n\n### Deep\n"] {
+        for (index, text) in try Self.tocTexts().enumerated() {
             let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
             #expect(cmark.contains("<ul class=\"toc\">"))
-            #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(MarkdownParser.parse(text, settings: settings).body))
+            #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(try EngineSnapshots.value("toc/\(index)")))
         }
         #expect(!html("[TOC]\n\n# A\n").contains("class=\"toc\""))    // off by default
     }
 
-    /// Hard wrap (FR-13): with the setting on, a soft break is <br>.
-    @Test func hardWrap() {
+    /// Hard wrap: with the setting on, a soft break is <br>.
+    @Test func hardWrap() throws {
         var settings = CorpusTests.settings
-        settings.rendererFlags |= HOEDOWN_HTML_HARD_WRAP.rawValue
+        settings.hardWrap = true
         let text = "one\ntwo\nthree\n"
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
-        #expect(cmark == MarkdownParser.parse(text, settings: settings).body)
+        #expect(cmark == (try EngineSnapshots.value("hard-wrap")))
         #expect(!html(text).contains("<br>"))
         // Also in tight list items, which hoedown skipped (its rule was in
         // the paragraph renderer).
@@ -111,62 +116,57 @@ import Testing
                 == "<ul>\n<li>a<br>\nb</li>\n</ul>\n")
     }
 
-    /// Math (FR-14): put back in MathJax's delimiters, content escaped, as
+    /// Math: put back in MathJax's delimiters, content escaped, as
     /// hoedown did, untouched by Markdown.
     @Test(arguments: [false, true])
-    func math(inlineDollar: Bool) {
+    func math(inlineDollar: Bool) throws {
         var settings = CorpusTests.settings
-        settings.extensionFlags |= HOEDOWN_EXT_MATH.rawValue
-        if inlineDollar { settings.extensionFlags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
-        for text in [
-            "$$\n\\int_0^1 x^2 \\, dx < 1\n$$\n",
-            "Inline \\\\( a_1 * b_2 \\\\) and display \\\\[ c_{*} \\\\].\n",
-            "In text $$x_1 * y_2$$ here.\n",
-            "Dollars $A^T_S = B$ and *emphasis*.\n",
-            "# Header $$h_1$$\n\n| $t_1$ |\n|---|\n",
-        ] {
+        settings.math = true
+        settings.inlineDollar = inlineDollar
+        for (index, text) in Self.mathTexts.enumerated() {
             let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
-            #expect(cmark == MarkdownParser.parse(text, settings: settings).body, "\(text.debugDescription)")
+            #expect(cmark == (try EngineSnapshots.value("math/\(inlineDollar)/\(index)")), "\(text.debugDescription)")
         }
     }
 
-    /// Autolink (FR-8a): bare URLs and emails only with the setting on;
+    /// Autolink: bare URLs and emails only with the setting on;
     /// <url> always.
-    @Test func autolinks() {
-        let text = "See https://example.org/page?q=1, www.example.org and hello@example.org; <https://x.org>.\n"
+    @Test func autolinks() throws {
+        let text = Self.autolinkText
         var settings = CorpusTests.settings
         let off = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(off.components(separatedBy: "<a href").count == 2)    // just <https://x.org>
-        settings.extensionFlags |= HOEDOWN_EXT_AUTOLINK.rawValue
+        settings.autolink = true
         let on = MarkdownDocumentModel(text, options: .init(settings)).body
-        #expect(on == MarkdownParser.parse(text, settings: settings).body)
+        #expect(on == (try EngineSnapshots.value("autolink")))
     }
 
-    /// Smart punctuation (FR-17): curly quotes, dashes and ellipses with
+    /// Smart punctuation: curly quotes, dashes and ellipses with
     /// the setting on, never in code. cmark writes the characters where
     /// hoedown wrote entities, so compare with entities decoded.
-    @Test func smartPunctuation() {
-        let text = "\"Double,\" 'single,' it's, en -- dash, em --- dash... `\"code\" --`\n\n```\n\"block\" --\n```\n"
+    @Test func smartPunctuation() throws {
+        let text = Self.smartText
         var settings = CorpusTests.settings
         #expect(MarkdownDocumentModel(text, options: .init(settings)).body.contains("&quot;Double,&quot;"))
-        settings.smartyPants = true
+        settings.smartPunctuation = true
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
         #expect(cmark.contains("“Double,” ‘single,’ it’s, en – dash, em — dash…"))
-        #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(MarkdownParser.parse(text, settings: settings).body))
+        #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(try EngineSnapshots.value("smart-punctuation")))
     }
 
-    /// Highlight and superscript (FR-19, FR-19a): in plain text, with their
+    /// Highlight and superscript: in plain text, with their
     /// settings on.
-    @Test func highlightAndSuperscript() {
-        let text = "==marked== and == spaced == and x^2, 10^(-6), e^(i pi) and a ^ caret. `==no== x^2`\n"
+    @Test func highlightAndSuperscript() throws {
+        let text = Self.markText
         var settings = CorpusTests.settings
         #expect(!MarkdownDocumentModel(text, options: .init(settings)).body.contains("<mark>"))
-        settings.extensionFlags |= HOEDOWN_EXT_HIGHLIGHT.rawValue | HOEDOWN_EXT_SUPERSCRIPT.rawValue
+        settings.highlight = true
+        settings.superscript = true
         let cmark = MarkdownDocumentModel(text, options: .init(settings)).body
-        #expect(cmark == MarkdownParser.parse(text, settings: settings).body)
+        #expect(cmark == (try EngineSnapshots.value("highlight-superscript")))
     }
 
-    /// Source lines (FR-18): every block in the preview names its first
+    /// Source lines: every block in the preview names its first
     /// source line; exports don't.
     @Test func sourceLines() {
         let text = "# Title\n\nPara\ngraph.\n\n> quote\n\n- a\n- b\n\n```\ncode\n```\n\n| t |\n|---|\n| 1 |\n\n---\n"
@@ -215,11 +215,11 @@ import Testing
     }
 }
 
-/// Both engines collect the same Prism languages (FR-10).
+/// The renderer collects the Prism languages hoedown did.
 @MainActor @Suite struct PrismLanguageTests {
     @Test(arguments: try Corpus.all())
-    func sameLanguagesAsHoedown(_ document: Corpus.Document) {
-        let hoedown = MarkdownParser.parse(document.text, settings: CorpusTests.settings).languages
+    func sameLanguagesAsHoedown(_ document: Corpus.Document) throws {
+        let hoedown = try EngineSnapshots.value("languages/" + document.name).split(separator: " ").map(String.init)
         let cmark = MarkdownDocumentModel(document.text, options: .init(CorpusTests.settings)).languages
         #expect(Set(cmark) == Set(hoedown), "\(document.name)")
     }

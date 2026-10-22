@@ -2,7 +2,7 @@
 //  CorpusTests.swift
 //  MacDownKitTests
 //
-//  The migration corpus (TR-9): purpose-written Markdown in
+//  The migration corpus: purpose-written Markdown in
 //  Resources/Corpus, one file per feature area with its edge cases, plus the
 //  bundled help.md and a generated 10k-line document. The HTML and
 //  highlight-span diff harnesses run over every document here. Never add
@@ -50,7 +50,7 @@ enum Corpus {
     }
 
     /// A long document cycling through the common block types, for
-    /// performance checks (NFR-1). Deterministic, exactly `lines` lines.
+    /// performance checks. Deterministic, exactly `lines` lines.
     static func generated(lines: Int) -> String {
         let blocks = [
             ["## Section %d", ""],
@@ -86,7 +86,7 @@ enum Corpus {
     }()
 
     func render(_ text: String) -> String {
-        MarkdownParser.parse(text, settings: Self.settings).body
+        MarkdownDocumentModel(text, options: .init(Self.settings)).body
     }
 
     @Test func coversEveryArea() throws {
@@ -97,7 +97,7 @@ enum Corpus {
     }
 
     @Test(arguments: try Corpus.all())
-    func everyDocumentParsesWithBothEngines(_ document: Corpus.Document) {
+    func everyDocumentRenders(_ document: Corpus.Document) {
         #expect(!render(document.text).isEmpty)
         #expect(CMarkTree(document.text).withRoot { !$0.children.isEmpty })
     }

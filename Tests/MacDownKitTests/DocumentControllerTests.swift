@@ -56,7 +56,7 @@ extension LiveDocumentTests {
         #expect(controller.html.contains("id=\"toc_0\">Second</h1>"))
     }
 
-    /// After a parse, the editor knows where the code blocks are (FR-5).
+    /// After a parse, the editor knows where the code blocks are.
     @Test func editorLearnsCodeBlocksFromTheParse() async {
         let text = "Text\n\n    indented code\n"
         let (controller, window) = makeController(text)
@@ -425,14 +425,10 @@ extension LiveDocumentTests {
 
     @Test func clickingTaskListCheckboxesEditsTheMarkdown() async throws {
         let preferences = Preferences.shared
-        let (engine, toggling, autosaves) = (preferences.markdownEngine,
-                                              preferences.htmlTaskListToggling,
-                                              preferences.autosavesDocuments)
-        preferences.markdownEngine = .cmarkGfm
+        let (toggling, autosaves) = (preferences.htmlTaskListToggling, preferences.autosavesDocuments)
         preferences.htmlTaskListToggling = true
         preferences.autosavesDocuments = false
         defer {
-            preferences.markdownEngine = engine
             preferences.htmlTaskListToggling = toggling
             preferences.autosavesDocuments = autosaves
         }

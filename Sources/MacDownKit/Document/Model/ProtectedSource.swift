@@ -3,7 +3,7 @@
 //  MacDownKit
 //
 //  Hides math and front matter from the Markdown parser without moving any
-//  source position (FR-4, FR-5). Each protected span is replaced by filler of
+//  source position. Each protected span is replaced by filler of
 //  the same UTF-8 length, keeping its line breaks. Math becomes characters
 //  no document uses (Private Use Area, padded with C0/C1 controls), which the
 //  parser takes as ordinary text and the renderer finds again to put the

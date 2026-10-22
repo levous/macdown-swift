@@ -28,7 +28,7 @@ public struct TextCount: Equatable, Sendable {
 }
 
 public struct PreviewMetrics: Sendable {
-    /// Scroll sync anchors, in CSS pixels; see `ScrollAnchors`.
+    /// Scroll sync anchors (blocks' source lines), in CSS pixels.
     public var anchors: [ScrollAnchor] = []
     public var contentHeight: CGFloat = 0
     public var visibleHeight: CGFloat = 0
@@ -284,44 +284,14 @@ public final class PreviewController: NSObject {
     }
 
     public func fetchMetrics() async -> PreviewMetrics {
-        // The new engine marks blocks with their source line: report each
-        // one's top. Otherwise mirror ScrollAnchors.scan: top-level headers,
-        // and images in top-level paragraphs that contain nothing else.
+        // Every block is marked with its source line: report each one's top.
         let script = """
             (function () {
               var anchors = [];
               var lines = document.querySelectorAll("[data-source-line]");
-              if (lines.length > 0) {
-                Array.prototype.forEach.call(lines, function (node) {
-                  anchors.push(["l", node.getBoundingClientRect().top + window.scrollY,
-                                parseInt(node.getAttribute("data-source-line"), 10)]);
-                });
-                return JSON.stringify({
-                  anchors: anchors,
-                  contentHeight: document.documentElement.scrollHeight,
-                  visibleHeight: window.innerHeight
-                });
-              }
-              function add(kind, node) {
-                var rect = node.getBoundingClientRect();
-                anchors.push([kind, rect.top + window.scrollY + rect.height / 2]);
-              }
-              // The body, unless a custom template wraps it.
-              var first = document.querySelector("h1, h2, h3, h4, h5, h6, p");
-              var container = (first && first.parentElement) || document.body;
-              Array.prototype.forEach.call(container.children, function (node) {
-                if (/^H[1-6]$/.test(node.tagName)) {
-                  add("h", node);
-                } else if (node.tagName === "P" && node.textContent.trim() === ""
-                           && node.querySelector("img")) {
-                  var children = Array.prototype.slice.call(node.children);
-                  if (children.every(function (c) {
-                        return c.tagName === "IMG" || c.tagName === "BR"; })) {
-                    children.forEach(function (c) {
-                      if (c.tagName === "IMG") add("i", c);
-                    });
-                  }
-                }
+              Array.prototype.forEach.call(lines, function (node) {
+                anchors.push([parseInt(node.getAttribute("data-source-line"), 10),
+                              node.getBoundingClientRect().top + window.scrollY]);
               });
               return JSON.stringify({
                 anchors: anchors,
@@ -337,13 +307,9 @@ public final class PreviewController: NSObject {
         else { return PreviewMetrics() }
         var metrics = PreviewMetrics()
         metrics.anchors = (object["anchors"] as? [[Any]] ?? []).compactMap {
-            guard $0.count >= 2, let kind = $0[0] as? String,
-                  let y = $0[1] as? NSNumber else { return nil }
-            if kind == "l" {
-                guard $0.count == 3, let line = $0[2] as? NSNumber else { return nil }
-                return ScrollAnchor(.line(line.intValue), CGFloat(y.doubleValue))
-            }
-            return ScrollAnchor(kind == "h" ? .header : .image, CGFloat(y.doubleValue))
+            guard $0.count == 2, let line = $0[0] as? NSNumber, let y = $0[1] as? NSNumber
+            else { return nil }
+            return ScrollAnchor(line: line.intValue, CGFloat(y.doubleValue))
         }
         metrics.contentHeight = CGFloat((object["contentHeight"] as? NSNumber)?
             .doubleValue ?? 0)

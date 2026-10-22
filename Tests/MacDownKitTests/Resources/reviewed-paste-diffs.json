@@ -20,13 +20,13 @@
     },
     {
       "id": "footnote-back-links",
-      "reason": "Footnotes aren't round-tripped: a note's back-link (↩) is dropped with the space before it (FR-26).",
+      "reason": "Footnotes aren't round-tripped: a note's back-link (↩) is dropped with the space before it.",
       "find": "(?:\\s| )*<a href=\"#fnref\\d+\" rev=\"footnote\">.*?</a>",
       "replace": ""
     },
     {
       "id": "in-page-links",
-      "reason": "Links within the copied page (#anchor) and empty links keep only their text (FR-14).",
+      "reason": "Links within the copied page (#anchor) and empty links keep only their text.",
       "find": "<a href=\"(?:#[^\"]*)?\">(.*?)</a>",
       "replace": "$1"
     },
@@ -38,7 +38,7 @@
     },
     {
       "id": "kbd-as-code",
-      "reason": "<kbd> is monospace text, written as a code span (FR-12).",
+      "reason": "<kbd> is monospace text, written as a code span.",
       "find": "<(/?)kbd>",
       "replace": "<$1code>"
     },
@@ -50,13 +50,13 @@
     },
     {
       "id": "no-equivalent",
-      "reason": "Elements without a Markdown equivalent keep only their text (FR-19).",
+      "reason": "Elements without a Markdown equivalent keep only their text.",
       "find": "</?(?:sub|sup|u|mark|q|span|small|abbr|ins)(?: [^>]*)?>",
       "replace": ""
     },
     {
       "id": "comments-and-scripts",
-      "reason": "Comments and scripts aren't content (FR-19).",
+      "reason": "Comments and scripts aren't content.",
       "find": "<!--.*?-->|<script[^>]*>.*?</script>",
       "replace": ""
     }
@@ -96,25 +96,25 @@
       "document": "07-html.md",
       "original": "",
       "roundTrip": "<thead>",
-      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header."
     },
     {
       "document": "07-html.md",
       "original": "<td>",
       "roundTrip": "<th>",
-      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header."
     },
     {
       "document": "07-html.md",
       "original": "</td>",
       "roundTrip": "</th>",
-      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header."
     },
     {
       "document": "07-html.md",
       "original": "",
       "roundTrip": "</thead><tbody></tbody>",
-      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header (FR-18)."
+      "reason": "A pipe table always has a header row, so an HTML table without one gets its first row as the header."
     },
     {
       "document": "help.md",
@@ -138,43 +138,43 @@
       "document": "help.md",
       "original": "<math><mn>1</mn><mo>+</mo><mn>1</mn></math>,",
       "roundTrip": "1+1,",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "<math display=\"block\"><msubsup><mi>",
       "roundTrip": "<p>",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "</mi><mi>",
       "roundTrip": " ",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "</mi><mi>",
       "roundTrip": " ",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "</mi></msubsup><mo>",
       "roundTrip": " ",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "</mo><mi>",
       "roundTrip": " ",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     },
     {
       "document": "help.md",
       "original": "</mi></math>",
       "roundTrip": "</p>",
-      "reason": "MathML has no Markdown equivalent: it keeps its text (FR-19)."
+      "reason": "MathML has no Markdown equivalent: it keeps its text."
     }
   ]
 }

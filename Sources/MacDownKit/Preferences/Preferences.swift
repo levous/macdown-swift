@@ -23,15 +23,6 @@ public extension Notification.Name {
     static let didRequestPreviewRender = Notification.Name("MPDidRequestPreviewRender")
 }
 
-/// The Markdown parser behind the preview and highlighting. 
-/// `cmarkGfm` is cmark-gfm, the default; `hoedown` is the
-/// original's engine, kept selectable for one release before it's removed
-/// (docs/intents/swift-markdown-migration.md, Phase 5). Hidden: set with
-/// `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
-public enum MarkdownEngine: String, CaseIterable, Sendable {
-    case hoedown, cmarkGfm
-}
-
 public enum UnorderedListMarkerType: Int, CaseIterable, Sendable {
     case asterisk = 0, plusSign, minusSign
 
@@ -124,8 +115,7 @@ public final class Preferences {
 
     public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, .previewZoomRelativeToBaseFontSize) } }
 
-    /// Not shown in Settings (FR-32).
-    public var markdownEngine = MarkdownEngine.cmarkGfm { didSet { save(markdownEngine.rawValue, .markdownEngine) } }
+    /// Not shown in Settings.
 
     // MARK: HTML rendering
 
@@ -290,7 +280,6 @@ public final class Preferences {
         editorConvertsPastedFormatting = d.bool(forKey: .editorConvertsPastedFormatting)
         previewZoomRelativeToBaseFontSize = d.bool(forKey: .previewZoomRelativeToBaseFontSize)
 
-        markdownEngine = d.string(forKey: .markdownEngine).flatMap(MarkdownEngine.init) ?? .cmarkGfm
         htmlTemplateName = d.string(forKey: .htmlTemplateName)
         htmlStyleName = d.string(forKey: .htmlStyleName)
         htmlHardWrap = d.bool(forKey: .htmlHardWrap)

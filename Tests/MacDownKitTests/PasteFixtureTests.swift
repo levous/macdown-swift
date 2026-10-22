@@ -129,8 +129,7 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 
     /// Code from Terminal (RTF in a monospace font, with colors) and
-    /// JetBrains IDEs (a styled pre, bold keywords) pastes exactly as copied
-    /// (FR-6).
+    /// JetBrains IDEs (a styled pre, bold keywords) pastes exactly as copied.
     @Test func codeEditors() throws {
         let terminal = NSMutableAttributedString(string: "$ ls -la\ntotal 8\n-rw-r--r--  1 me  staff  12 notes.md\n", attributes: [
             .font: NSFont(name: "SFMono-Regular", size: 12) ?? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular),
@@ -148,7 +147,7 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 
     /// Pages and TextEdit write RTF; AppKit's HTML for it puts fonts in
-    /// classes and nests lists directly in lists (FR-24).
+    /// classes and nests lists directly in lists.
     @Test func richTextFromPagesAndTextEdit() throws {
         let text = NSMutableAttributedString()
         func add(_ string: String, font: String = "Helvetica", lists: [NSTextList] = []) {

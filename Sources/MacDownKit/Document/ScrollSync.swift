@@ -4,193 +4,27 @@
 //
 //  Scroll synchronization between the editor and the preview.
 //
-//  Both panes report "anchors". With the cmark-gfm engine the preview marks
-//  every block with its source line, and anchors are those lines (at the
-//  block's top), paired by line number. With hoedown they are headers and
-//  stand-alone images, in document order, paired by index, so both sides
-//  must apply the same rules (see `ScrollAnchors.scan` and
-//  `PreviewController.fetchMetrics`).
-//  Pairs give a piecewise linear map between editor and preview content
-//  positions. Each pane is aligned at a focus line, which sits at the middle
-//  of the visible area, except within the first and last screen of the
-//  document where it tapers to the top and bottom edges, so both panes reach
-//  their top and bottom together.
+//  Both panes report "anchors": the preview marks every block with its
+//  source line (`data-source-line`), and anchors are those lines (at the
+//  block's top) in each pane, paired by line number. Pairs give a piecewise
+//  linear map between editor and preview content positions. Each pane is
+//  aligned at a focus line, which sits at the middle of the visible area,
+//  except within the first and last screen of the document where it tapers
+//  to the top and bottom edges, so both panes reach their top and bottom
+//  together.
 //
 
 import Foundation
 
-public enum ScrollAnchorKind: Sendable, Equatable {
-    case header
-    case image
-    /// A 1-based source line (the new engine's `data-source-line`).
-    case line(Int)
-}
-
 public struct ScrollAnchor: Sendable, Equatable {
-    public var kind: ScrollAnchorKind
-    /// Vertical center of the anchor, in content coordinates.
+    /// A 1-based source line.
+    public var line: Int
+    /// Where the line's block starts, in content coordinates.
     public var position: CGFloat
 
-    public init(_ kind: ScrollAnchorKind, _ position: CGFloat) {
-        self.kind = kind
+    public init(line: Int, _ position: CGFloat) {
+        self.line = line
         self.position = position
-    }
-}
-
-/// Finds anchors in Markdown source, mirroring how hoedown renders them.
-///
-/// Headers are ATX headers (`#` in the first column) and setext headers
-/// (`===` or `---` under a paragraph line). Images count only when they make
-/// up a whole top-level paragraph, one anchor per image; the preview applies
-/// the same rule to `<p>` elements that contain nothing but images. Fenced
-/// code blocks, HTML comment blocks and front matter are skipped.
-public enum ScrollAnchors {
-    public struct SourceAnchor: Sendable, Equatable {
-        public var kind: ScrollAnchorKind
-        /// Character range (UTF-16) whose center is the anchor.
-        public var range: NSRange
-    }
-
-    private static let fenceRegex = try! NSRegularExpression(
-        pattern: "^( {0,3})(`{3,}|~{3,})")
-    private static let setextRegex = try! NSRegularExpression(
-        pattern: "^(=+|-+) *$")
-    private static let hruleRegex = try! NSRegularExpression(
-        pattern: "^ {0,3}([-*_])( *\\1){2,} *$")
-    private static let blockStartRegex = try! NSRegularExpression(
-        pattern: "^( {0,3}([-*+]|\\d+\\.)[ \\t]| {0,3}>| {4}|\\t| {0,3}\\|)")
-    private static let imageRegex = try! NSRegularExpression(
-        pattern: "!\\[[^\\]]*\\](?:\\([^)]*\\)|\\[[^\\]]*\\])")
-    private static let imageLineRegex = try! NSRegularExpression(
-        pattern: "^ {0,3}(?:!\\[[^\\]]*\\](?:\\([^)]*\\)|\\[[^\\]]*\\])[ \\t]*)+$")
-
-    private static func matches(_ regex: NSRegularExpression, _ line: String) -> Bool {
-        regex.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count))
-            != nil
-    }
-
-    /// A code fence line, as hoedown's `is_codefence` sees it: up to three
-    /// spaces, then three or more backticks or tildes.
-    private static func fenceMarker(_ line: String)
-        -> (indent: Int, character: Character, width: Int, rest: Substring)? {
-        guard let match = fenceRegex.firstMatch(
-            in: line, range: NSRange(location: 0, length: line.utf16.count)),
-              let indent = Range(match.range(at: 1), in: line),
-              let marker = Range(match.range(at: 2), in: line)
-        else { return nil }
-        return (line[indent].count, line[marker].first!, line[marker].count,
-                line[marker.upperBound...])
-    }
-
-    /// - Parameter fencedCode: Whether hoedown's fenced code extension is on.
-    public static func scan(_ markdown: String, skipsFrontMatter: Bool,
-                            fencedCode: Bool = true) -> [SourceAnchor] {
-        var anchors: [SourceAnchor] = []
-        var location = 0
-        if skipsFrontMatter {
-            location = markdown.frontMatter().offset
-        }
-        let text = (markdown as NSString).substring(from: location)
-
-        var fence: (indent: Int, character: Character, width: Int)?
-        var inComment = false
-        // Lines of the current paragraph, as (location, line).
-        var paragraph: [(Int, String)] = []
-        // Whether the previous line can be the text of a setext header.
-        var previousIsParagraphText = false
-
-        func flushParagraph() {
-            defer { paragraph.removeAll() }
-            guard !paragraph.isEmpty,
-                  paragraph.allSatisfy({ matches(imageLineRegex, $0.1) })
-            else { return }
-            for (lineLocation, line) in paragraph {
-                let ns = line as NSString
-                for match in imageRegex.matches(
-                    in: line, range: NSRange(location: 0, length: ns.length)) {
-                    anchors.append(SourceAnchor(
-                        kind: .image,
-                        range: NSRange(location: lineLocation + match.range.location,
-                                       length: match.range.length)))
-                }
-            }
-        }
-
-        for line in text.components(separatedBy: "\n") {
-            let lineLocation = location
-            let length = (line as NSString).length
-            location += length + 1
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-
-            if let open = fence {
-                // Closed by the same fence (indent, character and width)
-                // followed by nothing but spaces (parse_fencedcode).
-                if let close = fenceMarker(line), close.indent == open.indent,
-                   close.character == open.character, close.width == open.width,
-                   close.rest.allSatisfy({ $0 == " " }) {
-                    fence = nil
-                }
-                continue
-            }
-            if inComment {
-                if line.contains("-->") { inComment = false }
-                continue
-            }
-            // Fences only start blocks; they don't interrupt paragraphs. A
-            // line with the fence characters again (```` ``a`` ````) is a
-            // code span, not a fence (parse_codefence).
-            if fencedCode, paragraph.isEmpty, let open = fenceMarker(line),
-               !open.rest.drop(while: { $0 == " " || $0 == "\t" })
-                   .contains(String(repeating: open.character, count: 3)) {
-                previousIsParagraphText = false
-                fence = (open.indent, open.character, open.width)
-                continue
-            }
-            if trimmed.isEmpty {
-                flushParagraph()
-                previousIsParagraphText = false
-                continue
-            }
-            if paragraph.isEmpty && line.hasPrefix("<!--") {
-                inComment = !line.contains("-->")
-                previousIsParagraphText = false
-                continue
-            }
-            if line.hasPrefix("#") {
-                flushParagraph()
-                anchors.append(SourceAnchor(
-                    kind: .header, range: NSRange(location: lineLocation, length: length)))
-                previousIsParagraphText = false
-                continue
-            }
-            if previousIsParagraphText && matches(setextRegex, line),
-               let last = paragraph.last {
-                // The paragraph's last line becomes the header text.
-                paragraph.removeLast()
-                flushParagraph()
-                anchors.append(SourceAnchor(
-                    kind: .header,
-                    range: NSRange(location: last.0, length: location - 1 - last.0)))
-                previousIsParagraphText = false
-                continue
-            }
-            if matches(hruleRegex, line) {
-                flushParagraph()
-                previousIsParagraphText = false
-                continue
-            }
-            if paragraph.isEmpty && matches(blockStartRegex, line) {
-                // Lists, quotes, code and tables: not top-level paragraphs.
-                // Following lines belong to the same block until a blank line.
-                paragraph.append((lineLocation, "\u{0}"))
-                previousIsParagraphText = false
-                continue
-            }
-            paragraph.append((lineLocation, line))
-            previousIsParagraphText = paragraph.first?.1 != "\u{0}"
-        }
-        flushParagraph()
-        return anchors
     }
 }
 
@@ -253,32 +87,17 @@ public struct ScrollMap: Sendable, Equatable {
     ///   - previewEnd: Preview content height.
     public init(editor: [ScrollAnchor], preview: [ScrollAnchor],
                 editorEnd: CGFloat, previewEnd: CGFloat) {
-        var editor = editor
-        var preview = preview
-        if case .line = preview.first?.kind {
-            // Pair by line number, in preview order.
-            var editorByLine: [Int: CGFloat] = [:]
-            for anchor in editor {
-                if case .line(let line) = anchor.kind, editorByLine[line] == nil {
-                    editorByLine[line] = anchor.position
-                }
-            }
-            let paired = preview.compactMap { anchor -> (ScrollAnchor, ScrollAnchor)? in
-                guard case .line(let line) = anchor.kind, let y = editorByLine[line] else { return nil }
-                return (ScrollAnchor(anchor.kind, y), anchor)
-            }
-            editor = paired.map(\.0)
-            preview = paired.map(\.1)
-        } else if editor.map(\.kind) != preview.map(\.kind) {
-            // Something the rules didn't anticipate; headers are the most
-            // reliable, so try them alone before giving up on anchors.
-            editor = editor.filter { $0.kind == .header }
-            preview = preview.filter { $0.kind == .header }
-            if editor.count != preview.count {
-                editor = []
-                preview = []
-            }
+        // Pair by line number, in preview order.
+        var editorByLine: [Int: CGFloat] = [:]
+        for anchor in editor where editorByLine[anchor.line] == nil {
+            editorByLine[anchor.line] = anchor.position
         }
+        let paired = preview.compactMap { anchor -> (ScrollAnchor, ScrollAnchor)? in
+            guard let y = editorByLine[anchor.line] else { return nil }
+            return (ScrollAnchor(line: anchor.line, y), anchor)
+        }
+        let editor = paired.map(\.0)
+        let preview = paired.map(\.1)
         var pairs: [(editor: CGFloat, preview: CGFloat)] = [(0, 0)]
         for (e, p) in zip(editor, preview) {
             guard let last = pairs.last, e.position > last.editor,

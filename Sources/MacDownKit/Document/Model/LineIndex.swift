@@ -3,8 +3,8 @@
 //  MacDownKit
 //
 //  Converts swift-markdown source positions (1-based line, and 1-based column
-//  in UTF-8 bytes) to the UTF-16 offsets NSString and NSTextView use
-//  (TR-3). Lines end at "\n", "\r\n" or a lone "\r", as in cmark.
+//  in UTF-8 bytes) to the UTF-16 offsets NSString and NSTextView use.
+//  Lines end at "\n", "\r\n" or a lone "\r", as in cmark.
 //
 
 import Foundation

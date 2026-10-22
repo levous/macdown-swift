@@ -11,8 +11,8 @@ extension HTMLToMarkdown {
     struct Renderer {
         let options: Options
 
-        /// The blocks separated by one blank line (FR-21); a lone paragraph
-        /// has no newline, to be inserted inline (FR-9).
+        /// The blocks separated by one blank line; a lone paragraph
+        /// has no newline, to be inserted inline.
         func render(_ blocks: [Block]) -> Result {
             let rendered = renderedBlocks(blocks)
             let markdown = rendered.map(\.text).joined(separator: "\n\n")
@@ -59,7 +59,6 @@ extension HTMLToMarkdown {
             case .list(let list):
                 return render(list, alternate: alternate)
             case .quote(let blocks):
-                // FR-17
                 return renderedBlocks(blocks).map(\.text).joined(separator: "\n\n")
                     .split(separator: "\n", omittingEmptySubsequences: false)
                     .map { $0.isEmpty ? ">" : "> " + $0 }
@@ -74,7 +73,7 @@ extension HTMLToMarkdown {
 
         // MARK: - Lists
 
-        /// A list with the writer's marker (FR-16). Items are separated by
+        /// A list with the writer's marker. Items are separated by
         /// blank lines when any holds more than one block; an item's lines
         /// after the first are indented by the indent setting, or to the
         /// content column when the marker is wider.
@@ -119,7 +118,7 @@ extension HTMLToMarkdown {
 
         // MARK: - Inline content
 
-        /// Emphasis, outermost first (FR-11).
+        /// Emphasis, outermost first.
         enum Emphasis: CaseIterable {
             case strike, bold, italic
 
@@ -183,7 +182,7 @@ extension HTMLToMarkdown {
             return "[\(text)](\(destination(link.url, title: link.title)))"
         }
 
-        /// `![alt](src "title")` (FR-15).
+        /// `![alt](src "title")`.
         static func image(_ image: Image) -> String {
             "![\(escape(image.alt, atLineStart: false))](\(destination(image.source, title: image.title)))"
         }
@@ -283,7 +282,7 @@ extension HTMLToMarkdown {
             return output + renderCode(plain, lineStart: &lineStart)
         }
 
-        /// Monospace runs as code spans, the rest as escaped text (FR-12).
+        /// Monospace runs as code spans, the rest as escaped text.
         private func renderCode(_ inlines: [Inline], lineStart: inout Bool) -> String {
             var output = ""
             var code = ""
@@ -382,7 +381,7 @@ extension HTMLToMarkdown {
         private static let entity = try! NSRegularExpression(pattern: #"^&(?:#[0-9xX]|[A-Za-z][A-Za-z0-9]*;)"#)
 
         /// Text with the characters escaped that would otherwise be read as
-        /// Markdown, and only those (FR-20). `atLineStart` also escapes what
+        /// Markdown, and only those. `atLineStart` also escapes what
         /// would start a block: a heading, quote, list item or rule.
         static func escape(_ text: String, atLineStart: Bool, inTable: Bool = false) -> String {
             let characters = Array(text)

@@ -1,6 +1,6 @@
 // Renders ```mermaid code blocks as diagrams (Mermaid 12).
 //
-// Each block is hoedown's <div><pre><code class="language-mermaid">; the
+// Each block is MacDown's <div><pre><code class="language-mermaid">; the
 // <div> is replaced with the diagram. The preview calls
 // MacDownMermaid.render() again after it replaces the page body in place.
 

@@ -2,8 +2,8 @@
 //  HTMLRenderer.swift
 //  MacDownKit
 //
-//  The preview's HTML body from the cmark-gfm tree (FR-7 to FR-20, TR-4,
-//  TR-5), in the markup hoedown and MacDown's patches produced, since the
+//  The preview's HTML body from the cmark-gfm tree, in the markup hoedown
+//  and MacDown's C patches produced, since the
 //  bundled styles and page scripts rely on it: header ids `toc_N`, Prism
 //  code blocks, task-list items, hoedown's footnotes. Runs inside the parse
 //  task; only the HTML string leaves it.
@@ -21,13 +21,13 @@ struct HTMLRenderer {
         /// Every line break in a paragraph is a <br>.
         var hardWrap = false
         /// Protected math, in source order, to put back in place of its
-        /// filler (FR-14).
+        /// filler.
         var math: [MathSpan] = []
-        /// `==mark==` and `x^2` in plain text (FR-19, FR-19a).
+        /// `==mark==` and `x^2` in plain text.
         var highlight = false
         var superscript = false
         /// Blocks name their first source line, for scroll sync (preview
-        /// only; FR-18).
+        /// only: exports leave it out).
         var sourceLines = false
     }
 
@@ -215,7 +215,7 @@ struct HTMLRenderer {
         while output.hasSuffix("\n") { output.removeLast() }
     }
 
-    /// MacDown's Prism-compatible block code (hoedown_html_patch.c).
+    /// MacDown's Prism-compatible block code (as its hoedown patch wrote it).
     private mutating func codeBlock(_ node: CMarkNode) {
         newline()
         var language = (node.fenceInfo ?? "").split(whereSeparator: \.isWhitespace).first.map(String.init) ?? ""
@@ -394,7 +394,7 @@ struct HTMLRenderer {
         pattern: "<p.*?>\\s*\\[TOC\\]\\s*</p>", options: .caseInsensitive)
 
     /// hoedown's TOC (with MacDown's "toc" class on the outer list) in place
-    /// of every `[TOC]` paragraph, as MarkdownParser did.
+    /// of every `[TOC]` paragraph.
     private mutating func insertTableOfContents() {
         guard output.contains("TOC]") else { return }
         var toc = ""

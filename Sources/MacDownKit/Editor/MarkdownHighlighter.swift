@@ -3,12 +3,12 @@
 //  MacDown
 //
 //  Swift port of HGMarkdownHighlighter and HGMarkdownHighlightingStyle from
-//  PEG Markdown Highlight (Copyright 2011-2013 Ali Rantakari, MIT/GPL2+).
-//  The PEG parser and stylesheet parser remain in C (CPegMarkdown).
+//  PEG Markdown Highlight (Copyright 2011-2013 Ali Rantakari, MIT/GPL2+; see
+//  Licenses/peg-markdown-highlight.txt). The spans now come from the
+//  cmark-gfm document model; PEG's C parser is no longer used.
 //
 
 import AppKit
-import CPegMarkdown
 
 /// A single highlighted span, in UTF-16 offsets.
 struct HighlightSpan: Sendable {
@@ -17,63 +17,19 @@ struct HighlightSpan: Sendable {
     var address: String?
 }
 
-/// Parsed spans, indexed by `pmh_element_type` raw value.
+/// The element types themes style and the highlighter highlights: PEG
+/// Markdown Highlight's (`pmh_element_type`, in its order, which the themes'
+/// names follow; see `ThemeStyle.elementNames`), then those it didn't have.
+enum HighlightElement: Int, CaseIterable {
+    case link, autoLinkURL, autoLinkEmail, image, code, html, htmlEntity, emph, strong
+    case listBullet, listEnumerator, comment, h1, h2, h3, h4, h5, h6, blockquote, verbatim
+    case htmlBlock, hrule, reference, note, math, highlight, superscript
+}
+
+/// Highlight spans, indexed by `HighlightElement` raw value. They come from
+/// the document model (`HighlightMapper`).
 struct HighlightElements: Sendable {
     var spans: [[HighlightSpan]]
-
-    static func parse(_ markdown: String, extensions: Int32) -> HighlightElements {
-        var result: UnsafeMutablePointer<UnsafeMutablePointer<pmh_element>?>?
-        markdown.withCString { cString in
-            pmh_markdown_to_elements(UnsafeMutablePointer(mutating: cString),
-                                     extensions, &result)
-        }
-        guard let result else {
-            return HighlightElements(spans: Array(repeating: [],
-                                                  count: Int(pmh_NUM_LANG_TYPES)))
-        }
-        pmh_sort_elements_by_pos(result)
-        defer { pmh_free_elements(result) }
-
-        // The parser reports Unicode code point offsets; NSString uses UTF-16.
-        // Gather indexes of surrogate pairs to convert.
-        let utf16 = Array(markdown.utf16)
-        var surrogatePairIndexes: [Int] = []
-        for (i, unit) in utf16.enumerated() where UTF16.isLeadSurrogate(unit) {
-            surrogatePairIndexes.append(i)
-        }
-
-        var spans: [[HighlightSpan]] = []
-        for langType in 0..<Int(pmh_NUM_LANG_TYPES) {
-            var list: [HighlightSpan] = []
-            var cursor = result[langType]
-            while let element = cursor {
-                var pos = Int(element.pointee.pos)
-                var end = Int(element.pointee.end)
-                if !surrogatePairIndexes.isEmpty {
-                    var posShift = 0, endShift = 0, passedPairs = 0
-                    for pairIndex in surrogatePairIndexes {
-                        let u = pairIndex - passedPairs
-                        if u < pos {
-                            posShift += 1
-                            endShift += 1
-                        } else if u < end {
-                            endShift += 1
-                        } else {
-                            break
-                        }
-                        passedPairs += 1
-                    }
-                    pos += posShift
-                    end += endShift
-                }
-                let address = element.pointee.address.map { String(cString: $0) }
-                list.append(HighlightSpan(pos: pos, end: end, address: address))
-                cursor = element.pointee.next
-            }
-            spans.append(list)
-        }
-        return HighlightElements(spans: spans)
-    }
 }
 
 /// Attributes applied to one Markdown element type.
@@ -148,28 +104,28 @@ struct HighlightingStyle {
         let red: CGFloat = 0, magenta: CGFloat = 0.87, cyan: CGFloat = 0.5
         let darkGray = hsb(0, 0, 0.2), medGray = hsb(0, 0, 0.5), lightGray = hsb(0, 0, 0.9)
 
-        func t(_ type: pmh_element_type) -> Int { Int(type.rawValue) }
+        func t(_ type: HighlightElement) -> Int { type.rawValue }
         var styles: [HighlightingStyle] = []
-        for h in [pmh_H1, pmh_H2, pmh_H3, pmh_H4, pmh_H5, pmh_H6] {
+        for h in [HighlightElement.h1, .h2, .h3, .h4, .h5, .h6] {
             styles.append(.init(elementType: t(h), foreground: dark(blue),
                                 background: light(blue), traits: .boldFontMask))
         }
         styles += [
-            .init(elementType: t(pmh_HRULE), foreground: darkGray, background: lightGray),
-            .init(elementType: t(pmh_LIST_BULLET), foreground: dark(magenta)),
-            .init(elementType: t(pmh_LIST_ENUMERATOR), foreground: dark(magenta)),
-            .init(elementType: t(pmh_LINK), foreground: dark(cyan), background: light(cyan)),
-            .init(elementType: t(pmh_AUTO_LINK_URL), foreground: dark(cyan), background: light(cyan)),
-            .init(elementType: t(pmh_AUTO_LINK_EMAIL), foreground: dark(cyan), background: light(cyan)),
-            .init(elementType: t(pmh_IMAGE), foreground: dark(magenta), background: light(magenta)),
-            .init(elementType: t(pmh_REFERENCE), foreground: dim(red)),
-            .init(elementType: t(pmh_CODE), foreground: dark(green), background: light(green)),
-            .init(elementType: t(pmh_EMPH), foreground: dark(yellow), traits: .italicFontMask),
-            .init(elementType: t(pmh_STRONG), foreground: dark(magenta), traits: .boldFontMask),
-            .init(elementType: t(pmh_HTML_ENTITY), foreground: medGray),
-            .init(elementType: t(pmh_COMMENT), foreground: medGray),
-            .init(elementType: t(pmh_VERBATIM), foreground: dark(green), background: light(green)),
-            .init(elementType: t(pmh_BLOCKQUOTE), foreground: dark(magenta),
+            .init(elementType: t(.hrule), foreground: darkGray, background: lightGray),
+            .init(elementType: t(.listBullet), foreground: dark(magenta)),
+            .init(elementType: t(.listEnumerator), foreground: dark(magenta)),
+            .init(elementType: t(.link), foreground: dark(cyan), background: light(cyan)),
+            .init(elementType: t(.autoLinkURL), foreground: dark(cyan), background: light(cyan)),
+            .init(elementType: t(.autoLinkEmail), foreground: dark(cyan), background: light(cyan)),
+            .init(elementType: t(.image), foreground: dark(magenta), background: light(magenta)),
+            .init(elementType: t(.reference), foreground: dim(red)),
+            .init(elementType: t(.code), foreground: dark(green), background: light(green)),
+            .init(elementType: t(.emph), foreground: dark(yellow), traits: .italicFontMask),
+            .init(elementType: t(.strong), foreground: dark(magenta), traits: .boldFontMask),
+            .init(elementType: t(.htmlEntity), foreground: medGray),
+            .init(elementType: t(.comment), foreground: medGray),
+            .init(elementType: t(.verbatim), foreground: dark(green), background: light(green)),
+            .init(elementType: t(.blockquote), foreground: dark(magenta),
                   traits: .unboldFontMask),
         ]
         return styles
@@ -182,14 +138,9 @@ public final class MarkdownHighlighter {
     public weak var textView: NSTextView? {
         didSet { if textView != nil { readClearTextStylesFromTextView() } }
     }
-    public var extensions: Int32 = Int32(pmh_EXT_NONE.rawValue)
-    public var waitInterval: TimeInterval = 0
     public var resetTypingAttributes = true
     public var makeLinksClickable = false
     public private(set) var isActive = false
-    /// Spans come from elsewhere (the swift-markdown document model, via
-    /// `update(_:)`) instead of the highlighter's own PEG parse.
-    public var usesExternalElements = false
     /// Whether the idle pass is styling the rest of the document. Its storage
     /// edits come a chunk at a time; layout-dependent work can wait for
     /// `onIdlePassFinished` instead of following each one.
@@ -209,7 +160,6 @@ public final class MarkdownHighlighter {
     private var defaultTextSize: CGFloat = 0
     private var defaultTextColor: NSColor?
     private var defaultTypingAttributes: [NSAttributedString.Key: Any] = [:]
-    private var parseGeneration = 0
     /// Character ranges styled with `cachedElements`.
     private(set) var highlightedRanges = IndexSet()
     private var isHighlighting = false
@@ -224,31 +174,10 @@ public final class MarkdownHighlighter {
         if textView != nil { readClearTextStylesFromTextView() }
     }
 
-    // MARK: - Parsing
+    // MARK: - Spans
 
-    func requestParsing() {
-        guard let textView, !usesExternalElements else { return }
-        parseGeneration += 1
-        let generation = parseGeneration
-        let markdown = textView.string
-        let extensions = self.extensions
-        Task { [weak self] in
-            let elements = await Task.detached(priority: .userInitiated) {
-                HighlightElements.parse(markdown, extensions: extensions)
-            }.value
-            guard let self, self.isActive, generation == self.parseGeneration
-            else { return }
-            self.setElements(elements)
-        }
-    }
-
-    public func parseAndHighlightNow() {
-        requestParsing()
-    }
-
-    /// Highlights with spans parsed elsewhere, for the current text.
+    /// Highlights with the document model's spans for the current text.
     func update(_ elements: HighlightElements) {
-        parseGeneration += 1    // Any PEG parse in flight is stale.
         if isActive {
             setElements(elements)
         } else {
@@ -343,8 +272,7 @@ public final class MarkdownHighlighter {
         clearHighlighting(in: range)
 
         let sourceLength = storage.length
-        let linkTypes = [pmh_LINK, pmh_AUTO_LINK_URL, pmh_AUTO_LINK_EMAIL]
-            .map { Int($0.rawValue) }
+        let linkTypes = [HighlightElement.link, .autoLinkURL, .autoLinkEmail].map(\.rawValue)
         for style in styles {
             guard style.elementType < elements.spans.count else { continue }
             for span in elements.spans[style.elementType] {
@@ -360,7 +288,7 @@ public final class MarkdownHighlighter {
 
                 if makeLinksClickable, linkTypes.contains(style.elementType),
                    var address = span.address {
-                    if style.elementType == Int(pmh_AUTO_LINK_EMAIL.rawValue),
+                    if style.elementType == HighlightElement.autoLinkEmail.rawValue,
                        !address.hasPrefix("mailto:") {
                         address = "mailto:" + address
                     }
@@ -583,7 +511,7 @@ public final class MarkdownHighlighter {
     private func applyStyleDependencies() {
         guard let textView else { return }
         // Make link styles match the styles set for LINK elements.
-        if let style = styles.first(where: { $0.elementType == Int(pmh_LINK.rawValue) }) {
+        if let style = styles.first(where: { $0.elementType == HighlightElement.link.rawValue }) {
             var attrs = style.attributesToAdd
             attrs[.cursor] = NSCursor.pointingHand
             textView.linkTextAttributes = attrs
@@ -652,14 +580,9 @@ public final class MarkdownHighlighter {
         guard let textView else { return }
         applyStyleDependencies()
         isActive = true
-        requestParsing()
+        if cachedElements != nil { highlightVisibleRange() }
 
         let center = NotificationCenter.default
-        observers.append(center.addObserver(
-            forName: NSText.didChangeNotification, object: textView, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.textDidChange() }
-        })
         // Edits move the text, so what was highlighted no longer lines up.
         // Posted synchronously, while `editedMask` is valid, and for
         // programmatic changes too.
@@ -697,21 +620,10 @@ public final class MarkdownHighlighter {
         guard isActive else { return }
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
-        cachedElements = nil
+        // The spans are kept: they're the model's, for the current text,
+        // and restyle the editor when it's activated again.
         highlightedRanges = IndexSet()
-        parseGeneration += 1
         isActive = false
-    }
-
-    private func textDidChange() {
-        if waitInterval <= 0 {
-            requestParsing()
-        } else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + waitInterval) {
-                [weak self] in
-                MainActor.assumeIsolated { self?.requestParsing() }
-            }
-        }
     }
 
     private func textViewDidScroll() {

@@ -3,70 +3,13 @@
 //  MacDownKitTests
 //
 //  The Swift theme parser must read every stylesheet exactly as
-//  pmh_styleparser.c does, errors included.
+//  pmh_styleparser.c did, errors included, checked against the C parser's
+//  recorded results (EngineSnapshots).
 //
 
-import CPegMarkdown
 import Foundation
 import Testing
 @testable import MacDownKit
-
-/// The C parser's result, in ThemeStyle's shape.
-private func cStyle(_ stylesheet: String) -> ThemeStyle {
-    final class Box { var errors: [ThemeStyle.ParseError] = [] }
-    let box = Box()
-    let callback: @convention(c) (UnsafeMutablePointer<CChar>?, Int32, UnsafeMutableRawPointer?) -> Void = {
-        message, line, context in
-        let box = Unmanaged<Box>.fromOpaque(context!).takeUnretainedValue()
-        box.errors.append(.init(line: Int(line), message: String(cString: message!)))
-    }
-    let unmanaged = Unmanaged.passRetained(box)
-    defer { unmanaged.release() }
-    let collection = stylesheet.withCString {
-        pmh_parse_styles(UnsafeMutablePointer(mutating: $0), callback, unmanaged.toOpaque())
-    }!
-    defer { pmh_free_style_collection(collection) }
-
-    func attributes(_ list: UnsafeMutablePointer<pmh_style_attribute>?) -> [ThemeStyle.Attribute] {
-        var result: [ThemeStyle.Attribute] = []
-        var cursor = list
-        while let attribute = cursor {
-            let a = attribute.pointee, v = a.value.pointee
-            func color() -> ThemeStyle.Color {
-                let c = v.argb_color.pointee
-                return .init(red: Int(c.red), green: Int(c.green), blue: Int(c.blue), alpha: Int(c.alpha))
-            }
-            let value: ThemeStyle.Value = switch a.type {
-            case pmh_attr_type_foreground_color: .foregroundColor(color())
-            case pmh_attr_type_background_color: .backgroundColor(color())
-            case pmh_attr_type_caret_color: .caretColor(color())
-            case pmh_attr_type_font_size_pt:
-                .fontSize(points: Int(v.font_size.pointee.size_pt),
-                          relative: v.font_size.pointee.is_relative)
-            case pmh_attr_type_font_family: .fontFamily(String(cString: v.font_family))
-            case pmh_attr_type_font_style:
-                .fontStyle(italic: v.font_styles.pointee.italic, bold: v.font_styles.pointee.bold,
-                           underlined: v.font_styles.pointee.underlined)
-            default: .other(String(cString: v.string))
-            }
-            result.append(.init(name: String(cString: a.name), value: value))
-            cursor = a.next
-        }
-        return result
-    }
-
-    var style = ThemeStyle()
-    style.editor = attributes(collection.pointee.editor_styles)
-    style.currentLine = attributes(collection.pointee.editor_current_line_styles)
-    style.selection = attributes(collection.pointee.editor_selection_styles)
-    for i in 0..<Int(pmh_NUM_LANG_TYPES) {
-        guard let list = collection.pointee.element_styles[i] else { continue }
-        let name = String(cString: pmh_element_name_from_type(list.pointee.lang_element_type))
-        style.elements.append(.init(element: name, attributes: attributes(list)))
-    }
-    style.errors = box.errors
-    return style
-}
 
 @Suite struct ThemeStyleParserTests {
     static let themes: [URL] = {
@@ -84,14 +27,13 @@ private func cStyle(_ stylesheet: String) -> ThemeStyle {
     func matchesTheCParser(_ url: URL) throws {
         let stylesheet = try String(contentsOf: url, encoding: .utf8)
         let swift = ThemeStyle(parsing: stylesheet)
-        #expect(swift == cStyle(stylesheet))
+        #expect(themeDescription(swift) == (try EngineSnapshots.value("theme/" + url.lastPathComponent)))
         #expect(swift.errors.isEmpty)
         #expect(!swift.elements.isEmpty && !swift.editor.isEmpty)
     }
 
     /// Errors and the C parser's quirks, with CRLF line endings and a BOM.
-    @Test func malformedStylesheet() {
-        let stylesheet = "\u{FEFF}" + """
+    static let malformed = "\u{FEFF}" + """
             # A comment before any rule
 
             editor
@@ -124,9 +66,11 @@ private func cStyle(_ stylesheet: String) -> ThemeStyle {
             foreground-color: -fffff
             background-color: 80ff0000
             """.replacingOccurrences(of: "\n", with: "\r\n")
+
+    @Test func malformedStylesheet() throws {
+        let stylesheet = Self.malformed
         let swift = ThemeStyle(parsing: stylesheet)
-        let c = cStyle(stylesheet)
-        #expect(swift == c)
+        #expect(themeDescription(swift) == (try EngineSnapshots.value("theme/malformed")))
         #expect(swift.errors.count >= 7, "\(swift.errors)")
         // The later editor rule replaces the first.
         #expect(swift.editor == [.init(name: "foreground", value: .foregroundColor(
@@ -135,15 +79,15 @@ private func cStyle(_ stylesheet: String) -> ThemeStyle {
         #expect(!swift.elements.contains { $0.element == "EMPH" })
     }
 
-    /// The highlighter uses an element's index as its PEG element type.
+    /// Element names follow PEG Markdown Highlight's element types
+    /// (pmh_element_type), then the types PEG didn't have.
     @Test func elementNamesFollowThePEGOrder() {
-        for (index, name) in ThemeStyle.elementNames.prefix(Int(pmh_NUM_LANG_TYPES)).enumerated() {
-            let type = name.withCString { pmh_element_type_from_name(UnsafeMutablePointer(mutating: $0)) }
-            #expect(Int(type.rawValue) == index, "\(name)")
-        }
-        // Then the types PEG didn't have.
-        #expect(ThemeStyle.elementNames.dropFirst(Int(pmh_NUM_LANG_TYPES))
-                == ["MATH", "HIGHLIGHT", "SUPERSCRIPT"])
+        #expect(ThemeStyle.elementNames == [
+            "LINK", "AUTO_LINK_URL", "AUTO_LINK_EMAIL", "IMAGE", "CODE", "HTML", "HTML_ENTITY",
+            "EMPH", "STRONG", "LIST_BULLET", "LIST_ENUMERATOR", "COMMENT", "H1", "H2", "H3", "H4",
+            "H5", "H6", "BLOCKQUOTE", "VERBATIM", "HTMLBLOCK", "HRULE", "REFERENCE", "NOTE",
+            "MATH", "HIGHLIGHT", "SUPERSCRIPT",
+        ])
     }
 
     @Test func errorMessagesReadLikeTheHighlighters() {

@@ -8,7 +8,6 @@
 //
 
 import AppKit
-import CPegMarkdown
 import Observation
 import UniformTypeIdentifiers
 
@@ -79,9 +78,7 @@ public final class DocumentController: NSObject {
     @ObservationIgnored private var editorTextEnd: CGFloat = 0
     /// What `editorAnchors` were computed for, to skip recomputing them.
     @ObservationIgnored private var editorLayoutSyncScheduled = false
-    @ObservationIgnored private var editorAnchorsKey: (text: String, width: CGFloat,
-                                                       frontMatter: Bool, fencedCode: Bool,
-                                                       lines: [Int])?
+    @ObservationIgnored private var editorAnchorsKey: (text: String, width: CGFloat, lines: [Int])?
     @ObservationIgnored private(set) var previewMetrics = PreviewMetrics()
     /// The pane the user scrolled last; the other one follows it.
     @ObservationIgnored private var scrollLeader = ScrollLeader.editor
@@ -93,7 +90,7 @@ public final class DocumentController: NSObject {
 
     /// Preferences that change the editor's setup (see `setupEditor`).
     private static let editorPreferencesToObserve: Set<PreferenceSettingKey> = [
-        .editorBaseFontInfo, .editorHorizontalInset, .markdownEngine,
+        .editorBaseFontInfo, .editorHorizontalInset,
         .editorVerticalInset, .editorWidthLimited, .editorMaximumWidth,
         .editorLineSpacing, .editorOnRight, .editorStyleName,
         .editorShowWordCount, .editorScrollsPastEnd, .editorConvertsPastedFormatting,
@@ -144,7 +141,6 @@ public final class DocumentController: NSObject {
         isSetUp = true
         setupEditor(nil)
         parseAndRenderNow()
-        highlighter.parseAndHighlightNow()
     }
 
     /// Replaces the model, e.g. after "Revert to Saved".
@@ -158,7 +154,6 @@ public final class DocumentController: NSObject {
         savedText = newDocument.text
         if !keepsDraft && editor.string != newDocument.text {
             editor.string = newDocument.text
-            highlighter.parseAndHighlightNow()
             parseAndRenderNow()
         }
         updateUnsavedState()
@@ -286,7 +281,6 @@ public final class DocumentController: NSObject {
         set {
             editor.string = newValue
             draftDidChange()
-            highlighter.parseAndHighlightNow()
             parseAndRender()
         }
     }
@@ -522,7 +516,6 @@ public final class DocumentController: NSObject {
                                             length: 0))
             editorScrollView.contentView.scroll(to: origin)
             editorScrollView.reflectScrolledClipView(editorScrollView.contentView)
-            highlighter.parseAndHighlightNow()
             parseAndRenderNow()
         }
         // Saving automatically, the document now matches the file.
@@ -631,15 +624,14 @@ public final class DocumentController: NSObject {
         render()
     }
 
-    /// With the swift-markdown engine, the editor is highlighted from the
-    /// renderer's model of the same text (one parse for both, FR-1), and
-    /// learns where its code blocks are, for pasting (FR-5).
+    /// The editor is highlighted from the renderer's model of the same text
+    /// (one parse for both), and learns where its code blocks are, for
+    /// pasting.
     private func highlightFromModel() {
         if let model = renderer.model {
             editor.documentBlocks = (model.source, model.blocks)
         }
-        guard highlighter.usesExternalElements, let model = renderer.model,
-              model.source == editor.string
+        guard let model = renderer.model, model.source == editor.string
         else { return }
         highlighter.update(model.highlights)
     }
@@ -749,7 +741,7 @@ public final class DocumentController: NSObject {
         scrollLeader = .editor
         if needsHtml {
             parseAndRender()
-        } else if highlighter.usesExternalElements {
+        } else {
             parseForHighlighting()
         }
     }
@@ -778,7 +770,7 @@ public final class DocumentController: NSObject {
             || settings.parse != renderer.lastParseSettings {
             if needsHtml || renderer.lastParseSettings != nil {
                 parseAndRender()
-            } else if highlighter.usesExternalElements {
+            } else {
                 parseForHighlighting()
             }
         } else if settings.page != renderer.lastPageSettings {
@@ -801,8 +793,6 @@ public final class DocumentController: NSObject {
         editorAnchorsKey = nil    // Fonts and insets move the text.
         highlighter.deactivate()
 
-        highlighter.extensions = Int32(pmh_EXT_NOTES.rawValue)    // Footnotes are standard.
-        highlighter.usesExternalElements = preferences.markdownEngine == .cmarkGfm
 
         if changedKey == nil || [.editorHorizontalInset, .editorVerticalInset,
                                  .editorWidthLimited, .editorMaximumWidth]
@@ -987,36 +977,22 @@ public final class DocumentController: NSObject {
         guard let layoutManager = editor.layoutManager,
               let container = editor.textContainer
         else { return }
-        // The preview's source lines, when the new engine marks them.
-        let lines = previewMetrics.anchors.compactMap { anchor -> Int? in
-            if case .line(let line) = anchor.kind { line } else { nil }
-        }
-        let key = (text: editor.string, width: container.size.width,
-                   frontMatter: true, fencedCode: true, lines: lines)
+        // The preview's source lines.
+        let lines = previewMetrics.anchors.map(\.line)
+        let key = (text: editor.string, width: container.size.width, lines: lines)
         if let old = editorAnchorsKey, old.text == key.text, old.width == key.width,
            old.lines == key.lines { return }
         editorAnchorsKey = key
         let origin = editor.textContainerOrigin.y
         layoutManager.ensureLayout(for: container)
-        if !lines.isEmpty {
-            // The top of each of those lines in the editor.
-            let index = LineIndex(key.text)
-            let length = (key.text as NSString).length
-            editorAnchors = Set(lines).sorted().compactMap { line in
-                guard let offset = index.utf16Offset(line: line, column: 1) else { return nil }
-                let glyph = layoutManager.glyphIndexForCharacter(at: min(offset, max(0, length - 1)))
-                let rect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
-                return ScrollAnchor(.line(line), origin + rect.minY)
-            }
-        } else {
-            let sourceAnchors = ScrollAnchors.scan(key.text, skipsFrontMatter: key.frontMatter,
-                                                   fencedCode: key.fencedCode)
-            editorAnchors = sourceAnchors.map { anchor in
-                let glyphRange = layoutManager.glyphRange(forCharacterRange: anchor.range,
-                                                          actualCharacterRange: nil)
-                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
-                return ScrollAnchor(anchor.kind, origin + rect.midY)
-            }
+        // The top of each of those lines in the editor.
+        let index = LineIndex(key.text)
+        let length = (key.text as NSString).length
+        editorAnchors = Set(lines).sorted().compactMap { line in
+            guard let offset = index.utf16Offset(line: line, column: 1) else { return nil }
+            let glyph = layoutManager.glyphIndexForCharacter(at: min(offset, max(0, length - 1)))
+            let rect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
+            return ScrollAnchor(line: line, origin + rect.minY)
         }
         editorTextEnd = origin + layoutManager.usedRect(for: container).maxY
     }

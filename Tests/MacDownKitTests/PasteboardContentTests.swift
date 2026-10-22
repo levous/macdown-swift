@@ -2,8 +2,8 @@
 //  PasteboardContentTests.swift
 //  MacDownKitTests
 //
-//  What a paste finds on the clipboard (paste intent, FR-1 to FR-3, FR-25,
-//  FR-33). Each test uses its own named pasteboard, not the user's.
+//  What a paste finds on the clipboard: HTML, web archives, rich text and
+//  image data. Each test uses its own named pasteboard, not the user's.
 //
 
 import AppKit

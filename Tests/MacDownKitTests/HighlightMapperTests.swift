@@ -114,7 +114,7 @@ import Testing
         #expect(s["HTMLBLOCK"] == ["<!-- block -->"])
     }
 
-    /// Footnotes (FR-27): PEG defined NOTE but never produced it. As in
+    /// Footnotes: PEG defined NOTE but never produced it. As in
     /// GFM, a reference without a definition is plain text.
     @Test func footnotes() {
         let s = spans("A note[^1] and[^long-label] and[^undefined].\n\n[^1]: The note.\n\n[^long-label]: **Formatted**.\n\n`[^code]` and [^ spaced].\n")
@@ -122,7 +122,8 @@ import Testing
         #expect(s["STRONG"] == ["**Formatted**"])    // definitions are Markdown
     }
 
-    /// New types (FR-23, FR-19): each only with its setting on.
+    /// Math, highlight and superscript spans (types PEG didn't have): each
+    /// only with its setting on.
     @Test func mathHighlightAndSuperscript() {
         let text = "$x_1$ and $$y$$, ==marked== and == spaced ==, x^2 and 10^(-6). `==code== x^2`\n"
         let off = spans(text)

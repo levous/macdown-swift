@@ -1,6 +1,0 @@
-module CPegMarkdown {
-    header "pmh_definitions.h"
-    header "pmh_parser.h"
-    header "pmh_styleparser.h"
-    export *
-}

@@ -7,7 +7,39 @@
 //
 
 import Foundation
-import CHoedown
+
+/// Settings that affect the Markdown → HTML body conversion. Standard
+/// Markdown (CommonMark and GFM: tables, task lists, strikethrough,
+/// footnotes, front matter) is always on; these are the opt-in extras.
+public struct ParseSettings: Sendable, Equatable {
+    /// Bare URLs and email addresses as links.
+    public var autolink = false
+    /// `==text==` as <mark>.
+    public var highlight = false
+    /// `x^2` and `x^(y z)` as <sup>.
+    public var superscript = false
+    /// TeX math for MathJax, and with `inlineDollar`, `$…$` inline.
+    public var math = false
+    public var inlineDollar = false
+    /// Curly quotes, dashes and ellipses.
+    public var smartPunctuation = false
+    /// Code blocks: line numbers, and the `lang:info` accessory.
+    public var lineNumbers = false
+    public var blockCodeInformation = false
+    /// Every newline in a paragraph is a line break.
+    public var hardWrap = false
+    /// A paragraph of just `[TOC]` becomes a table of contents.
+    public var rendersTOC = false
+
+    public init() {}
+}
+
+public struct ParseResult: Sendable, Equatable {
+    /// The rendered HTML body.
+    public var body: String
+    /// Prism languages used in code blocks, dependencies first.
+    public var languages: [String]
+}
 
 /// Settings that affect how the HTML page is assembled around the body.
 public struct PageSettings: Sendable, Equatable {
@@ -43,29 +75,20 @@ public struct RenderSettings: Sendable, Equatable {
 
 @MainActor
 extension Preferences {
-    /// Standard Markdown (tables, fenced code, footnotes, strikethrough and
-    /// intra-word emphasis) is always on; extended syntax is opt-in. Quote
-    /// (`"…"` as `<q>`) is dropped in favor of smart punctuation.
-    public var extensionFlags: UInt32 {
-        var flags: UInt32 = HOEDOWN_EXT_TABLES.rawValue | HOEDOWN_EXT_FENCED_CODE.rawValue
-            | HOEDOWN_EXT_FOOTNOTES.rawValue | HOEDOWN_EXT_STRIKETHROUGH.rawValue
-        if extensionAutolink { flags |= HOEDOWN_EXT_AUTOLINK.rawValue }
-        if extensionHighlight { flags |= HOEDOWN_EXT_HIGHLIGHT.rawValue }
-        if extensionSuperscript { flags |= HOEDOWN_EXT_SUPERSCRIPT.rawValue }
-        if htmlMathJax { flags |= HOEDOWN_EXT_MATH.rawValue }
-        if htmlMathJaxInlineDollar { flags |= HOEDOWN_EXT_MATH_EXPLICIT.rawValue }
-        return flags
-    }
-
-    /// Task lists are standard (GFM) and always on.
-    public var rendererFlags: UInt32 {
-        var flags = UInt32(HOEDOWN_HTML_USE_TASK_LIST)
-        if htmlLineNumbers { flags |= UInt32(HOEDOWN_HTML_BLOCKCODE_LINE_NUMBERS) }
-        if htmlHardWrap { flags |= HOEDOWN_HTML_HARD_WRAP.rawValue }
-        if codeBlockAccessory == .custom {
-            flags |= UInt32(HOEDOWN_HTML_BLOCKCODE_INFORMATION)
-        }
-        return flags
+    /// The opt-in Markdown settings (standard Markdown is always on).
+    public var parseSettings: ParseSettings {
+        var settings = ParseSettings()
+        settings.autolink = extensionAutolink
+        settings.highlight = extensionHighlight
+        settings.superscript = extensionSuperscript
+        settings.math = htmlMathJax
+        settings.inlineDollar = htmlMathJaxInlineDollar
+        settings.smartPunctuation = extensionSmartyPants
+        settings.lineNumbers = htmlLineNumbers
+        settings.blockCodeInformation = codeBlockAccessory == .custom
+        settings.hardWrap = htmlHardWrap
+        settings.rendersTOC = htmlRendersTOC
+        return settings
     }
 
     public var renderSettings: RenderSettings {
@@ -82,14 +105,7 @@ extension Preferences {
         page.mathJax = htmlMathJax
         page.templateName = htmlTemplateName ?? "Default"
         page.baseFontSize = htmlBaseFontSize
-        return RenderSettings(
-            parse: ParseSettings(extensionFlags: extensionFlags,
-                                 rendererFlags: rendererFlags,
-                                 smartyPants: extensionSmartyPants,
-                                 rendersTOC: htmlRendersTOC,
-                                 detectsFrontMatter: true,
-                                 engine: markdownEngine),
-            page: page)
+        return RenderSettings(parse: parseSettings, page: page)
     }
 }
 
@@ -280,7 +296,7 @@ public enum PageBuilder {
              linkTransform: linkTransform)
     }
 
-    /// HTML without the preview's `data-source-line` attributes (FR-18),
+    /// HTML without the preview's `data-source-line` attributes,
     /// for export and copying.
     public static func withoutSourceLines(_ html: String) -> String {
         guard html.contains(" data-source-line=") else { return html }
@@ -334,7 +350,8 @@ public enum PageBuilder {
 @MainActor
 public final class Renderer {
     public private(set) var result = ParseResult(body: "", languages: [])
-    /// The swift-markdown model of the same text, when that engine is on.
+    /// The document model the result was rendered from, which the editor
+    /// highlights from too; nil before the first parse.
     public private(set) var model: MarkdownDocumentModel?
     public private(set) var lastParseSettings: ParseSettings?
     public private(set) var lastPageSettings: PageSettings?
@@ -378,10 +395,7 @@ public final class Renderer {
     private nonisolated static func parse(
         _ markdown: String, _ settings: ParseSettings
     ) -> (ParseResult, MarkdownDocumentModel?) {
-        guard settings.engine == .cmarkGfm else {
-            return (MarkdownParser.parse(markdown, settings: settings), nil)
-        }
-        // One cmark-gfm parse for the preview and the editor (FR-20, NFR-3).
+        // One cmark-gfm parse for the preview and the editor.
         var options = MarkdownDocumentModel.Options(settings)
         options.sourceLines = true
         let model = MarkdownDocumentModel(markdown, options: options)

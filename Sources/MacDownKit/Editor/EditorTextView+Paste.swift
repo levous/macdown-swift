@@ -10,8 +10,8 @@ import AppKit
 extension EditorTextView {
     // MARK: - Paste
 
-    /// Paste, Services and text dropped from other apps all read here
-    /// (FR-8): formatted text becomes Markdown and image data an image;
+    /// Paste, Services and text dropped from other apps all read here:
+    /// formatted text becomes Markdown and image data an image;
     /// anything else is read as usual.
     public override func readSelection(from pasteboard: NSPasteboard,
                                        type: NSPasteboard.PasteboardType) -> Bool {
@@ -34,14 +34,14 @@ extension EditorTextView {
             .filter { !super.readablePasteboardTypes.contains($0) }
     }
 
-    /// Paste and Match Style: always the plain text (FR-4).
+    /// Paste and Match Style: always the plain text.
     public override func pasteAsPlainText(_ sender: Any?) {
         pastesPlainText = true
         defer { pastesPlainText = false }
         super.pasteAsPlainText(sender)
     }
 
-    /// Edit ▸ Paste as Markdown: converts even with the setting off (FR-28).
+    /// Edit ▸ Paste as Markdown: converts even with the setting off.
     @objc public func pasteAsMarkdown(_ sender: Any?) {
         if !pasteConverted(from: .general, convertsFormatting: true) {
             super.paste(sender)
@@ -51,8 +51,8 @@ extension EditorTextView {
     /// Inserts the Markdown for `pasteboard`'s formatted text, or its
     /// image, in place of the selection, as one undoable change. False when
     /// there's nothing to convert, so the caller pastes as usual: plain
-    /// text, code (FR-6), a paste into a code block (FR-5), or formatted
-    /// text when not converting it (FR-27; images are pasted anyway, FR-34).
+    /// text, code, a paste into a code block, or formatted text when not
+    /// converting it (images are pasted either way).
     @discardableResult
     func pasteConverted(from pasteboard: NSPasteboard, convertsFormatting: Bool? = nil) -> Bool {
         let selection = selectedRange()
@@ -82,7 +82,7 @@ extension EditorTextView {
 
     /// Inserts pasted Markdown as its own undo step (not merged with the
     /// typing before it), through the usual text-change path so the
-    /// document sees it like typing (FR-7). Blocks are set off from the
+    /// document sees it like typing. Blocks are set off from the
     /// text around them by blank lines.
     /// The range of the inserted text.
     @discardableResult
@@ -102,7 +102,7 @@ extension EditorTextView {
     // MARK: - Paste as Plain Text
 
     /// Shows a button just below `range`, what a converted paste inserted,
-    /// that puts `plainText` there instead (FR-31). It never takes focus,
+    /// that puts `plainText` there instead. It never takes focus,
     /// so typing goes on in the editor.
     func showPlainTextButton(replacing range: NSRange, with plainText: String) {
         dismissPlainTextButton()
@@ -156,8 +156,8 @@ extension EditorTextView {
         breakUndoCoalescing()
     }
 
-    /// Removes the button, and lets go of the pasted range and plain text
-    /// (FR-32). It stays until then: there's no timeout.
+    /// Removes the button, and lets go of the pasted range and plain text.
+    /// It stays until then: there's no timeout.
     func dismissPlainTextButton() {
         guard let button = plainTextButton else { return }
         button.removeFromSuperview()
@@ -215,7 +215,7 @@ extension EditorTextView {
 
     // MARK: - Code blocks
 
-    /// Whether `location` is inside a fenced or indented code block (FR-5):
+    /// Whether `location` is inside a fenced or indented code block:
     /// by scanning the fences above it, which also works when the latest
     /// parse is behind the text, or, for indented code, from the parse.
     func isInCodeBlock(_ location: Int) -> Bool {

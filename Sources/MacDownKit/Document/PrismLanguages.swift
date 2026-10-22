@@ -2,7 +2,7 @@
 //  PrismLanguages.swift
 //  MacDownKit
 //
-//  Code block languages for Prism, shared by both Markdown engines (FR-10):
+//  Code block languages for Prism, shared by both Markdown engines:
 //  aliases map to Prism's names (`js` → `javascript`), and each language
 //  brings the scripts it depends on.
 //

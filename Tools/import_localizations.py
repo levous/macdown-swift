@@ -186,6 +186,67 @@ def add_port_translations(strings):
         strings[key] = entry
 
 
+
+# The port's changes to the original's credits (RTF): its contributor, and
+# the libraries it uses. hoedown and Hoextdown are gone (cmark-gfm parses);
+# PEG Markdown Highlight's highlighter and theme parser live on as Swift
+# ports (see Licenses/README.md).
+CREDITS_CONTRIBUTOR_AFTER = (
+    '{\\field{\\*\\fldinst{HYPERLINK "https://www.loopingz.com/"}}{\\fldrslt \\cf0 Remi Cattiau}}\\\n')
+CREDITS_CONTRIBUTOR = (
+    '\\pard\\pardeftab720\\partightenfactor0\n'
+    '{\\field{\\*\\fldinst{HYPERLINK "https://github.com/levous"}}{\\fldrslt \\cf0 LeVous (Rusty Zarse)}}\\\n')
+CREDITS_HOEDOWN = (
+    '{\\field{\\*\\fldinst{HYPERLINK "https://github.com/hoedown/hoedown"}}{\\fldrslt \n'
+    '\\b\\fs28 \\cf0 Hoedown}}')
+CREDITS_AFTER_HOEDOWN = '{\\field{\\*\\fldinst{HYPERLINK "http://pyyaml.org/wiki/LibYAML"}}'
+CREDITS_CMARK = (
+    '{\\field{\\*\\fldinst{HYPERLINK "https://github.com/swiftlang/swift-cmark"}}{\\fldrslt \n'
+    '\\b\\fs28 \\cf0 cmark-gfm}}\\\n'
+    "Copyright \\'a9 2014, John MacFarlane\\\n"
+    'All rights reserved.\\\n'
+    '\\\n'
+    'Redistribution and use in source and binary forms, with or without modification, are permitted '
+    'provided that the following conditions are met:\\\n'
+    '    * Redistributions of source code must retain the above copyright notice, this list of '
+    'conditions and the following disclaimer.\\\n'
+    '    * Redistributions in binary form must reproduce the above copyright notice, this list of '
+    'conditions and the following disclaimer in the documentation and/or other materials provided '
+    'with the distribution.\\\n'
+    '\\\n'
+    'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR '
+    'IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND '
+    'FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR '
+    'CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL '
+    'DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, '
+    'DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER '
+    'IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT '
+    'OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\\\n'
+    '\\\n'
+    'cmark-gfm includes code from other projects under their own notices: see '
+    '{\\field{\\*\\fldinst{HYPERLINK "https://github.com/swiftlang/swift-cmark/blob/main/COPYING"}}'
+    '{\\fldrslt https://github.com/swiftlang/swift-cmark/blob/main/COPYING}}.\\\n'
+    '\\\n')
+CREDITS_PEG_AFTER = ('PEG-Markdown-Highlight is licensed under the same terms as peg-markdown '
+                     '(see below for more information).\\\n')
+CREDITS_PEG_NOTE = ("\\\nMacDown's editor highlighter and theme parser are Swift ports of PEG Markdown "
+                    "Highlight's code, so that editor themes keep working; the library itself is no "
+                    "longer used.\\\n")
+
+
+def port_credits(text):
+    """The original's Credits.rtf with the port's changes."""
+    for marker in (CREDITS_CONTRIBUTOR_AFTER, CREDITS_HOEDOWN, CREDITS_AFTER_HOEDOWN,
+                   CREDITS_PEG_AFTER):
+        if text.count(marker) != 1:
+            sys.exit(f"Credits.rtf changed upstream; update port_credits: {marker[:60]!r}")
+    text = text.replace(CREDITS_CONTRIBUTOR_AFTER, CREDITS_CONTRIBUTOR_AFTER + CREDITS_CONTRIBUTOR)
+    start = text.index(CREDITS_HOEDOWN)
+    # Up to the paragraph reset before LibYAML: hoedown, then Hoextdown.
+    end = text.rindex("\\pard", start, text.index(CREDITS_AFTER_HOEDOWN))
+    text = text[:start] + CREDITS_CMARK + text[end:]
+    return text.replace(CREDITS_PEG_AFTER, CREDITS_PEG_AFTER + CREDITS_PEG_NOTE)
+
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
@@ -220,13 +281,14 @@ def main():
     CATALOG.write_text(json.dumps(catalog, ensure_ascii=False, indent=2,
                                   sort_keys=True) + "\n")
 
-    # Credits shown in the About panel.
+    # Credits shown in the About panel, with the port's changes.
     if CREDITS_DIR.exists():
         shutil.rmtree(CREDITS_DIR)
     for credits in sorted(localization_dir.glob("*.lproj/Credits.rtf")):
         target = CREDITS_DIR / credits.parent.name / "Credits.rtf"
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(credits, target)
+        text = credits.read_text(encoding="latin-1")
+        target.write_text(port_credits(text), encoding="latin-1")
 
     print(f"{len(keys)} strings written to {CATALOG.relative_to(ROOT)}")
     for language in sorted(translations):
