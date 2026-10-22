@@ -122,10 +122,29 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 
     @Test(arguments: ["synthetic-google-docs", "synthetic-word", "synthetic-textedit", "synthetic-browser",
-                      "synthetic-macdown-preview"])
+                      "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode"])
     func fixture(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         #expect(try Self.pasted(fixture) == fixture.expected)
+    }
+
+    /// Code from Terminal (RTF in a monospace font, with colors) and
+    /// JetBrains IDEs (a styled pre, bold keywords) pastes exactly as copied
+    /// (FR-6).
+    @Test func codeEditors() throws {
+        let terminal = NSMutableAttributedString(string: "$ ls -la\ntotal 8\n-rw-r--r--  1 me  staff  12 notes.md\n", attributes: [
+            .font: NSFont(name: "SFMono-Regular", size: 12) ?? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular),
+            .foregroundColor: NSColor.green, .backgroundColor: NSColor.black])
+        let rtf = try #require(terminal.rtf(from: NSRange(location: 0, length: terminal.length)))
+        let fromTerminal = PasteFixture(name: "terminal", types: ["public.rtf": rtf, "public.utf8-plain-text": Data(terminal.string.utf8)],
+                                        expected: nil, synthetic: true)
+        #expect(try Self.pasted(fromTerminal) == terminal.string)
+
+        let code = "fun main() {\n    println(\"*hi*\")\n}"
+        let html = #"<pre style="background-color:#2b2b2b;color:#a9b7c6;font-family:'JetBrains Mono',monospace;font-size:9.8pt;"><span style="color:#cc7832;font-weight:bold;">fun </span>main() {<br>    println(<span style="color:#6a8759;">"*hi*"</span>)<br>}</pre>"#
+        let fromJetBrains = PasteFixture(name: "jetbrains", types: ["public.html": Data(html.utf8), "public.utf8-plain-text": Data(code.utf8)],
+                                         expected: nil, synthetic: true)
+        #expect(try Self.pasted(fromJetBrains) == code)
     }
 
     /// Pages and TextEdit write RTF; AppKit's HTML for it puts fonts in
