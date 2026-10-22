@@ -74,7 +74,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Docs: `docs/MACDOWN-PORT.md` "Differences from the original" (paste conversion, new setting, image paste); `docs/ARCHITECTURE.md` (code layout, "Editor and highlighting" paste path, Tests section for the round-trip harness, dated "Decisions" entry); `CLAUDE.md` Editor section if the paste path warrants a line
 
 ### Phase 3: Source quirks (each with its fixture test)
-- [ ] Google Docs (FR-22): wrapper bold cancelled by `font-weight:normal`; styles on spans for bold/italic/strike/monospace; real `h*` headings; nested lists
+- [x] Google Docs (FR-22): wrapper bold cancelled by `font-weight:normal`; styles on spans for bold/italic/strike/monospace; real `h*` headings; nested lists
 - [ ] Word HTML (FR-23): drop `mso-*`, conditional comments, `o:p`; rebuild nested bulleted/numbered lists from `mso-list: lN levelM` paragraphs, dropping the hidden bullet span
 - [ ] Pages / TextEdit via RTF (FR-24): fixture tests over the Phase 1 effective-styles pass (class-based bold, italic, monospace); AppKit `ul`/`ol` lists for `NSTextList`
 - [ ] Web pages (FR-25): resolve relative `href`/`src` against the source URL (`public.url`, `org.chromium.source-url`, `<base href>`); `<picture>`/`srcset` → `img src`; skip icon-font glyphs; in-page `#anchor` links text only

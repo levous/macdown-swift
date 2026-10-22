@@ -5,7 +5,7 @@
 //  Clipboard fixtures for pasting formatted text (Resources/Paste).
 //
 
-import Foundation
+import AppKit
 import Testing
 @testable import MacDownKit
 
@@ -95,5 +95,35 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
                        "colspan=", "rowspan="] {
             #expect(body.contains(markup), "missing \(markup)")
         }
+    }
+}
+
+/// Each source app's clipboard pastes as its expected Markdown (paste
+/// intent, "Source quirks"): converted as the editor does, from HTML or
+/// rich text, or as plain text when it's code.
+@MainActor @Suite struct PasteFixtureConversionTests {
+    /// What pasting the fixture inserts.
+    static func pasted(_ fixture: PasteFixture) throws -> String {
+        let pasteboard = NSPasteboard(name: .init("MacDownTests-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        let item = NSPasteboardItem()
+        for (type, data) in fixture.types { item.setData(data, forType: .init(type)) }
+        pasteboard.writeObjects([item])
+        guard case .html(let html, let baseURL)? = PasteboardContent.read(from: pasteboard) else {
+            return try #require(fixture.plainText)
+        }
+        var options = pasteTestOptions
+        options.baseURL = baseURL
+        guard let result = HTMLToMarkdown(options: options).convert(html), !result.isCode else {
+            return try #require(fixture.plainText)
+        }
+        return result.markdown
+    }
+
+    @Test(arguments: ["synthetic-google-docs"])
+    func fixture(_ name: String) throws {
+        let fixture = try PasteFixture.load(name)
+        #expect(try Self.pasted(fixture) == fixture.expected)
     }
 }
