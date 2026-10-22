@@ -225,14 +225,14 @@ extension HTMLToMarkdown {
             for child in element.children ?? [] {
                 guard let child = child as? XMLElement else { continue }
                 let childStyle = self.style(of: child, inheriting: style)
-                let blocks = child.localName?.lowercased() == "li"
+                var blocks = child.localName?.lowercased() == "li"
                     ? self.blocks(in: child, style: childStyle) : block(child, style: childStyle)
                 guard !blocks.isEmpty else { continue }
                 if !items.isEmpty, blocks.allSatisfy(\.isList) {
                     items[items.count - 1].blocks += blocks
                 } else {
-                    items.append(ListItem(blocks: blocks, task: Self.taskState(child),
-                                          spaced: hasSpacedParagraph(child)))
+                    let task = Self.taskState(child) ?? Self.removeTaskText(from: &blocks)
+                    items.append(ListItem(blocks: blocks, task: task, spaced: hasSpacedParagraph(child)))
                 }
             }
             guard !items.isEmpty else { return [] }
@@ -283,6 +283,28 @@ extension HTMLToMarkdown {
             }
             _ = visit(item)
             return state
+        }
+
+        /// A task written as text before the item, `[x] ` or `[ ] `, as
+        /// Notion copies its to-dos: removes it and returns whether it's
+        /// checked, or nil if the item doesn't start with one.
+        static func removeTaskText(from blocks: inout [Block]) -> Bool? {
+            guard case .paragraph(var inlines)? = blocks.first,
+                  let index = inlines.firstIndex(where: {
+                      if case .text(let text, _) = $0 { !text.allSatisfy(\.isWhitespace) } else { true }
+                  }),
+                  case .text(let text, let style) = inlines[index]
+            else { return nil }
+            let trimmed = text.drop(while: \.isWhitespace)
+            let checked: Bool
+            switch trimmed.prefix(4) {
+            case "[x] ", "[X] ": checked = true
+            case "[ ] ": checked = false
+            default: return nil
+            }
+            inlines[index] = .text(String(trimmed.dropFirst(4)), style)
+            blocks[0] = .paragraph(inlines)
+            return checked
         }
 
         /// An image's address: its `src`, or for lazily loaded images, the

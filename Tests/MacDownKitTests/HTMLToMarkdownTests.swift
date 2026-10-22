@@ -702,6 +702,14 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         #expect(markdown(#"<ul><li><p><input type="checkbox" checked disabled>Done</p></li></ul>"#) == "- [x] Done\n")
     }
 
+    /// Notion copies a to-do as text: the box as `[x]` or `[ ]` before the item.
+    @Test func bracketTextTasks() {
+        #expect(markdown("<ul><li>[x] Done</li><li>[X] <b>Bold</b> done</li><li>[ ] Open</li></ul>")
+                    == "- [x] Done\n- [x] **Bold** done\n- [ ] Open\n")
+        // Without the space after it, or not at the start, it's text.
+        #expect(markdown("<ul><li>[x]Done</li><li>Item [ ] later</li></ul>") == "- \\[x\\]Done\n- Item \\[ \\] later\n")
+    }
+
     @Test func otherInputsAreNotTasks() {
         #expect(markdown(#"<ul><li>text <input type="checkbox"></li><li><input type="radio"> radio</li></ul>"#)
                     == "- text\n- radio\n")

@@ -124,7 +124,7 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
 
     @Test(arguments: ["synthetic-google-docs", "synthetic-word", "synthetic-textedit", "synthetic-browser",
                       "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode", "google-docs", "chrome", "safari", "macdown-preview",
-                      "word", "pages", "textedit"])
+                      "word", "pages", "textedit", "notion"])
     func fixture(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         #expect(try Self.pasted(fixture) == fixture.expected)
