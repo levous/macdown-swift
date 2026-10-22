@@ -1,6 +1,6 @@
 # Migrate Markdown parsing to swift-markdown
 
-- **Status:** Accepted (decisions recorded below)
+- **Status:** Done (2026-10-22; decisions recorded below)
 - **Date:** 2026-10-09
 - **Scope:** Replace both Markdown parsers, hoedown (`Sources/CHoedown`, preview and export) and PEG Markdown Highlight (`Sources/CPegMarkdown`, editor highlighting), with Apple's [swift-markdown](https://github.com/swiftlang/swift-markdown) (built on cmark-gfm). Align Markdown formatting, settings and editing defaults with standard conventions (see "Principle").
 
@@ -260,6 +260,8 @@ Each phase from 0 on lands behind a hidden setting (`markdownEngine` = `hoedown`
 9. **Footnotes have no setting.** The "backwards" footnote-highlighting flag in `DocumentController` turned out to be harmless: PEG Markdown Highlight defines a `NOTE` type but never emits it, so footnotes aren't colored in the editor with either flag value (checked 2026-10-09). The new highlighter colors footnotes (a `NOTE` span type).
 
 10. **The parser is cmark-gfm, used directly** (decided 2026-10-09, after finding F8). swift-cmark's `cmark-gfm` and `cmark-gfm-extensions` products, pinned exactly, parse once per edit with source positions, footnotes (`CMARK_OPT_FOOTNOTES`), the `table`, `strikethrough` and `tasklist` extensions always, `autolink` only with the Autolink setting on, and `CMARK_OPT_SMART` only with Smart punctuation on. Our model, highlighter and renderer walk cmark's C tree inside the parse task; swift-markdown's Swift tree is no longer used and the dependency goes. This resolves open questions 1 (footnotes are native) and 2 (cmark-gfm parses and walks 10,000 lines in 4.5 ms, against PEG's 20). Documents keep the "swift-markdown migration" name.
+
+11. **hoedown and PEG Markdown Highlight are removed now** (2026-10-22, at the owner's request), without the separate release with hoedown still selectable that Phase 5 planned. The hidden `markdownEngine` setting, `MarkdownParser`, `ScrollAnchors.scan`, the highlighter's PEG parse, `Sources/CHoedown`, `Sources/CPegMarkdown` and both diff harnesses are gone. hoedown's HTML and escaping, and PEG's theme parsing, were recorded as test fixtures first (`engine-snapshots.json`). `Licenses/peg-markdown-highlight.txt` stays: `MarkdownHighlighter` and `ThemeStyle` are Swift ports of its code. hoedown's and Hoextdown's licenses go. There's no swift-markdown dependency (Decision 10), so no license for it; `Licenses/cmark-gfm.txt` is swift-cmark's.
 
 ### Phase 0 findings
 

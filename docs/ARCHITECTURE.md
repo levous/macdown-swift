@@ -27,8 +27,6 @@ changes, and implements the formatting, saving and export actions.
 | Path | Contents |
 |------|----------|
 | `Package.swift` | Swift package with everything except the app entry point |
-| `Sources/CHoedown` | hoedown 3.0.7 plus MacDown's renderer patches (`hoedown_html_patch.c`) — being replaced, see [Markdown engine](#markdown-engine) |
-| `Sources/CPegMarkdown` | PEG Markdown Highlight parser (C) — being replaced |
 | `Sources/MacDownShared` | Constants shared by the app and the shell utility |
 | `Sources/MacDownKit/Document` | Parsing, page assembly, the document model and per-window controller |
 | `Sources/MacDownKit/Document/Model` | The cmark-gfm document model: `CMarkTree`, `LineIndex`, `ProtectedSource`, `MarkdownDocumentModel`, `HighlightMapper` |
@@ -50,14 +48,14 @@ changes, and implements the formatting, saving and export actions.
 
 1. `DocumentController` observes editor text and preference changes.
 2. `Preferences.renderSettings` turns preferences into `RenderSettings`:
-   `ParseSettings` (Markdown options, and the hidden `markdownEngine`) plus
-   `PageSettings` (styles, Prism, MathJax, Mermaid, Graphviz, template).
-3. `Renderer.parse` parses in a detached task; a generation counter discards
-   results of superseded parses. Today the HTML comes from `MarkdownParser`
-   (hoedown, bridged through C callbacks), which also renders front matter
+   `ParseSettings` (the opt-in Markdown options; standard Markdown is always
+   on) plus `PageSettings` (styles, Prism, MathJax, Mermaid, Graphviz,
+   template).
+3. `Renderer.parse` builds the `MarkdownDocumentModel` in a detached task
+   (see [Markdown engine](#markdown-engine)); a generation counter discards
+   results of superseded parses. The model's HTML renders front matter
    (Yams) as a table, substitutes `[TOC]`, and collects code block languages
-   for Prism. With `markdownEngine = cmarkGfm` the same task also builds
-   the `MarkdownDocumentModel` (see [Markdown engine](#markdown-engine)).
+   for Prism; its highlight spans go to the editor.
 4. `PageBuilder` (pure functions) builds the full page with `HTMLTemplate` (a
    minimal Handlebars subset) and `Asset` (linked or embedded CSS/JS). The
    preview, HTML export and PDF export use the same builder with different
@@ -72,10 +70,11 @@ changes, and implements the formatting, saving and export actions.
 (`PreviewURL`) and served by `LocalFileSchemeHandler`. Relative links and
 images resolve against the document's location as in the original.
 
-**Scroll sync.** Editor and preview are aligned by anchors (headers, images,
-code blocks) found in the source and reported by the page, mapped through
-`ScrollMap`, so unequal pane widths and tall images stay aligned in both
-directions. The migration moves this to source-line anchors from the parse.
+**Scroll sync.** Editor and preview are aligned by anchors: the preview marks
+every block with its source line (`data-source-line`), the page reports where
+each one is, and the editor finds the same lines in its layout. `ScrollMap`
+pairs them by line, so unequal pane widths and tall images stay aligned in
+both directions.
 The page follows the editor smoothly: `PreviewController.scroll(to:animated:)`
 hands the offset to `MacDownScroll`, a script in the page that eases towards
 the latest target each animation frame. While the editor scrolls, each new
@@ -93,13 +92,13 @@ helpers (list and quote continuation, auto-pairing, toggling markup,
 indenting) are in `NSTextView+Autocomplete.swift`, called from
 `DocumentController`'s text view delegate methods.
 
-`MarkdownHighlighter` styles text from spans keyed by PEG
-Markdown Highlight's element types (`H1`, `EMPH`, `CODE`, …) so the original
-`.style` themes apply unchanged. Themes are parsed by `ThemeStyle`, a Swift
-port of the C style parser. Spans come either from the PEG C parser (today's
-default) or, with the new engine, from `HighlightMapper` via the shared
-document model, which adds `NOTE` (footnotes), `MATH`, `HIGHLIGHT` and
-`SUPERSCRIPT`.
+`MarkdownHighlighter` styles text from spans keyed by `HighlightElement`, PEG
+Markdown Highlight's element types (`H1`, `EMPH`, `CODE`, …), so the original
+`.style` themes apply unchanged. Themes are parsed by `ThemeStyle`. Both are
+Swift ports of PEG Markdown Highlight's code (its license is kept in
+`Licenses/`); the C library is no longer used. The spans come from
+`HighlightMapper` via the shared document model, which adds `NOTE`
+(footnotes), `MATH`, `HIGHLIGHT` and `SUPERSCRIPT`.
 
 New spans are applied straight away to the visible text and a screen above
 and below it. When the editor scrolls, the highlighter styles whatever of
@@ -171,17 +170,14 @@ original's classes onto this code are in [MACDOWN-PORT.md](MACDOWN-PORT.md).
 
 The port started on the original's engines: patched hoedown for HTML and PEG
 Markdown Highlight for the editor, two C parsers that parse every edit twice
-and disagree in places. They are being replaced by **cmark-gfm**, used
-directly, so one parse feeds the preview, export, highlighting and scroll
-sync. The plan, requirements and progress are in
-[docs/intents/swift-markdown-migration.md](intents/swift-markdown-migration.md),
-[docs/prd/swift-markdown-migration-prd.md](prd/swift-markdown-migration-prd.md)
-and `.ralph/fix_plan.md`.
-
-cmark-gfm is the default. For one release the original engines stay
-selectable through a hidden setting
-(`defaults write io.github.levous.macdown-swift markdownEngine hoedown`); 
-then hoedown and PEG Markdown Highlight are removed.
+and disagree in places. They were replaced by **cmark-gfm** (swift-cmark),
+used directly, so one parse feeds the preview, export, highlighting and
+scroll sync, and removed on 2026-10-22. The plan and requirements are in
+[docs/intents/swift-markdown-migration.md](intents/swift-markdown-migration.md)
+and [docs/prd/swift-markdown-migration-prd.md](prd/swift-markdown-migration-prd.md).
+The renderer still writes hoedown's markup where CommonMark agrees, checked
+against hoedown's output recorded before it was removed
+(`Tests/MacDownKitTests/Resources/engine-snapshots.json`).
 
 The new model (`Sources/MacDownKit/Document/Model`):
 
@@ -194,13 +190,22 @@ The new model (`Sources/MacDownKit/Document/Model`):
 - `LineIndex` converts cmark's UTF-8 line/column positions into the UTF-16
   ranges the editor uses.
 - `MarkdownDocumentModel` is built inside the parse task and keeps only
-  `Sendable` results (blocks, highlight spans; later the HTML); the C tree
+  `Sendable` results (blocks, highlight spans, the HTML); the C tree
   never leaves the task.
 
 ## Decisions
 
 Dated, newest first. The migration intent has the full list for the engine
 work.
+
+**hoedown and PEG Markdown Highlight are removed (2026-10-22).** cmark-gfm
+has been the only engine in practice since 2026-10-09; the hidden
+`markdownEngine` setting, `MarkdownParser`, the hoedown scroll anchors, the
+highlighter's PEG parse and both C targets are gone, so the package has no C
+code. Before the removal, the outputs the port has to match (hoedown's HTML
+and escaping, PEG's theme parsing) were recorded as test fixtures. The PEG
+license stays because the highlighter and theme parser are ports of its code
+(`Licenses/README.md`); hoedown's goes.
 
 **Paste conversion parses HTML with `XMLDocument` (2026-10-21).** Pasting
 formatted text converts the clipboard's HTML (or RTF, via AppKit's HTML
@@ -299,26 +304,20 @@ The bundled help (`Resources/help.md`) has a live example of every feature
 and setting, and `HelpDocumentTests` renders it, checks its highlighting and
 loads it in the real preview.
 
-The engine migration is checked by two harnesses that run with every
-`swift test` over the corpus (19 generated documents, `help.md`, and a
-generated 10,000-line document):
+The renderer is checked against hoedown's output and PEG Markdown
+Highlight's style parser, recorded before they were removed
+(`Resources/engine-snapshots.json`, `EngineSnapshots`). The corpus (19
+generated documents, `help.md`, and a generated 10,000-line document) is
+rendered by `CorpusTests` and round-tripped by `PasteRoundTripTests` below.
+The two engine-comparison harnesses that guided the migration were retired
+with hoedown; the differences they found are summarized in
+[MACDOWN-PORT.md](MACDOWN-PORT.md).
 
 ```sh
-swift test --filter HTMLDiffHarnessTests        # preview HTML, 9 settings
-swift test --filter HighlightDiffHarnessTests   # editor highlight spans
-
-# Write html-diff.md and highlight-diff.md for review:
-MACDOWN_DIFF_REPORT=/tmp/diff swift test --filter "DiffHarnessTests"
-
-# Highlighting speed (NFR-1), on demand:
+# Highlighting speed against PEG Markdown Highlight's recorded time, on demand:
 MACDOWN_BENCHMARK=1 swift test -c release -Xswiftc -enable-testing \
   --filter HighlightBenchmarkTests
 ```
-
-Intended HTML differences are listed once in
-`Tests/MacDownKitTests/Resources/expected-html-diffs.json`; reviewed
-highlighting differences are in `HighlightDiffHarnessTests.reviewed`. There is
-no CI; run them before merging engine work.
 
 Pasting is checked the same way: `PasteRoundTripTests` renders each corpus
 document, converts the HTML back with `HTMLToMarkdown` and renders that
@@ -357,14 +356,6 @@ saves it in another (`"key" : value`, its own key order, `extractionState`
 on each entry), so a run after Xcode has saved the catalog rewrites every
 line. If it has, commit only the new entries (2026-10-21: the paste strings
 were added that way).
-
-### Regenerating the highlighter parser
-
-`Sources/CPegMarkdown/pmh_parser.c` is generated from PEG Markdown Highlight's
-`pmh_grammar.leg` with `greg`; don't edit it by hand. To regenerate it, run
-`make` in the original repository's `Dependency/peg-markdown-highlight`
-directory and copy `pmh_parser.c` here. (It goes away with the engine
-migration.)
 
 ### Releasing
 

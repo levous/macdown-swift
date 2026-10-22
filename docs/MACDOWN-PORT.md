@@ -62,8 +62,9 @@ fresh, and the original's plist can be copied over to migrate.
 - **Markdown engine:** the original's two parsers are replaced by one,
   [cmark-gfm](https://github.com/swiftlang/swift-cmark), which follows
   CommonMark and GitHub Flavored Markdown; where the results differ is listed
-  below. For one release the original's engine can be turned back on with
-  `defaults write io.github.levous.macdown-swift markdownEngine hoedown`.
+  below. The original's engines (hoedown, PEG Markdown Highlight) were
+  removed on 2026-10-22, after a release in which hoedown could still be
+  turned back on with a hidden setting.
 - **Editor highlighting** styles text as it scrolls into view, and the
   rest of the document in the background, instead of restyling what's
   visible after scrolling (every 100 ms in the original).
@@ -73,7 +74,7 @@ fresh, and the original's plist can be copied over to migrate.
   Rendering ▸ "Enable checkbox toggling" (on by default) changes `[ ]` to
   `[x]` (or back) in the Markdown, as an undoable edit. The original's
   preview checkboxes were always disabled, as they still are with the
-  setting off and with the hoedown engine.
+  setting off.
 - **Base font size**: Settings ▸ Rendering ▸ "Base font size" (0, off, by
   default) sets the root `html` font size in the preview and exports, so
   stylesheets in relative units scale with it. The bundled styles size
@@ -110,8 +111,9 @@ The port renders with cmark-gfm instead of the original's hoedown (see
 [ARCHITECTURE.md](ARCHITECTURE.md), "Markdown engine"). It follows
 CommonMark and GitHub Flavored Markdown, so some documents render
 differently from the original. These are the differences found on the test
-corpus; each is reviewed in
-`Tests/MacDownKitTests/Resources/reviewed-html-diffs.json`:
+corpus, each reviewed while both engines were in the app (the reviewed list
+is in the git history, `Tests/MacDownKitTests/Resources/reviewed-html-diffs.json`,
+removed with hoedown on 2026-10-22):
 
 - **Emphasis:** underscores don't emphasize inside words (`snake_case_name`
   stays as typed), `***text***` nests as emphasis inside strong, and nested
@@ -145,12 +147,14 @@ corpus; each is reviewed in
 | Objective-C | Swift |
 |-------------|-------|
 | `MPDocument` (NSDocument + xib) | `MarkdownDocument` (`ReferenceFileDocument`), `DocumentController`, `DocumentView` |
-| `MPRenderer` | `MarkdownDocumentModel` and `HTMLRenderer` (cmark-gfm), `PageBuilder`, `Renderer`; `MarkdownParser` (the hoedown bridge, for one release) |
+| `MPRenderer` | `MarkdownDocumentModel` and `HTMLRenderer` (cmark-gfm), `PageBuilder`, `Renderer` |
 | `MPAsset`, handlebars-objc | `Asset`, `HTMLTemplate` (minimal Handlebars subset) |
 | `MPPreferences` (PAPreferences) | `Preferences` (`@Observable`, same user defaults keys) |
 | MASPreferences panes (xibs) | `SettingsView` (SwiftUI `Settings` scene) |
 | `MPEditorView`, `NSTextView+Autocomplete` | `EditorTextView`, `NSTextView+Autocomplete.swift` |
-| `HGMarkdownHighlighter` | `MarkdownHighlighter` |
+| `HGMarkdownHighlighter` | `MarkdownHighlighter` (a Swift port; spans from `HighlightMapper`) |
+| PEG Markdown Highlight's `pmh_styleparser.c` | `ThemeStyle` (`ThemeStyleParser.swift`, a Swift port) |
+| hoedown, PEG Markdown Highlight's parser | cmark-gfm (swift-cmark), through `MarkdownDocumentModel` |
 | `MPDocumentSplitView` | `DocumentSplitView` |
 | `MPToolbarController` | `DocumentToolbar` (customizable SwiftUI toolbar) |
 | `MainMenu.xib` | `MacDownCommands` |
@@ -170,8 +174,8 @@ original's.
 engine change, the port rendered with the original's patched hoedown, and its
 HTML matched the original byte for byte. The new cmark-gfm renderer follows
 CommonMark and GitHub Flavored Markdown instead; where its output differs from
-the original is reviewed with the diff harnesses and listed under
-"Differences from the original". (See [ARCHITECTURE.md](ARCHITECTURE.md),
+the original was reviewed with diff harnesses (removed with hoedown) and is
+listed under "Markdown differences with the new engine". (See [ARCHITECTURE.md](ARCHITECTURE.md),
 "Markdown engine".)
 
 **Removed rather than ported:** Sparkle updates (releases go through GitHub
