@@ -245,136 +245,6 @@
         }
       }
     },
-    "Convert formatted text to Markdown when pasting" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Při vkládání převádět formátovaný text na Markdown"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
-          }
-        },
-        "da-DK" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Formatierten Text beim Einsetzen in Markdown umwandeln"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Convertir texto con formato a Markdown al pegar"
-          }
-        },
-        "et" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Teisenda kleepimisel vormindatud tekst Markdowniks"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Muunna muotoiltu teksti Markdowniksi sijoitettaessa"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Convertir le texte mis en forme en Markdown lors du collage"
-          }
-        },
-        "is" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Umbreyta sniðnum texta í Markdown við límingu"
-          }
-        },
-        "it-IT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Converti il testo formattato in Markdown quando incolli"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ペースト時にフォーマット済みテキストをMarkdownに変換"
-          }
-        },
-        "ko-KR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "붙여넣을 때 서식 있는 텍스트를 Markdown으로 변환"
-          }
-        },
-        "nb-NO" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Konverter formatert tekst til Markdown ved innliming"
-          }
-        },
-        "nl-NL" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zet opgemaakte tekst bij plakken om in Markdown"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Converter texto formatado em Markdown ao colar"
-          }
-        },
-        "ru-RU" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Преобразовывать форматированный текст в Markdown при вставке"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pri vkladaní prevádzať formátovaný text na Markdown"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Konvertera formaterad text till Markdown vid inklistring"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Yapıştırırken biçimli metni Markdown'a dönüştür"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "粘贴时将格式化文本转换为 Markdown"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "貼上時將格式化文字轉換為 Markdown"
-          }
-        }
-      }
-    },
     "(Default)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3027,6 +2897,137 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一起打造 MacDown"
+          }
+        }
+      }
+    },
+    "Convert formatted text to Markdown when pasting" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Při vkládání převádět formátovaný text na Markdown"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formateret tekst til Markdown ved indsættelse"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Formatierten Text beim Einsetzen in Markdown umwandeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Convertir texto con formato a Markdown al pegar"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teisenda kleepimisel vormindatud tekst Markdowniks"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Muunna muotoiltu teksti Markdowniksi sijoitettaessa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Convertir le texte mis en forme en Markdown lors du collage"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Umbreyta sniðnum texta í Markdown við límingu"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Converti il testo formattato in Markdown quando incolli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ペースト時にフォーマット済みテキストをMarkdownに変換"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "붙여넣을 때 서식 있는 텍스트를 Markdown으로 변환"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konverter formatert tekst til Markdown ved innliming"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zet opgemaakte tekst bij plakken om in Markdown"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Converter texto formatado em Markdown ao colar"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Преобразовывать форматированный текст в Markdown при вставке"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pri vkladaní prevádzať formátovaný text na Markdown"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Konvertera formaterad text till Markdown vid inklistring"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yapıştırırken biçimli metni Markdown'a dönüştür"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粘贴时将格式化文本转换为 Markdown"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貼上時將格式化文字轉換為 Markdown"
           }
         }
       }
@@ -9476,6 +9477,7 @@
       }
     },
     "Paste and Match Style" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -9606,6 +9608,7 @@
       }
     },
     "Paste as Markdown" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -9736,6 +9739,7 @@
       }
     },
     "Paste as Plain Text" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
