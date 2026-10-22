@@ -1,0 +1,15 @@
+{
+  "source" : "notion",
+  "types" : [
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 925,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "public.html",
+      "size" : 7871,
+      "type" : "public.html"
+    }
+  ]
+}
