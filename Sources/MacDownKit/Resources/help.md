@@ -25,6 +25,7 @@ Copy formatted text from a web page, Google Docs, Word, Pages, Notion or my own 
 
 * Formatting Markdown doesn’t have, like colors, fonts, sizes and underline, is left out; the text stays.
 * Apps that show headings only as larger text, like Pages, TextEdit and Word on the web, get them back as headings: a short line in a clearly larger size becomes one.
+* A list whose items all start with `[ ]` or `[x]`, as Notion copies to-dos, becomes a task list, whichever app it comes from.
 * Tables with merged cells stay as HTML, so nothing is lost.
 * Code copied from a code editor or Terminal pastes exactly as you copied it, and so does anything you paste inside a code block.
 * Lists use your **List marker** and **Insert spaces instead of tabs** settings.

@@ -724,7 +724,7 @@ let cocoaGenerator = #"<meta name="Generator" content="Cocoa HTML Writer">"#
     }
 
     /// Notion copies a list of to-dos as text: the box as `[x]` or `[ ]`
-    /// before every item.
+    /// before every item. Any source's list like that is read the same way.
     @Test func bracketTextTasks() {
         #expect(markdown("<ul><li>[x] Done</li><li>[X] <b>Bold</b> done</li><li>[ ] Open</li></ul>")
                     == "- [x] Done\n- [x] **Bold** done\n- [ ] Open\n")
@@ -732,6 +732,12 @@ let cocoaGenerator = #"<meta name="Generator" content="Cocoa HTML Writer">"#
         #expect(markdown("<ul><li>[x]Done</li><li>Item [ ] later</li></ul>") == "- \\[x\\]Done\n- Item \\[ \\] later\n")
         // One such item among others is text: a list about checklists, say.
         #expect(markdown("<ul><li>[x] means done</li><li>Plain item</li></ul>") == "- \\[x\\] means done\n- Plain item\n")
+        // Not only Notion's: a web page's list typed with boxes is a task list
+        // too, even one showing the syntax as text.
+        #expect(markdown(#"<meta name="Generator" content="Cocoa HTML Writer"><ul><li>[ ] Milk</li><li>[ ] Eggs</li></ul>"#)
+                    == "- [ ] Milk\n- [ ] Eggs\n")
+        #expect(markdown(#"<h2>Checklist syntax</h2><ul><li>[ ] an open item</li><li>[x] a done item</li></ul>"#)
+                    == "## Checklist syntax\n\n- [ ] an open item\n- [x] a done item\n")
     }
 
     @Test func otherInputsAreNotTasks() {

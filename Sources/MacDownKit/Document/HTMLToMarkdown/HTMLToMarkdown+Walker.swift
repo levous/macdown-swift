@@ -239,8 +239,11 @@ extension HTMLToMarkdown {
                 }
             }
             guard !items.isEmpty else { return [] }
-            // Notion copies a list of to-dos as text, every item starting with
-            // its box. One such item among others is just text.
+            // A list whose every item starts with its box as text is a to-do
+            // list, as Notion copies one. This applies to any source: Notion's
+            // HTML has nothing to tell it apart, and a list typed that way
+            // elsewhere is usually a to-do list too. One such item among
+            // others is just text.
             if items.allSatisfy({ $0.task == nil }) {
                 var tasks = items
                 for index in tasks.indices {

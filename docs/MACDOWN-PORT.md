@@ -90,11 +90,14 @@ fresh, and the original's plist can be copied over to migrate.
   converts on demand. Edit ▸ Paste and Match Style (⌥⇧⌘V) always pastes
   plain text. The original only pasted plain text. A few sources get
   repairs of their own: rich text (Pages, TextEdit) and Word for the web
-  get headings from larger text and their split lists joined, and a list
-  whose items all start with `[x]`/`[ ]` (Notion's to-dos) becomes a task
-  list. These guess, so a short larger line in a Pages document can become
-  a heading; web pages and Google Docs, which have real headings, aren't
-  read this way.
+  get headings from larger text and their split lists joined. These
+  guess, so a short larger line in a Pages document can become a heading;
+  web pages and Google Docs, which have real headings, aren't read this
+  way. A list whose items all start with `[x]`/`[ ]` becomes a task list,
+  from any source: that's how Notion copies to-dos, and its HTML can't be
+  told apart. A page whose list shows that syntax as text (about checklist
+  syntax, say) pastes as a task list too; a list with even one item
+  without the brackets stays text.
 - **Pasting images** (new): image data on the clipboard, such as a
   screenshot, is pasted as an embedded (data URI) image, as dropped image
   files already were. The original ignored it.

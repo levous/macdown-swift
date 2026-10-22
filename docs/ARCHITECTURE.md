@@ -139,7 +139,10 @@ body paragraphs. AppKit's HTML export also loses list structure the rich
 text has: `PasteboardContent` adds `start` to its `ol`s from the
 `NSTextList`s, and for that HTML only, the walker joins the sublists and
 continued numbering it splits into separate lists. Elsewhere a short larger
-paragraph, or two lists in a row, mean what they say.
+paragraph, or two lists in a row, mean what they say. One repair isn't
+gated: a list whose every item starts with `[x] `/`[ ] ` text becomes a task
+list from any source, because Notion's HTML has no marker (only its private
+clipboard data names it) and such lists elsewhere are rarely anything else.
 
 The paste is skipped, so the text view pastes plain text, for content that
 looks like code (all monospace, no structure), inside a code block (a fence
