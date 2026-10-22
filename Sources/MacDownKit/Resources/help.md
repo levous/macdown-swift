@@ -305,14 +305,16 @@ Write a footnote reference like this[^1], and the footnote itself anywhere in th
 1. [x] I can render checkbox list syntax
 	* [x] I support nesting
 	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
+2. [ ] Click me in the preview to check me off
 
 ```
 1. [x] I can render checkbox list syntax
 	* [x] I support nesting
 	* [x] I support ordered *and* unordered lists
-2. [ ] I don’t support clicking checkboxes directly in the preview
+2. [ ] Click me in the preview to check me off
 ```
+
+With *Enable checkbox toggling* on in the [**Rendering** settings](#rendering-pane) (on by default), clicking a checkbox in the preview checks or unchecks it in your Markdown (`[ ]` ↔ `[x]`), as an edit you can undo.
 
 ### Jekyll Front-matter
 
@@ -353,6 +355,8 @@ This is where I keep the settings for how I render and style your document in th
 ### CSS
 
 Choose the stylesheet the preview uses (*GitHub2* by default). The folder button reveals the Styles folder in `~/Library/Application Support/MacDown`, where you can edit the styles or add your own `.css` files; the reload button picks up your changes. **Default path** is the folder that relative links and images resolve against in documents that haven’t been saved yet.
+
+**Base font size** sets the page’s root font size, in the preview and in exported HTML and PDF. Stylesheets that size text in relative units (`rem`, `em` or `%`) grow and shrink with it; sizes a stylesheet sets in `px` stay as they are. Leave it at 0 to keep the stylesheet’s own size.
 
 ### Syntax Highlighting
 
@@ -452,12 +456,16 @@ Normally I require you to put two spaces and a newline at the end of a line to c
 
 *Scale preview based on editor font size* zooms the preview along with the editor’s font size.
 
+### Checkbox Toggling
+
+*Enable checkbox toggling* (on by default) lets you click [task list](#standard-extensions) checkboxes in the preview: each click changes `[ ]` to `[x]` (or back) in your Markdown. Turn it off to make the preview’s checkboxes read-only.
+
 ## <a name="general-pane"></a>The General Settings
 
 This is where I keep settings for how I behave: **MacDown ▸ Settings… ▸ General**.
 
 * **Update preview automatically as you type** (on by default). Turn it off to update the preview only when you choose **View ▸ Render Markdown** (Command-R).
-* **Sync preview scrollbar when editor scrolls** (on by default) keeps the preview lined up with the editor. Scroll either one, and the other follows.
+* **Sync source and preview scrolling** (on by default) keeps the preview lined up with the editor. Scroll either one, and the other follows.
 * **Put editor on the right** swaps the editor and the preview.
 * **Show word count** shows a count in the corner of the editor. Click it to choose words, characters, or characters without spaces.
 * **Ensure open document on launch** opens an empty document when I start without one.

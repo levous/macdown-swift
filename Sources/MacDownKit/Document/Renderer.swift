@@ -17,10 +17,15 @@ public struct PageSettings: Sendable, Equatable {
     public var lineNumbers = false
     public var codeBlockAccessory: CodeBlockAccessoryType = .none
     public var taskList = false
+    /// Task list checkboxes in the preview can be clicked (preview only).
+    public var taskListToggling = false
     public var mermaid = false
     public var graphviz = false
     public var mathJax = false
     public var templateName = "Default"
+    /// The root font size in points that relative (`rem`, `em`, `%`) sizes
+    /// scale with; 0 leaves it to the style.
+    public var baseFontSize = 0.0
 
     public init() {}
 }
@@ -71,10 +76,12 @@ extension Preferences {
         page.lineNumbers = htmlLineNumbers
         page.codeBlockAccessory = codeBlockAccessory
         page.taskList = true
+        page.taskListToggling = htmlTaskListToggling
         page.mermaid = htmlMermaid
         page.graphviz = htmlGraphviz
         page.mathJax = htmlMathJax
         page.templateName = htmlTemplateName ?? "Default"
+        page.baseFontSize = htmlBaseFontSize
         return RenderSettings(
             parse: ParseSettings(extensionFlags: extensionFlags,
                                  rendererFlags: rendererFlags,
@@ -196,7 +203,8 @@ public enum PageBuilder {
     static func scripts(_ s: PageSettings, languages: [String]) -> [Asset] {
         var scripts: [Asset] = []
         if s.taskList {
-            scripts.append(.javaScript(extensionURL("tasklist", "js")))
+            let name = s.taskListToggling ? "tasklist-toggle" : "tasklist"
+            scripts.append(.javaScript(extensionURL(name, "js")))
         }
         if s.syntaxHighlighting {
             scripts += prismScripts(s, languages: languages)
@@ -205,6 +213,13 @@ public enum PageBuilder {
         }
         if s.mathJax { scripts += mathJaxScripts() }
         return scripts
+    }
+
+    /// Sets the root font size, after the stylesheets so it wins over a
+    /// style's own `html` size. Sizes a style sets in `px` stay as they are.
+    static func baseFontSizeStyleTag(_ s: PageSettings) -> String? {
+        guard s.baseFontSize > 0 else { return nil }
+        return "<style>html { font-size: \(String(format: "%g", s.baseFontSize))px; }</style>"
     }
 
     // MARK: Pages
@@ -228,10 +243,11 @@ public enum PageBuilder {
     public static func html(title: String?, body: String, templateName: String,
                             styles: [Asset], styleOption: AssetOption,
                             scripts: [Asset], scriptOption: AssetOption,
+                            extraStyleTags: [String] = [],
                             linkTransform: (URL) -> URL = { $0 }) -> String {
         let styleTags = styles.compactMap {
             $0.html(for: styleOption, linkTransform: linkTransform)
-        }
+        } + extraStyleTags
         let scriptTags = scripts.compactMap {
             $0.html(for: scriptOption, linkTransform: linkTransform)
         }
@@ -259,7 +275,9 @@ public enum PageBuilder {
         return html(title: title, body: body, templateName: settings.templateName,
              styles: stylesheets(settings), styleOption: .fullLink,
              scripts: scripts(settings, languages: result.languages),
-             scriptOption: .fullLink, linkTransform: linkTransform)
+             scriptOption: .fullLink,
+             extraStyleTags: [baseFontSizeStyleTag(settings)].compactMap { $0 },
+             linkTransform: linkTransform)
     }
 
     /// HTML without the preview's `data-source-line` attributes (FR-18),
@@ -306,7 +324,8 @@ public enum PageBuilder {
         return html(title: title ?? "", body: withoutSourceLines(result.body),
                     templateName: settings.templateName,
                     styles: styles, styleOption: stylesOption,
-                    scripts: scripts, scriptOption: scriptsOption)
+                    scripts: scripts, scriptOption: scriptsOption,
+                    extraStyleTags: [baseFontSizeStyleTag(settings)].compactMap { $0 })
     }
 }
 

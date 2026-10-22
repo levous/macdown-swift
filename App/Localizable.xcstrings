@@ -1575,6 +1575,137 @@
         }
       }
     },
+    "Base font size:" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Základní velikost písma:"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundlæggende skriftstørrelse:"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundlæggende skriftstørrelse:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundschriftgröße:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tamaño de letra base:"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Põhifondi suurus:"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Perusfonttikoko:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Taille de police de base :"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grunnleturstærð:"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dimensione font di base:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本フォントサイズ:"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "기본 글꼴 크기:"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grunnleggende skriftstørrelse:"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Basislettergrootte:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tamanho da fonte base:"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Базовый размер шрифта:"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Základná veľkosť písma:"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grundteckenstorlek:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Temel yazı tipi boyutu:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本字体大小："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "基本字體大小："
+          }
+        }
+      }
+    },
     "Base font:" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4098,6 +4229,137 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "斜體"
+          }
+        }
+      }
+    },
+    "Enable checkbox toggling" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Povolit přepínání zaškrtávacích políček"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Slå afkrydsning af afkrydsningsfelter til"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Slå afkrydsning af afkrydsningsfelter til"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abhaken von Kontrollkästchen erlauben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Permitir marcar y desmarcar casillas"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Luba märkeruutude märkimine"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Salli valintaruutujen valitseminen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Permettre de cocher les cases"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Leyfa að haka í gátreiti"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Consenti di selezionare le caselle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チェックボックスの切り替えを有効にする"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "체크박스 전환 사용"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tillat avkrysning av avmerkingsbokser"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aanvinken van selectievakjes toestaan"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Permitir marcar e desmarcar caixas de seleção"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Разрешить переключение флажков"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Povoliť prepínanie začiarkavacích políčok"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tillåt avbockning av kryssrutor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Onay kutularını işaretlemeye izin ver"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "允许切换复选框"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "允許切換核取方塊"
           }
         }
       }
@@ -9571,6 +9833,137 @@
         }
       }
     },
+    "pt (0 keeps the CSS’s size)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "b. (0 ponechá velikost z CSS)"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pkt. (0 beholder CSS’ens størrelse)"
+          }
+        },
+        "da-DK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pkt. (0 beholder CSS’ens størrelse)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behält die Größe aus dem CSS)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantiene el tamaño del CSS)"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 jätab CSS-i suuruse)"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 säilyttää CSS:n koon)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 conserve la taille du CSS)"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 heldur stærð CSS)"
+          }
+        },
+        "it-IT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantiene la dimensione del CSS)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt（0 で CSS のサイズのまま）"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt(0이면 CSS 크기 유지)"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 beholder størrelsen fra CSS)"
+          }
+        },
+        "nl-NL" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behoudt de grootte uit de CSS)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 mantém o tamanho do CSS)"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "пт (0 — размер из CSS)"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "b. (0 ponechá veľkosť z CSS)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0 behåller storleken från CSS)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "pt (0, CSS’teki boyutu korur)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "磅（0 表示沿用 CSS 的大小）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "點（0 表示沿用 CSS 的大小）"
+          }
+        }
+      }
+    },
     "Put editor on the right" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12198,97 +12591,133 @@
         }
       }
     },
-    "Sync preview scrollbar when editor scrolls" : {
+    "Sync source and preview scrolling" : {
       "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchronizovat posuvníky editoru a náhledu"
+            "state" : "needs_review",
+            "value" : "Synchronizovat posouvání zdroje a náhledu"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synkroniser rulning af kilde og forhåndsvisning"
           }
         },
         "da-DK" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkroniser preview- og editor rulleskakter"
+            "state" : "needs_review",
+            "value" : "Synkroniser rulning af kilde og forhåndsvisning"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorschau mit dem Editor scrollen"
+            "state" : "needs_review",
+            "value" : "Quelltext und Vorschau gemeinsam scrollen"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar la barra de desplazamiento de la vista previa al desplazar el editor"
+            "state" : "needs_review",
+            "value" : "Sincronizar el desplazamiento del código fuente y la vista previa"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sünkrooni lähteteksti ja eelvaate kerimine"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synkronoi lähdetekstin ja esikatselun vieritys"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchroniser le défilement de la prévisualisation quand l'éditeur défile"
+            "state" : "needs_review",
+            "value" : "Synchroniser le défilement de la source et de la prévisualisation"
+          }
+        },
+        "is" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Samstilla skrun frumtexta og forskoðunar"
           }
         },
         "it-IT" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizza le barra di scorrimento dell'editor e dell'anteprima"
+            "state" : "needs_review",
+            "value" : "Sincronizza lo scorrimento di sorgente e anteprima"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "エディタと連動してプレビューもスクロール"
+            "state" : "needs_review",
+            "value" : "ソースとプレビューのスクロールを同期"
+          }
+        },
+        "ko-KR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "소스와 미리 보기 스크롤 동기화"
           }
         },
         "nb-NO" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkroniser forhåndsvisningas rulling med redigeringsvinduet"
+            "state" : "needs_review",
+            "value" : "Synkroniser rulling av kilde og forhåndsvisning"
           }
         },
         "nl-NL" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sychroniseer voorbeeldscrollbalk tijdens scrollen"
+            "state" : "needs_review",
+            "value" : "Scrollen van bron en voorbeeld synchroniseren"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar a rolagem da visualização quando o editor rolar"
+            "state" : "needs_review",
+            "value" : "Sincronizar a rolagem do código-fonte e da visualização"
+          }
+        },
+        "ru-RU" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Синхронизировать прокрутку исходного текста и предпросмотра"
           }
         },
         "sk" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchronizovať posuvník ukážky pri rolovaní editora"
+            "state" : "needs_review",
+            "value" : "Synchronizovať posúvanie zdroja a ukážky"
           }
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synkronisera förhandsvisnings-scrollning med regierings-vyn's scrollning"
+            "state" : "needs_review",
+            "value" : "Synkronisera rullning av källa och förhandsvisning"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editör kaydırıldığında önizlemeyi de kaydır"
+            "state" : "needs_review",
+            "value" : "Kaynak ve önizleme kaydırmasını eşitle"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "预览窗口同步滚动"
+            "state" : "needs_review",
+            "value" : "同步滚动源文本和预览"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "編輯器捲動時同步預覽捲軸"
+            "state" : "needs_review",
+            "value" : "同步捲動原始文字與預覽"
           }
         }
       }

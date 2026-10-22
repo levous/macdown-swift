@@ -69,10 +69,21 @@ fresh, and the original's plist can be copied over to migrate.
   visible after scrolling (every 100 ms in the original).
 - **Scroll sync** glides the preview after the editor rather than jumping
   (unless reduced motion is on).
+- **Task list checkboxes** in the preview can be clicked: Settings ▸
+  Rendering ▸ "Enable checkbox toggling" (on by default) changes `[ ]` to
+  `[x]` (or back) in the Markdown, as an undoable edit. The original's
+  preview checkboxes were always disabled, as they still are with the
+  setting off and with the hoedown engine.
+- **Base font size**: Settings ▸ Rendering ▸ "Base font size" (0, off, by
+  default) sets the root `html` font size in the preview and exports, so
+  stylesheets in relative units scale with it. The bundled styles size
+  text in `px`, so they don't change with it.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;
-  the split ratio is stored per window.
+  the split ratio is stored per window. New windows open at the size a
+  window was last resized to, if it fits the screen (the original's
+  untitled-window frame, without the position).
 - **Save panel** uses SwiftUI's default name; export panels still suggest a
   name from the front matter title or first heading.
 - Following a link to a missing file with "Automatically create files for

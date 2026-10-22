@@ -15,6 +15,12 @@ public struct MacDownScene: Scene {
             DocumentView(document: file.document, fileURL: file.fileURL)
         }
         .commands { MacDownCommands() }
+        // Windows open at the size the user last gave one (restored windows
+        // keep their own frames).
+        .defaultWindowPlacement { _, context in
+            WindowPlacement(size: DocumentWindowSize.size(
+                fitting: context.defaultDisplay.visibleRect))
+        }
 
         Settings {
             SettingsView()
