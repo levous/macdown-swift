@@ -78,7 +78,11 @@ extension HTMLToMarkdown {
         /// An element's style, or nil if it and its content are left out:
         /// not content, or not shown.
         func visibleStyle(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle? {
-            if Self.droppedElements.contains(element.localName?.lowercased() ?? "") { return nil }
+            let tag = element.localName?.lowercased() ?? ""
+            if Self.droppedElements.contains(tag) { return nil }
+            // A footnote's link back to its reference (↩), as MacDown's
+            // preview writes it, means nothing without the footnote (FR-26).
+            if tag == "a", element.attribute(forName: "rev")?.stringValue == "footnote" { return nil }
             // Material icons are ligatures: their text is the icon's name.
             if let classes = element.attribute(forName: "class")?.stringValue,
                classes.split(separator: " ").contains(where: {

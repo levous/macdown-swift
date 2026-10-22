@@ -8,7 +8,7 @@
     },
     {
       "id": "footnote-list",
-      "reason": "Footnotes aren't round-tripped: the notes become a rule and a numbered list, without their ids or the footnotes div; the back-link keeps its text (Phase 3 drops it).",
+      "reason": "Footnotes aren't round-tripped: the notes become a rule and a numbered list, without their ids or the footnotes div.",
       "find": "<div class=\"footnotes\">(.*?)</div>",
       "replace": "$1"
     },
@@ -20,9 +20,9 @@
     },
     {
       "id": "footnote-back-links",
-      "reason": "Footnotes aren't round-tripped: a note's back-link is an in-page link, which keeps its text.",
-      "find": "<a href=\"#fnref\\d+\" rev=\"footnote\">(.*?)</a>",
-      "replace": "$1"
+      "reason": "Footnotes aren't round-tripped: a note's back-link (↩) is dropped with the space before it (FR-26).",
+      "find": "(?:\\s| )*<a href=\"#fnref\\d+\" rev=\"footnote\">.*?</a>",
+      "replace": ""
     },
     {
       "id": "in-page-links",
