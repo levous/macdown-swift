@@ -1,8 +1,8 @@
-Paste Sample
+# Paste Sample
 
 Generated sample content for clipboard captures (see Tools/capture-pasteboard.swift).
 
-Inline Formatting
+## Inline Formatting
 
 A sentence with **bold text**, *italic text*, ~~struck text~~ and `inline code`. Bold and italic together: ***both at once***.
 
@@ -10,13 +10,13 @@ Links: an [absolute link](https://example.com/guide/start.html), a relative link
 
 An image:
 
-Code
+### Code
 
 let `greeting` = "Hello"
 
 print(`greeting`)
 
-Lists
+## Lists
 
 - First bullet
 - Second bullet
@@ -35,13 +35,13 @@ Lists
 - Finished task
 - Open task
 
-Quotes And Rules
+## Quotes And Rules
 
 A quoted paragraph.
 
 A nested quote.
 
-Tables
+## Tables
 
 | **Name** | **Count** | **Notes** |
 | --- | --- | --- |
