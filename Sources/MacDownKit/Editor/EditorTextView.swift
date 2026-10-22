@@ -41,7 +41,7 @@ public final class EditorTextView: NSTextView {
     /// After a converted paste: the "Paste as Plain Text" button, and what
     /// the paste inserted and the plain text to put there instead (FR-31).
     var plainTextButton: NSButton?
-    var pastedPlainText: (range: NSRange, text: String)?
+    var pastedPlainText: (range: NSRange, inserted: String, text: String)?
 
     private var storedContentRect: NSRect = .zero
     private var trailingHeight: CGFloat = 0
@@ -101,11 +101,15 @@ public final class EditorTextView: NSTextView {
         }
         let widthChanged = size.width != frame.size.width
         super.setFrameSize(size)
-        if widthChanged { frameDidChange?(self) }
+        if widthChanged {
+            frameDidChange?(self)
+            positionPlainTextButton()
+        }
     }
 
     public override var string: String {
         didSet {
+            dismissPlainTextButton()
             if scrollsPastEnd {
                 DispatchQueue.main.async { [weak self] in
                     self?.updateContentGeometry()
@@ -116,6 +120,8 @@ public final class EditorTextView: NSTextView {
 
     public override func didChangeText() {
         super.didChangeText()
+        // Any edit after a converted paste dismisses its plain-text button.
+        dismissPlainTextButton()
         if scrollsPastEnd { updateContentGeometry() }
     }
 

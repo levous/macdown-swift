@@ -611,6 +611,84 @@ extension EditorCodeBlockTests {
         #expect(editor.plainTextButton == nil)
     }
 
+    /// Pastes bold text after "Intro " and returns the editor showing the
+    /// plain-text button.
+    func editorWithPlainTextButton(_ text: String = "Intro ") throws -> EditorTextView {
+        let editor = editor(text)
+        #expect(paste([.html: "<b>bold</b>", .string: "bold"], into: editor))
+        try #require(editor.plainTextButton != nil)
+        return editor
+    }
+
+    /// Typing dismisses the button, and the keystroke goes into the text
+    /// (FR-32).
+    @Test func typingDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.insertText("!", replacementRange: editor.selectedRange())
+        #expect(editor.plainTextButton == nil && editor.pastedPlainText == nil)
+        #expect(editor.string == "Intro **bold**!")
+    }
+
+    /// Escape dismisses the button.
+    @Test func escapeDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.doCommand(by: #selector(NSResponder.cancelOperation(_:)))
+        #expect(editor.plainTextButton == nil)
+        #expect(editor.string == "Intro **bold**")
+    }
+
+    /// Moving the selection within the pasted text keeps the button; out of
+    /// it, dismisses it.
+    @Test func selectionOutsideDismissesThePlainTextButton() throws {
+        let editor = try editorWithPlainTextButton()
+        editor.setSelectedRange(NSRange(location: 8, length: 2))
+        #expect(editor.plainTextButton != nil)
+        editor.setSelectedRange(NSRange(location: 0, length: 0))
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// Scrolling the pasted text out of view dismisses the button.
+    @Test func scrollingAwayDismissesThePlainTextButton() throws {
+        let (scrollView, textView) = EditorTextView.makeScrollableEditor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        defer { withExtendedLifetime(window) {} }
+        window.contentView = scrollView
+        let editor = textView as! EditorTextView
+        editor.pasteOptions = pasteTestOptions
+        editor.string = "Intro \n" + String(repeating: "line\n", count: 300)
+        editor.setSelectedRange(NSRange(location: 6, length: 0))
+        #expect(paste([.html: "<b>bold</b>", .string: "bold"], into: editor))
+        #expect(editor.plainTextButton != nil)
+        editor.layoutManager!.ensureLayout(for: editor.textContainer!)
+        editor.sizeToFit()
+        editor.scroll(NSPoint(x: 0, y: 5))
+        #expect(editor.plainTextButton != nil)
+        editor.scroll(NSPoint(x: 0, y: editor.frame.height - 100))
+        #expect(editor.plainTextButton == nil, "frame \(editor.frame) visible \(editor.visibleRect) button \(editor.plainTextButton?.frame ?? .zero)")
+    }
+
+    /// Another paste, or replacing the text, dismisses the button.
+    @Test func otherChangesDismissThePlainTextButton() throws {
+        var editor = try editorWithPlainTextButton()
+        let pasteboard = pasteboard([.html: "<i>again</i>", .string: "again"])
+        defer { pasteboard.releaseGlobally() }
+        #expect(editor.pasteConverted(from: pasteboard))
+        #expect(editor.pastedPlainText?.text == "again")
+        editor = try editorWithPlainTextButton()
+        editor.string = "reloaded"
+        #expect(editor.plainTextButton == nil)
+    }
+
+    /// A click after the pasted text changed some other way does nothing.
+    @Test func plainTextButtonChecksThePastedText() throws {
+        let editor = try editorWithPlainTextButton()
+        let button = try #require(editor.plainTextButton)
+        editor.textStorage?.replaceCharacters(in: NSRange(location: 6, length: 2), with: "__")
+        button.performClick(nil)
+        #expect(editor.string == "Intro __bold**")
+    }
+
     /// Paste as Markdown converts with the setting off (FR-28).
     @Test func pasteAsMarkdownIgnoresTheSetting() {
         let editor = editor("")

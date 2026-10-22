@@ -115,8 +115,13 @@ extension EditorTextView {
         button.sizeToFit()
         addSubview(button)
         plainTextButton = button
-        pastedPlainText = (range, plainText)
+        pastedPlainText = (range, (string as NSString).substring(with: range), plainText)
         positionPlainTextButton()
+        if let clipView = enclosingScrollView?.contentView {
+            clipView.postsBoundsChangedNotifications = true
+            NotificationCenter.default.addObserver(self, selector: #selector(editorDidScroll(_:)),
+                                                   name: NSView.boundsDidChangeNotification, object: clipView)
+        }
     }
 
     /// Puts the button under the last line of the pasted text.
@@ -143,15 +148,50 @@ extension EditorTextView {
     @objc func pastePlainTextInstead(_ sender: Any?) {
         guard let pasted = pastedPlainText else { return }
         dismissPlainTextButton()
+        let text = string as NSString
+        guard NSMaxRange(pasted.range) <= text.length, text.substring(with: pasted.range) == pasted.inserted
+        else { return }
         breakUndoCoalescing()
         insertText(pasted.text, replacementRange: pasted.range)
         breakUndoCoalescing()
     }
 
+    /// Removes the button, and lets go of the pasted range and plain text
+    /// (FR-32). It stays until then: there's no timeout.
     func dismissPlainTextButton() {
-        plainTextButton?.removeFromSuperview()
+        guard let button = plainTextButton else { return }
+        button.removeFromSuperview()
         plainTextButton = nil
         pastedPlainText = nil
+        NotificationCenter.default.removeObserver(self, name: NSView.boundsDidChangeNotification, object: nil)
+    }
+
+    /// Escape (`cancelOperation:`, which a text view handles as a command)
+    /// dismisses the button; otherwise it does what it always does.
+    public override func doCommand(by selector: Selector) {
+        if selector == #selector(NSResponder.cancelOperation(_:)), plainTextButton != nil {
+            dismissPlainTextButton()
+        } else {
+            super.doCommand(by: selector)
+        }
+    }
+
+    /// Moving the selection out of the pasted text dismisses the button.
+    public override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity,
+                                           stillSelecting: Bool) {
+        super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
+        guard let pasted = pastedPlainText else { return }
+        let inside = ranges.allSatisfy { value in
+            let range = value.rangeValue
+            return range.location >= pasted.range.location && NSMaxRange(range) <= NSMaxRange(pasted.range)
+        }
+        if !inside { dismissPlainTextButton() }
+    }
+
+    /// Scrolling the button out of view dismisses it.
+    @objc private func editorDidScroll(_ notification: Notification) {
+        guard let button = plainTextButton else { return }
+        if !visibleRect.intersects(button.frame) { dismissPlainTextButton() }
     }
 
     /// What to add around pasted blocks (ending in a newline) at `range` so
