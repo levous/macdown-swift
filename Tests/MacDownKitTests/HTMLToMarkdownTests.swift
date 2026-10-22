@@ -846,3 +846,30 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
                     == "One\n\nTwo\n")
     }
 }
+
+/// Web pages (FR-25).
+@Suite struct HTMLToMarkdownWebTests {
+    /// Lazily loaded images name their source in srcset or data-src.
+    @Test func imagesWithoutSrc() {
+        #expect(markdown(#"<p><img srcset="a.png 1x, a@2x.png 2x" alt="A"></p>"#) == "![A](a.png)")
+        #expect(markdown(#"<p><img data-src="b.png" alt="B"></p>"#) == "![B](b.png)")
+        #expect(markdown(#"<p><img alt="none"></p><p>x</p>"#) == "x")
+    }
+
+    /// Icon fonts: Private Use Area glyphs and Material icon names aren't
+    /// text.
+    @Test func iconFonts() {
+        #expect(markdown("<p><span class=\"icon\">\u{F015}</span> Home</p>") == "Home")
+        #expect(markdown(#"<p><span class="material-icons">search</span>Search</p>"#) == "Search")
+        #expect(markdown(#"<p><span class="material-symbols-outlined">home</span> Home</p>"#) == "Home")
+    }
+
+    /// The fixture's links resolve against the page, in-page links keep
+    /// their text and icon-only anchors disappear (see the fixture test).
+    @Test func relativeLinksUseTheBaseElement() {
+        var options = pasteTestOptions
+        options.baseURL = URL(string: "https://e.com/docs/guide/")
+        #expect(markdown(##"<p><a href="../api/">API</a> and <a href="#top">top</a></p>"##, options)
+                    == "[API](https://e.com/docs/api/) and top")
+    }
+}

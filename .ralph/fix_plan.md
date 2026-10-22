@@ -77,7 +77,7 @@ task can only be verified by UI control, stop and ask the user to enable it.
 - [x] Google Docs (FR-22): wrapper bold cancelled by `font-weight:normal`; styles on spans for bold/italic/strike/monospace; real `h*` headings; nested lists
 - [x] Word HTML (FR-23): drop `mso-*`, conditional comments, `o:p`; rebuild nested bulleted/numbered lists from `mso-list: lN levelM` paragraphs, dropping the hidden bullet span
 - [x] Pages / TextEdit via RTF (FR-24): fixture tests over the Phase 1 effective-styles pass (class-based bold, italic, monospace); AppKit `ul`/`ol` lists for `NSTextList`
-- [ ] Web pages (FR-25): resolve relative `href`/`src` against the source URL (`public.url`, `org.chromium.source-url`, `<base href>`); `<picture>`/`srcset` → `img src`; skip icon-font glyphs; in-page `#anchor` links text only
+- [x] Web pages (FR-25): resolve relative `href`/`src` against the source URL (`public.url`, `org.chromium.source-url`, `<base href>`); `<picture>`/`srcset` → `img src`; skip icon-font glyphs; in-page `#anchor` links text only
 - [ ] MacDown preview (FR-26): Prism token spans → code text, language kept from the `pre`/`code` class; task checkboxes restored; footnote markup → plain text without links, and the `rev="footnote"` back-link (↩) dropped entirely, as the fixture's `expected.md` has it; `data-source-line` ignored; test by rendering `help.md` sections and converting back
 - [ ] Code editors (FR-6): fixture tests for VS Code, Xcode, Terminal (and JetBrains if captured) paste exactly the plain text
 - [ ] Notion and Safari/Chrome real captures: add expected `.md` and make them pass (BLOCKED: awaiting HUMAN clipboard captures in Phase 0)

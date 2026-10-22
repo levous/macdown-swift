@@ -79,6 +79,13 @@ extension HTMLToMarkdown {
         /// not content, or not shown.
         func visibleStyle(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle? {
             if Self.droppedElements.contains(element.localName?.lowercased() ?? "") { return nil }
+            // Material icons are ligatures: their text is the icon's name.
+            if let classes = element.attribute(forName: "class")?.stringValue,
+               classes.split(separator: " ").contains(where: {
+                   $0 == "material-icons" || $0.hasPrefix("material-icons-") || $0.hasPrefix("material-symbols")
+               }) {
+                return nil
+            }
             return HTMLToMarkdown.resolvedStyle(of: element, inheriting: parent, styleSheet: styleSheet)
         }
 
@@ -231,6 +238,17 @@ extension HTMLToMarkdown {
             return state
         }
 
+        /// An image's address: its `src`, or for lazily loaded images, the
+        /// first in its `srcset` or its `data-src` (FR-25).
+        static func imageSource(_ image: XMLElement) -> String? {
+            if let source = image.attribute(forName: "src")?.stringValue, !source.isEmpty { return source }
+            if let set = image.attribute(forName: "srcset")?.stringValue,
+               let first = set.split(separator: ",").first?.split(whereSeparator: \.isWhitespace).first {
+                return String(first)
+            }
+            return image.attribute(forName: "data-src")?.stringValue
+        }
+
         /// A `pre` element's text, verbatim, as a code block (FR-13).
         static func codeBlock(_ pre: XMLElement) -> Block? {
             var text = ""
@@ -302,7 +320,7 @@ extension HTMLToMarkdown {
             if tag == "br" { return [.lineBreak] }
             if tag == "img" {
                 // Kept as an address, never fetched (FR-34).
-                guard let source = element.attribute(forName: "src")?.stringValue,
+                guard let source = Self.imageSource(element),
                       let link = link(source, title: element.attribute(forName: "title")?.stringValue)
                 else { return [] }
                 let alt = element.attribute(forName: "alt")?.stringValue ?? ""
@@ -388,6 +406,9 @@ extension HTMLToMarkdown {
                 }
                 var collapsed = ""
                 for character in text {
+                    // Icon fonts' glyphs, in the Private Use Areas, aren't
+                    // text (code keeps them: terminals use them).
+                    if !style.monospace, character.unicodeScalars.contains(where: Self.isPrivateUse) { continue }
                     if character == " " || character == "\t" || character.isNewline {
                         if !endsWithSpace { collapsed.append(" ") }
                         endsWithSpace = true
@@ -399,6 +420,10 @@ extension HTMLToMarkdown {
                 if !collapsed.isEmpty { result.append(.text(collapsed, style)) }
             }
             return result
+        }
+
+        static func isPrivateUse(_ scalar: Unicode.Scalar) -> Bool {
+            (0xE000...0xF8FF).contains(scalar.value) || scalar.value >= 0xF0000
         }
 
         /// Removes whitespace and line breaks at the start and end of a run
