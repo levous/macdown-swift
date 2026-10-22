@@ -95,6 +95,8 @@ fresh, and the original's plist can be copied over to migrate.
 - **Formatting commands on a whole span:** with formatted text selected
   markers and all (`**Header**`), Bold and the other inline formats act as
   they do on the text alone: the same format is removed, others go inside.
+  With formats nested (`**~~word~~**`), the one chosen is removed where it
+  is, and Undo restores the span in one step.
   The original wrapped the selection again (`****Header****`). Link and
   Image still wrap the whole selection.
 - **Ensure newline at end of file** adds the newline to the saved file

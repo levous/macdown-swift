@@ -218,7 +218,10 @@ extension NSTextView {
     /// outside them), so selecting a whole formatted span, `**Header**`,
     /// acts like selecting its text, `Header`. Unchanged when no pair
     /// encloses the whole selection: `**a** and **b**` is two spans, not one.
-    func rangeInsideMarkup(_ range: NSRange) -> NSRange {
+    /// Peeling stops just inside `stoppingAt` when it's one of the pairs, so
+    /// toggling it off `**~~word~~**` removes the outer `**` rather than
+    /// wrapping `word` in another.
+    func rangeInsideMarkup(_ range: NSRange, stoppingAt markup: (prefix: String, suffix: String)? = nil) -> NSRange {
         let content = nsString
         var start = range.location, end = NSMaxRange(range)
         func isSpace(_ index: Int) -> Bool {
@@ -240,6 +243,7 @@ extension NSTextView {
                 start += p
                 end -= s
                 stripped = true
+                if let markup, markup.prefix == prefix, markup.suffix == suffix { break peeling }
                 continue peeling
             }
             break
@@ -273,7 +277,8 @@ extension NSTextView {
     /// - Returns: Whether the markup is now on.
     @discardableResult
     public func toggleForMarkup(prefix: String, suffix: String, entersSpans: Bool = true) -> Bool {
-        var range = entersSpans ? rangeInsideMarkup(selectedRange()) : selectedRange()
+        var range = entersSpans
+            ? rangeInsideMarkup(selectedRange(), stoppingAt: (prefix, suffix)) : selectedRange()
         let selection = nsString.substring(with: range)
         let poff = (prefix as NSString).length
         let isOn: Bool

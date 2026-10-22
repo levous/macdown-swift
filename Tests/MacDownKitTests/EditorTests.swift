@@ -327,6 +327,45 @@ func highlightElements(_ text: String) -> HighlightElements {
         #expect(toggled("*a **b** c*", selecting: "*a **b** c*", italic).text == "a **b** c")
     }
 
+    /// With different markers nested, the one toggled is removed where it
+    /// is, outside or inside, and a new one goes inside them all.
+    @Test func nestedMixedMarkers() {
+        let bold = Self.markups[0], strike = Self.markups[2], code = Self.markups[3], underline = Self.markups[4]
+        #expect(toggled("x **~~word~~** y", selecting: "**~~word~~**", bold) == ("x ~~word~~ y", "~~word~~"))
+        #expect(toggled("x **~~word~~** y", selecting: "**~~word~~**", strike) == ("x **word** y", "word"))
+        #expect(toggled("**<u>x</u>**", selecting: "**<u>x</u>**", bold) == ("<u>x</u>", "<u>x</u>"))
+        #expect(toggled("**<u>x</u>**", selecting: "**<u>x</u>**", underline) == ("**x**", "x"))
+        #expect(toggled("**~~word~~**", selecting: "**~~word~~**", code) == ("**~~`word`~~**", "word"))
+    }
+
+    /// Offsets are UTF-16, so text outside the BMP inside or around the
+    /// span doesn't shift the markers.
+    @Test func wholeSpansWithEmojiAndAccents() {
+        let bold = Self.markups[0], strike = Self.markups[2]
+        #expect(toggled("🎉 **café 👩‍💻** ✓", selecting: "**café 👩‍💻**", bold) == ("🎉 café 👩‍💻 ✓", "café 👩‍💻"))
+        #expect(toggled("**~~ünïcødé 🚀~~**", selecting: "**~~ünïcødé 🚀~~**", strike) == ("**ünïcødé 🚀**", "ünïcødé 🚀"))
+    }
+
+    /// Spans at the very start and end of the document.
+    @Test func wholeSpanAtDocumentEdges() {
+        let bold = Self.markups[0]
+        #expect(toggled("**all**", selecting: "**all**", bold) == ("all", "all"))
+        #expect(toggled("start **end**", selecting: "**end**", bold) == ("start end", "end"))
+        #expect(toggled("**start** end", selecting: "**start**", bold) == ("start end", "start"))
+    }
+
+    /// One Undo puts the whole span back.
+    @Test func undoRestoresTheWholeSpan() {
+        let tv = makeTextView("x **word** y", selection: NSRange(location: 2, length: 8))
+        tv.allowsUndo = true
+        let window = NSWindow(contentRect: tv.frame, styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = tv
+        tv.toggleForMarkup(prefix: "**", suffix: "**")
+        #expect(tv.string == "x word y")
+        tv.undoManager?.undo()
+        #expect(tv.string == "x **word** y")
+    }
+
     /// Spaces at the edges of the selection don't count.
     @Test func spacesAroundTheSpan() {
         let result = toggled("x **Header 1** y", selecting: " **Header 1** ", Self.markups[0])
