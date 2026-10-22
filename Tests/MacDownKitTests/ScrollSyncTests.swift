@@ -211,7 +211,7 @@ extension LiveDocumentTests {
         }
     }
 
-    /// Phase 4 check: help.md (with its fence-in-code-span case) and the
+    /// help.md (with its fence-in-code-span case) and the
     /// image-heavy corpus document stay aligned with unequal pane widths,
     /// in both directions, at several points.
     @Test(arguments: ["help.md", "19-images.md"])

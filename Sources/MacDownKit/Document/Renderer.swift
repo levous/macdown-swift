@@ -296,7 +296,7 @@ public enum PageBuilder {
              linkTransform: linkTransform)
     }
 
-    /// HTML without the preview's `data-source-line` attributes (FR-18),
+    /// HTML without the preview's `data-source-line` attributes,
     /// for export and copying.
     public static func withoutSourceLines(_ html: String) -> String {
         guard html.contains(" data-source-line=") else { return html }
@@ -395,7 +395,7 @@ public final class Renderer {
     private nonisolated static func parse(
         _ markdown: String, _ settings: ParseSettings
     ) -> (ParseResult, MarkdownDocumentModel?) {
-        // One cmark-gfm parse for the preview and the editor (FR-20, NFR-3).
+        // One cmark-gfm parse for the preview and the editor.
         var options = MarkdownDocumentModel.Options(settings)
         options.sourceLines = true
         let model = MarkdownDocumentModel(markdown, options: options)

@@ -2,7 +2,7 @@
 //  CMarkTree.swift
 //  MacDownKit
 //
-//  One cmark-gfm parse (Decision 10): the C tree, walked in place by the
+//  One cmark-gfm parse: the C tree, walked in place by the
 //  model, the highlighter and the renderer inside the parse task. Neither
 //  the tree nor its nodes are Sendable; only what's built from them leaves.
 //

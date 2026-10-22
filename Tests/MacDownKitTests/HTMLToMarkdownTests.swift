@@ -2,7 +2,7 @@
 //  HTMLToMarkdownTests.swift
 //  MacDownKitTests
 //
-//  Converting pasted HTML to Markdown (paste intent, FR-9 to FR-21).
+//  Converting pasted HTML to Markdown.
 //
 
 import AppKit
@@ -179,7 +179,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Whitespace as a browser shows it (FR-20).
+/// Whitespace as a browser shows it.
 @Suite struct HTMLToMarkdownTextTests {
     @Test func whitespaceCollapses() {
         #expect(markdown("<p>  Hello\n   wide\tworld  </p>") == "Hello wide world")
@@ -201,7 +201,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Characters are escaped only where they'd change the Markdown (FR-20).
+/// Characters are escaped only where they'd change the Markdown.
 @Suite struct HTMLToMarkdownEscapingTests {
     func escaped(_ text: String) -> String {
         HTMLToMarkdown.Renderer.escape(text, atLineStart: true)
@@ -251,7 +251,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
 }
 
 /// Blocks are separated by one blank line, with no blank lines at the
-/// start, and a trailing newline only after blocks (FR-9, FR-21).
+/// start, and a trailing newline only after blocks.
 @Suite struct HTMLToMarkdownOutputTests {
     let renderer = HTMLToMarkdown.Renderer(options: pasteTestOptions)
     typealias Block = HTMLToMarkdown.Block
@@ -273,7 +273,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Headings, paragraphs and line breaks (FR-10, FR-20).
+/// Headings, paragraphs and line breaks.
 @Suite struct HTMLToMarkdownHeadingTests {
     @Test func atxHeadings() {
         #expect(markdown("<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>")
@@ -316,7 +316,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Bold, italic and strikethrough (FR-11).
+/// Bold, italic and strikethrough.
 @Suite struct HTMLToMarkdownEmphasisTests {
     @Test func markers() {
         #expect(markdown("<p><b>bold</b> and <i>italic</i> and <s>struck</s></p>") == "**bold** and *italic* and ~~struck~~")
@@ -363,7 +363,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Code and monospace text (FR-12).
+/// Code and monospace text.
 @Suite struct HTMLToMarkdownInlineCodeTests {
     @Test func codeSpans() {
         #expect(markdown("<p>Run <code>make install</code> now, press <kbd>⌘K</kbd></p>") == "Run `make install` now, press `⌘K`")
@@ -406,7 +406,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Preformatted text as fenced code blocks (FR-13).
+/// Preformatted text as fenced code blocks.
 @Suite struct HTMLToMarkdownCodeBlockTests {
     @Test func fencedWithLanguage() {
         #expect(markdown(#"<pre><code class="language-swift">let a = 1&#10;print(a)&#10;</code></pre>"#)
@@ -440,7 +440,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Links (FR-14).
+/// Links.
 @Suite struct HTMLToMarkdownLinkTests {
     @Test func inlineLinks() {
         #expect(markdown(#"<p>Read <a href="https://example.com/x" title="X">the guide</a>.</p>"#)
@@ -487,7 +487,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Images keep their address and are never fetched (FR-15, FR-34).
+/// Images keep their address and are never fetched.
 @Suite struct HTMLToMarkdownImageTests {
     @Test func images() {
         #expect(markdown(#"<p><img src="https://e.com/a.png" alt="A pic" title="T"></p>"#) == #"![A pic](https://e.com/a.png "T")"#)
@@ -516,7 +516,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Bulleted and numbered lists (FR-16).
+/// Bulleted and numbered lists.
 @Suite struct HTMLToMarkdownListTests {
     func options(_ marker: String, _ indent: String = "    ") -> HTMLToMarkdown.Options {
         .init(listMarker: marker, indent: indent)
@@ -586,7 +586,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Task lists (FR-16).
+/// Task lists.
 @Suite struct HTMLToMarkdownTaskListTests {
     @Test func checkboxes() {
         #expect(markdown(#"<ul><li><input type="checkbox" checked> Done</li><li><input type="checkbox"> Open</li></ul>"#)
@@ -608,7 +608,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Block quotes and rules (FR-17).
+/// Block quotes and rules.
 @Suite struct HTMLToMarkdownQuoteTests {
     @Test func quotes() {
         #expect(markdown("<blockquote><p>Quoted</p></blockquote>") == "> Quoted\n")
@@ -637,7 +637,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Tables (FR-18).
+/// Tables.
 @Suite struct HTMLToMarkdownTableTests {
     @Test func pipeTables() {
         #expect(markdown(#"<table><thead><tr><th>Name</th><th align="right">Count</th></tr></thead><tbody><tr><td>Apples</td><td>3</td></tr></tbody></table>"#)
@@ -712,7 +712,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
 }
 
 /// Formatting without a Markdown equivalent keeps its text; what isn't
-/// content is dropped (FR-19).
+/// content is dropped.
 @Suite struct HTMLToMarkdownDroppedTests {
     @Test func formattingWithoutEquivalentKeepsText() {
         #expect(markdown("<p>H<sub>2</sub>O and x<sup>2</sup>, <u>under</u>, <mark>hi</mark>, <font color=red>red</font>, <span style=\"color: blue; font-size: 20px\">big</span></p>")
@@ -772,7 +772,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
 }
 
 /// Code copied from a code editor or terminal is pasted as it is: all its
-/// text is monospace, without structure (FR-6).
+/// text is monospace, without structure.
 @MainActor @Suite struct HTMLToMarkdownCodeDetectionTests {
     func isCode(_ html: String) -> Bool {
         HTMLToMarkdown(options: pasteTestOptions).convert(html)?.isCode ?? false
@@ -812,7 +812,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Word's list paragraphs (FR-23).
+/// Word's list paragraphs.
 @Suite struct HTMLToMarkdownWordTests {
     static func item(_ level: Int, _ list: Int = 0, bullet: String, _ text: String) -> String {
         "<p class=MsoListParagraph style='margin-left:\(level * 36)pt;text-indent:-18pt;mso-list:l\(list) level\(level) lfo1'>"
@@ -847,7 +847,7 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
-/// Web pages (FR-25).
+/// Web pages.
 @Suite struct HTMLToMarkdownWebTests {
     /// Lazily loaded images name their source in srcset or data-src.
     @Test func imagesWithoutSrc() {

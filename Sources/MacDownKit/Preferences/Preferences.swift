@@ -115,7 +115,7 @@ public final class Preferences {
 
     public var previewZoomRelativeToBaseFontSize = false { didSet { save(previewZoomRelativeToBaseFontSize, .previewZoomRelativeToBaseFontSize) } }
 
-    /// Not shown in Settings (FR-32).
+    /// Not shown in Settings.
 
     // MARK: HTML rendering
 

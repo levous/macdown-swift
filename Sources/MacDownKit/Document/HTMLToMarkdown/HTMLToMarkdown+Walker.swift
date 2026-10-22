@@ -68,8 +68,7 @@ extension HTMLToMarkdown {
             "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul",
         ]
 
-        /// Elements that aren't content, dropped with everything in them
-        /// (FR-19).
+        /// Elements that aren't content, dropped with everything in them.
         static let droppedElements: Set<String> = [
             "audio", "button", "canvas", "embed", "head", "iframe", "link", "meta", "noscript",
             "object", "script", "select", "style", "svg", "template", "title", "video",
@@ -81,7 +80,7 @@ extension HTMLToMarkdown {
             let tag = element.localName?.lowercased() ?? ""
             if Self.droppedElements.contains(tag) { return nil }
             // A footnote's link back to its reference (↩), as MacDown's
-            // preview writes it, means nothing without the footnote (FR-26).
+            // preview writes it, means nothing without the footnote.
             if tag == "a", element.attribute(forName: "rev")?.stringValue == "footnote" { return nil }
             // Material icons are ligatures: their text is the icon's name.
             if let classes = element.attribute(forName: "class")?.stringValue,
@@ -174,7 +173,7 @@ extension HTMLToMarkdown {
             return blocks(in: element, style: style)
         }
 
-        /// A `ul` or `ol` as a list (FR-16). Empty items are dropped, and an
+        /// A `ul` or `ol` as a list. Empty items are dropped, and an
         /// item holding only lists (Tidy's repair of a list directly inside
         /// a list, as Google Docs writes it) joins the previous item.
         func list(_ element: XMLElement, style: TextStyle) -> [Block] {
@@ -243,7 +242,7 @@ extension HTMLToMarkdown {
         }
 
         /// An image's address: its `src`, or for lazily loaded images, the
-        /// first in its `srcset` or its `data-src` (FR-25).
+        /// first in its `srcset` or its `data-src`.
         static func imageSource(_ image: XMLElement) -> String? {
             if let source = image.attribute(forName: "src")?.stringValue, !source.isEmpty { return source }
             if let set = image.attribute(forName: "srcset")?.stringValue,
@@ -253,7 +252,7 @@ extension HTMLToMarkdown {
             return image.attribute(forName: "data-src")?.stringValue
         }
 
-        /// A `pre` element's text, verbatim, as a code block (FR-13).
+        /// A `pre` element's text, verbatim, as a code block.
         static func codeBlock(_ pre: XMLElement) -> Block? {
             var text = ""
             func visit(_ node: XMLNode) {
@@ -323,7 +322,7 @@ extension HTMLToMarkdown {
             let tag = element.localName?.lowercased() ?? ""
             if tag == "br" { return [.lineBreak] }
             if tag == "img" {
-                // Kept as an address, never fetched (FR-34).
+                // Kept as an address, never fetched.
                 guard let source = Self.imageSource(element),
                       let link = link(source, title: element.attribute(forName: "title")?.stringValue)
                 else { return [] }
@@ -339,8 +338,7 @@ extension HTMLToMarkdown {
         }
 
         /// A link to `href`, resolved against the base URL; nil for scripts
-        /// and links within the copied page, which keep only their text
-        /// (FR-14).
+        /// and links within the copied page, which keep only their text.
         func link(_ href: String, title: String?) -> Link? {
             let href = href.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !href.isEmpty, !href.hasPrefix("#"), !href.lowercased().hasPrefix("javascript:")

@@ -2,7 +2,7 @@
 //  HTMLRendererTests.swift
 //  MacDownKitTests
 //
-//  The cmark-gfm renderer writes hoedown's markup (TR-5), checked against
+//  The cmark-gfm renderer writes hoedown's markup, checked against
 //  hoedown's recorded output (EngineSnapshots).
 //
 
@@ -31,7 +31,7 @@ import Testing
     }
 
     /// Where CommonMark and hoedown agree, the output is hoedown's, byte
-    /// for byte (TR-5).
+    /// for byte.
     nonisolated static let byteForByte = [
         "# One\n\nText *em* **strong** `code`.\n\n## Two\n",
         "- a\n- b\n",
@@ -72,7 +72,7 @@ import Testing
         #expect(html(text) == (try EngineSnapshots.value("render/" + text)))
     }
 
-    /// Front matter (FR-15): a valid YAML block is a table before the body;
+    /// Front matter: a valid YAML block is a table before the body;
     /// otherwise it's Markdown. Same as hoedown.
     @Test(arguments: ["09-front-matter.md", "11-leading-rule.md"])
     func frontMatter(_ name: String) throws {
@@ -89,7 +89,7 @@ import Testing
         #expect(body.hasPrefix("<hr>\n\n<h2 id=\"toc_0\">title: &quot;unterminated\ntags: [one, two</h2>"))
     }
 
-    /// [TOC] (FR-12) with the setting on: hoedown's nested lists, the
+    /// [TOC] with the setting on: hoedown's nested lists, the
     /// outer one classed "toc", linking to the toc_N header ids.
     @Test func tableOfContents() throws {
         var settings = CorpusTests.settings
@@ -102,7 +102,7 @@ import Testing
         #expect(!html("[TOC]\n\n# A\n").contains("class=\"toc\""))    // off by default
     }
 
-    /// Hard wrap (FR-13): with the setting on, a soft break is <br>.
+    /// Hard wrap: with the setting on, a soft break is <br>.
     @Test func hardWrap() throws {
         var settings = CorpusTests.settings
         settings.hardWrap = true
@@ -116,7 +116,7 @@ import Testing
                 == "<ul>\n<li>a<br>\nb</li>\n</ul>\n")
     }
 
-    /// Math (FR-14): put back in MathJax's delimiters, content escaped, as
+    /// Math: put back in MathJax's delimiters, content escaped, as
     /// hoedown did, untouched by Markdown.
     @Test(arguments: [false, true])
     func math(inlineDollar: Bool) throws {
@@ -129,7 +129,7 @@ import Testing
         }
     }
 
-    /// Autolink (FR-8a): bare URLs and emails only with the setting on;
+    /// Autolink: bare URLs and emails only with the setting on;
     /// <url> always.
     @Test func autolinks() throws {
         let text = Self.autolinkText
@@ -141,7 +141,7 @@ import Testing
         #expect(on == (try EngineSnapshots.value("autolink")))
     }
 
-    /// Smart punctuation (FR-17): curly quotes, dashes and ellipses with
+    /// Smart punctuation: curly quotes, dashes and ellipses with
     /// the setting on, never in code. cmark writes the characters where
     /// hoedown wrote entities, so compare with entities decoded.
     @Test func smartPunctuation() throws {
@@ -154,7 +154,7 @@ import Testing
         #expect(HTMLDiff.normalize(cmark) == HTMLDiff.normalize(try EngineSnapshots.value("smart-punctuation")))
     }
 
-    /// Highlight and superscript (FR-19, FR-19a): in plain text, with their
+    /// Highlight and superscript: in plain text, with their
     /// settings on.
     @Test func highlightAndSuperscript() throws {
         let text = Self.markText
@@ -166,7 +166,7 @@ import Testing
         #expect(cmark == (try EngineSnapshots.value("highlight-superscript")))
     }
 
-    /// Source lines (FR-18): every block in the preview names its first
+    /// Source lines: every block in the preview names its first
     /// source line; exports don't.
     @Test func sourceLines() {
         let text = "# Title\n\nPara\ngraph.\n\n> quote\n\n- a\n- b\n\n```\ncode\n```\n\n| t |\n|---|\n| 1 |\n\n---\n"
@@ -215,7 +215,7 @@ import Testing
     }
 }
 
-/// The renderer collects the Prism languages hoedown did (FR-10).
+/// The renderer collects the Prism languages hoedown did.
 @MainActor @Suite struct PrismLanguageTests {
     @Test(arguments: try Corpus.all())
     func sameLanguagesAsHoedown(_ document: Corpus.Document) throws {

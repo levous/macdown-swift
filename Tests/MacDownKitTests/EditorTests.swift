@@ -372,7 +372,7 @@ func highlightElements(_ text: String) -> HighlightElements {
     }
 }
 
-/// Images embedded as data URIs (dropped files, pasted data; FR-33).
+/// Images embedded as data URIs (dropped files, pasted data).
 @Suite struct ImageMarkupTests {
     @Test func dataURI() {
         #expect(ImageMarkup.dataURI(Data([1, 2, 3]), mime: "image/png") == "![](data:image/png;base64,AQID)")
@@ -392,7 +392,7 @@ func highlightElements(_ text: String) -> HighlightElements {
     }
 }
 
-/// Pasting inside a code block pastes plain text (FR-5): the editor knows
+/// Pasting inside a code block pastes plain text: the editor knows
 /// where code blocks are from the latest parse, or by scanning for fences
 /// when the parse is behind the text.
 @MainActor @Suite struct EditorCodeBlockTests {
@@ -448,8 +448,8 @@ extension EditorCodeBlockTests {
     }
 }
 
-/// Pasting formatted text and images (FR-1 to FR-3, FR-6, FR-9, FR-33,
-/// FR-34). Each test uses its own named pasteboard.
+/// Pasting formatted text and images. Each test uses its own named
+/// pasteboard.
 @MainActor @Suite struct EditorPasteTests {
     func editor(_ text: String, selection: NSRange? = nil) -> EditorTextView {
         let (_, textView) = EditorTextView.makeScrollableEditor()
@@ -524,7 +524,7 @@ extension EditorCodeBlockTests {
     }
 
     /// Services and drops from other apps read through readSelection, as
-    /// Paste does (FR-8); Paste and Match Style reads plain text (FR-4).
+    /// Paste does; Paste and Match Style reads plain text.
     @Test func readSelectionConverts() {
         let types: [NSPasteboard.PasteboardType: String] = [.html: "<b>x</b>", .string: "x"]
         var editor = editor("")
@@ -548,7 +548,7 @@ extension EditorCodeBlockTests {
     }
 
     /// Formatted text dropped from another app is converted where it's
-    /// dropped (FR-8).
+    /// dropped.
     @Test func dropsConvert() {
         let (scrollView, textView) = EditorTextView.makeScrollableEditor()
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
@@ -566,8 +566,7 @@ extension EditorCodeBlockTests {
         #expect(editor.string == "**x**first line\nsecond line")
     }
 
-    /// After a converted paste, a button offers the plain text instead
-    /// (FR-31).
+    /// After a converted paste, a button offers the plain text instead.
     @Test func plainTextButton() throws {
         let editor = editor("Intro\n\n")
         #expect(paste([.html: "<p><b>bold</b> text</p>", .string: "bold text"], into: editor))
@@ -621,8 +620,7 @@ extension EditorCodeBlockTests {
         return editor
     }
 
-    /// Typing dismisses the button, and the keystroke goes into the text
-    /// (FR-32).
+    /// Typing dismisses the button, and the keystroke goes into the text.
     @Test func typingDismissesThePlainTextButton() throws {
         let editor = try editorWithPlainTextButton()
         editor.insertText("!", replacementRange: editor.selectedRange())
@@ -690,7 +688,7 @@ extension EditorCodeBlockTests {
         #expect(editor.string == "Intro __bold**")
     }
 
-    /// Paste as Markdown converts with the setting off (FR-28).
+    /// Paste as Markdown converts with the setting off.
     @Test func pasteAsMarkdownIgnoresTheSetting() {
         let editor = editor("")
         editor.convertsPastedFormatting = false
@@ -701,7 +699,7 @@ extension EditorCodeBlockTests {
         #expect(editor.responds(to: #selector(EditorTextView.pasteAsMarkdown(_:))))
     }
 
-    /// Image data is pasted as a data URI, whatever the setting (FR-34).
+    /// Image data is pasted as a data URI, whatever the setting.
     @Test func images() {
         for converts in [true, false] {
             let editor = editor("See ")

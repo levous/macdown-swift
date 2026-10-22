@@ -21,8 +21,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
-        // The Markdown parser (docs/intents/swift-markdown-migration.md,
-        // Decision 10), pinned exactly: the renderer tests and the paste round
+        // The Markdown parser (see docs/ARCHITECTURE.md, "Parse with cmark-gfm
+        // directly"), pinned exactly: the renderer tests and the paste round
         // trip compare its output byte for byte.
         .package(url: "https://github.com/swiftlang/swift-cmark.git", exact: "0.9.0"),
     ],

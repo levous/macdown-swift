@@ -2,9 +2,9 @@
 //  PasteLiveTests.swift
 //  MacDownKitTests
 //
-//  Paste, Paste and Match Style and Paste as Markdown in a real document
-//  (paste intent, FR-1 to FR-9, FR-28, FR-33, FR-34). These use the general
-//  pasteboard, as the menu actions do, and put back what was on it.
+//  Paste, Paste and Match Style and Paste as Markdown in a real document:
+//  formatted text, code, images and undo. These use the general pasteboard,
+//  as the menu actions do, and put back what was on it.
 //
 
 import AppKit
@@ -61,7 +61,7 @@ extension LiveDocumentTests {
                                                              .string: Data("bold text".utf8)]
 
     /// A paste after typing is undone on its own, and marks the document
-    /// changed (FR-7, FR-9).
+    /// changed.
     @Test func pasteIsItsOwnUndoStep() async {
         await withDocument("Intro ") { controller in
             let editor = controller.editor
@@ -86,7 +86,7 @@ extension LiveDocumentTests {
     }
 
     /// The plain-text button's swap is undone on its own: Undo brings
-    /// back the Markdown, then removes the paste (FR-31).
+    /// back the Markdown, then removes the paste.
     @Test func plainTextButtonUndo() async throws {
         try await withDocument("Intro ") { controller in
             let editor = controller.editor
@@ -102,7 +102,7 @@ extension LiveDocumentTests {
         }
     }
 
-    /// Paste and Match Style pastes the plain text (FR-4).
+    /// Paste and Match Style pastes the plain text.
     @Test func pasteAndMatchStyleIsPlain() async {
         await withDocument("") { controller in
             await withClipboard(Self.bold) { controller.editor.pasteAsPlainText(nil) }
@@ -110,7 +110,7 @@ extension LiveDocumentTests {
         }
     }
 
-    /// Inside a code block, Paste pastes the plain text (FR-5).
+    /// Inside a code block, Paste pastes the plain text.
     @Test func pasteInCodeBlockIsPlain() async {
         await withDocument("```\n") { controller in
             await withClipboard(Self.bold) { controller.editor.paste(nil) }
@@ -118,8 +118,7 @@ extension LiveDocumentTests {
         }
     }
 
-    /// With the setting off, Paste is plain and Paste as Markdown converts
-    /// (FR-27, FR-28).
+    /// With the setting off, Paste is plain and Paste as Markdown converts.
     @Test func settingOff() async {
         await withDocument("") { controller in
             Preferences.shared.editorConvertsPastedFormatting = false
@@ -133,7 +132,7 @@ extension LiveDocumentTests {
     }
 
     /// Image data is pasted as a data URI, whatever the setting; TIFF as
-    /// PNG (FR-33, FR-34).
+    /// PNG.
     @Test(arguments: [true, false])
     func images(converts: Bool) async throws {
         let image = NSImage(size: NSSize(width: 2, height: 2), flipped: false) { rect in

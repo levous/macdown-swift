@@ -2,7 +2,7 @@
 //  HTMLToMarkdown+Word.swift
 //  MacDownKit
 //
-//  Word's lists (FR-23): Word writes each list item as a paragraph styled
+//  Word's lists: Word writes each list item as a paragraph styled
 //  `mso-list: lN levelM`, its bullet or number as text in a span styled
 //  `mso-list: Ignore`. Consecutive items become nested lists again.
 //

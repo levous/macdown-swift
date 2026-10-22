@@ -20,8 +20,8 @@ enum PasteboardContent: Equatable {
     static let jpeg = NSPasteboard.PasteboardType("public.jpeg")
 
     /// The clipboard's formatted text or image, in order of preference:
-    /// HTML (or a web archive), then rich text (FR-1, FR-2), then image
-    /// data when there's no text at all (FR-33). Nil for plain text.
+    /// HTML (or a web archive), then rich text, then image
+    /// data when there's no text at all. Nil for plain text.
     @MainActor static func read(from pasteboard: NSPasteboard) -> PasteboardContent? {
         let types = pasteboard.types ?? []
         let archive = types.contains(webArchive) ? pasteboard.data(forType: webArchive).flatMap(mainResource) : nil

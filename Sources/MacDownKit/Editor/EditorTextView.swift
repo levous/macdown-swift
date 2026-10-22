@@ -31,15 +31,15 @@ public final class EditorTextView: NSTextView {
     /// where code blocks are when pasting (see EditorTextView+Paste.swift).
     var documentBlocks: (source: String, blocks: [MarkdownDocumentModel.Block])?
 
-    /// Whether Paste converts formatted text to Markdown (FR-27), and how
+    /// Whether Paste converts formatted text to Markdown, and how
     /// it writes it: the writer's list marker and indentation.
     public var convertsPastedFormatting = true
     public var pasteOptions = HTMLToMarkdown.Options()
     /// Set during Paste and Match Style, which reads through the same
-    /// method as Paste but always pastes plain text (FR-4).
+    /// method as Paste but always pastes plain text.
     var pastesPlainText = false
     /// After a converted paste: the "Paste as Plain Text" button, and what
-    /// the paste inserted and the plain text to put there instead (FR-31).
+    /// the paste inserted and the plain text to put there instead.
     var plainTextButton: NSButton?
     var pastedPlainText: (range: NSRange, inserted: String, text: String)?
 

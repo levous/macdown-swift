@@ -31,10 +31,10 @@ public struct HTMLToMarkdown: Sendable {
     public struct Result: Sendable, Equatable {
         public var markdown: String
         /// A single paragraph, inserted inline without paragraph breaks
-        /// around it (FR-9).
+        /// around it.
         public var isInline: Bool
         /// The HTML looks like code from a code editor or terminal, to be
-        /// pasted as plain text instead (FR-6).
+        /// pasted as plain text instead.
         public var isCode = false
     }
 
@@ -53,8 +53,8 @@ public struct HTMLToMarkdown: Sendable {
         return result.markdown.isEmpty ? nil : result
     }
 
-    /// Whether blocks look like code copied from a code editor or terminal
-    /// (FR-6): all their visible text is monospace (or in code blocks), with
+    /// Whether blocks look like code copied from a code editor or terminal:
+    /// all their visible text is monospace (or in code blocks), with
     /// no links, images, headings, lists, quotes or tables. Bold or colored
     /// keywords, as some editors' themes have, don't count.
     static func isCode(_ blocks: [Block]) -> Bool {

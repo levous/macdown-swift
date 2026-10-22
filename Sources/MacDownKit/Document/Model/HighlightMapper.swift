@@ -2,12 +2,12 @@
 //  HighlightMapper.swift
 //  MacDownKit
 //
-//  Editor highlighting from the cmark-gfm tree (FR-21, FR-22): the spans
+//  Editor highlighting from the cmark-gfm tree: the spans
 //  PEG Markdown Highlight produced, keyed by the same element types, so the
 //  bundled themes apply unchanged. Spans follow PEG's extents: headers cover
 //  their line(s) and line break, emphasis, code, links and images include
 //  their markup, fenced code is CODE and indented code VERBATIM, and a block
-//  quote colors only its `>` markers. Footnotes are NOTE (FR-27).
+//  quote colors only its `>` markers. Footnotes are NOTE.
 //
 //  What the tree doesn't keep comes from the source: reference definitions
 //  (cmark consumes them) and entities (cmark decodes them). The same walk

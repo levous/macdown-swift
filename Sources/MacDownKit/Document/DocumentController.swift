@@ -625,8 +625,8 @@ public final class DocumentController: NSObject {
     }
 
     /// The editor is highlighted from the renderer's model of the same text
-    /// (one parse for both, FR-1), and learns where its code blocks are, for
-    /// pasting (FR-5).
+    /// (one parse for both), and learns where its code blocks are, for
+    /// pasting.
     private func highlightFromModel() {
         if let model = renderer.model {
             editor.documentBlocks = (model.source, model.blocks)

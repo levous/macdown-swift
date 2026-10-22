@@ -8,8 +8,8 @@ import Testing
 @testable import MacDownKit
 
 @Suite struct MarkdownDocumentModelTests {
-    /// The model is built off the main actor and handed back (F6: the
-    /// swift-markdown tree itself can't cross; the model can).
+    /// The model is built off the main actor and handed back: cmark-gfm's
+    /// C tree never leaves the parse task; the `Sendable` model does.
     @Test func buildsInADetachedTask() async {
         let source = "# Title\n\nText.\n"
         let model = await Task.detached {
@@ -82,7 +82,7 @@ import Testing
     }
 }
 
-/// Parses go through the document model (FR-2).
+/// Parses go through the document model.
 @MainActor @Suite struct RendererEngineTests {
     @Test func renderSettingsFollowPreferences() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
@@ -106,7 +106,7 @@ import Testing
         #expect(renderer.model == nil)
         renderer.parseNow("# A\n", settings: settings)
         #expect(renderer.model?.blocks.map(\.kind) == [.heading(level: 1)])
-        // The preview's HTML is the model's, with source lines (FR-20).
+        // The preview's HTML is the model's, with source lines.
         #expect(renderer.result.body == renderer.model?.body)
         #expect(renderer.result.body.contains(#"<h1 data-source-line="1" id="toc_0">A</h1>"#))
 

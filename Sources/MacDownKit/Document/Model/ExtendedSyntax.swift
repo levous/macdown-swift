@@ -2,9 +2,9 @@
 //  ExtendedSyntax.swift
 //  MacDownKit
 //
-//  Opt-in syntax swift-markdown doesn't parse (finding F4), found in plain
-//  text the same way for the editor highlighting and the preview (FR-19,
-//  FR-19a), with hoedown's rules.
+//  Opt-in syntax cmark-gfm doesn't parse (`==highlight==`, `x^2`), found in
+//  plain text the same way for the editor highlighting and the preview,
+//  with hoedown's rules.
 //
 
 import Foundation

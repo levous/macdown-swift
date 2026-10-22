@@ -303,7 +303,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
     }
 
     /// Converting pasted formatting is on for new installs and for existing
-    /// ones that predate it, and stays off once turned off (FR-27).
+    /// ones that predate it, and stays off once turned off.
     @Test func convertsPastedFormattingByDefault() throws {
         for existing in [false, true] {
             let suite = "MacDownTests-\(UUID().uuidString)"
@@ -367,7 +367,7 @@ private func fixture(_ name: String, _ ext: String) -> URL {
     }
 
     /// Settings that became standard are no longer read, but their saved
-    /// values stay in user defaults (FR-36), so a downgrade still finds them.
+    /// values stay in user defaults, so a downgrade still finds them.
     @Test func removedSettingsKeepTheirSavedValues() throws {
         let suite = "MacDownTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

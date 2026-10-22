@@ -2,7 +2,7 @@
 //  HTMLToMarkdown+Tables.swift
 //  MacDownKit
 //
-//  Tables (FR-18): a GFM pipe table when every cell is one line of inline
+//  Tables: a GFM pipe table when every cell is one line of inline
 //  content and none spans rows or columns; otherwise the table stays HTML,
 //  with its cells' formatting written as HTML tags.
 //

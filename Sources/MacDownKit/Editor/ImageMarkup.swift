@@ -3,7 +3,7 @@
 //  MacDown
 //
 //  Images embedded in the document as data URIs: image files dropped on the
-//  editor, and image data pasted into it (paste intent, FR-33).
+//  editor, and image data pasted into it.
 //
 
 import Foundation

@@ -2,7 +2,7 @@
 //  HighlightBenchmarkTests.swift
 //  MacDownKitTests
 //
-//  NFR-1: edit → highlight spans on a 10,000-line document with the
+//  Edit → highlight spans on a 10,000-line document with the
 //  document model, the stages broken down and, for comparison, cmark-gfm
 //  walked directly, against PEG Markdown Highlight's recorded time (it's no
 //  longer built). Run optimized, on demand:
@@ -10,7 +10,8 @@
 //    MACDOWN_BENCHMARK=1 swift test -c release -Xswiftc -enable-testing \
 //      --filter HighlightBenchmarkTests
 //
-//  Results are recorded in docs/intents/swift-markdown-migration.md (F8).
+//  The measurements that chose cmark-gfm are in docs/ARCHITECTURE.md
+//  ("Parse with cmark-gfm directly").
 //
 
 import Foundation
@@ -22,7 +23,8 @@ import cmark_gfm_extensions
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["MACDOWN_BENCHMARK"] != nil))
 @MainActor struct HighlightBenchmarkTests {
     /// PEG Markdown Highlight's median for the same document, release build,
-    /// on the Mac the migration was measured on (F8: 19.3 to 20.1 ms).
+    /// on the Mac the migration was measured on (19.3 to 20.1 ms over
+    /// several runs).
     static let pegMilliseconds = 20.0
 
     /// The median of several runs, in milliseconds.
@@ -87,7 +89,7 @@ import cmark_gfm_extensions
             | bare cmark parse+walk %.1f | PEG (recorded) %.1f
             """, model, modelAll, parse, mapper, protectMath, direct, peg))
 
-        // NFR-1: highlighting is no slower than PEG.
+        // Highlighting must be no slower than PEG was (10% slack for noise).
         #expect(model <= peg * 1.1, "model \(model) ms vs PEG \(peg) ms")
         #expect(modelAll <= peg * 1.1, "with math and opt-ins \(modelAll) ms vs PEG \(peg) ms")
     }

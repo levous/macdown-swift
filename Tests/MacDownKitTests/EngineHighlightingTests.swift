@@ -3,7 +3,7 @@
 //  MacDownKitTests
 //
 //  The editor is highlighted from the renderer's document model, the same
-//  cmark-gfm parse as the preview (FR-1, FR-26).
+//  cmark-gfm parse as the preview.
 //
 
 import AppKit
@@ -73,8 +73,7 @@ extension LiveDocumentTests {
 }
 
 extension LiveDocumentTests {
-/// The preview carries data-source-line; HTML and PDF exports don't
-/// (FR-18).
+/// The preview carries data-source-line; HTML and PDF exports don't.
 @MainActor @Suite(.serialized) struct EngineExportTests {
     @Test func exportsHaveNoSourceLines() async throws {
         let preferences = Preferences.shared

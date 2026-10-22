@@ -56,7 +56,7 @@ extension LiveDocumentTests {
         #expect(controller.html.contains("id=\"toc_0\">Second</h1>"))
     }
 
-    /// After a parse, the editor knows where the code blocks are (FR-5).
+    /// After a parse, the editor knows where the code blocks are.
     @Test func editorLearnsCodeBlocksFromTheParse() async {
         let text = "Text\n\n    indented code\n"
         let (controller, window) = makeController(text)
