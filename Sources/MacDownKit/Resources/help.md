@@ -67,6 +67,8 @@ will break
 ***Both***: `***Both***`  
 <u>Underline</u>: `<u>Underline</u>` (Command-U; Markdown has no underline syntax, so I use HTML)
 
+The formatting commands toggle: with formatted text selected, with or without its markers (`**Strong**` or just `Strong`), the same command removes the formatting, and other commands add theirs inside it.
+
 Asterisks work inside words too: `So A*maz*ing` gives So A*maz*ing. Underscores don't, so names like snake_case_name stay as you typed them.
 
 ### Headers (like this one!)

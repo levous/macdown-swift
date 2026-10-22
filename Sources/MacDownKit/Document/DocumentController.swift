@@ -1116,7 +1116,7 @@ public final class DocumentController: NSObject {
     public func toggleImage() { toggleLinkLike(prefix: "![") }
 
     private func toggleLinkLike(prefix: String) {
-        guard editor.toggleForMarkup(prefix: prefix, suffix: "]()") else { return }
+        guard editor.toggleForMarkup(prefix: prefix, suffix: "]()", entersSpans: false) else { return }
         var range = editor.selectedRange()
         range = NSRange(location: range.location + range.length + 2, length: 0)
 

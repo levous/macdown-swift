@@ -208,12 +208,72 @@ extension NSTextView {
         return true
     }
 
-    /// Toggles inline markup around the selection.
+    /// Inline markup pairs, longest first so `**` is found before `*`.
+    static let inlineMarkupPairs: [(prefix: String, suffix: String)] = [
+        ("<!--", "-->"), ("<u>", "</u>"), ("~~", "~~"), ("==", "=="), ("**", "**"), ("*", "*"),
+        ("`", "`"),
+    ]
+
+    /// `range` without the inline markup pairs at its ends (and the spaces
+    /// outside them), so selecting a whole formatted span, `**Header**`,
+    /// acts like selecting its text, `Header`. Unchanged when no pair
+    /// encloses the whole selection: `**a** and **b**` is two spans, not one.
+    func rangeInsideMarkup(_ range: NSRange) -> NSRange {
+        let content = nsString
+        var start = range.location, end = NSMaxRange(range)
+        func isSpace(_ index: Int) -> Bool {
+            let c = content.character(at: index)
+            return c == 0x20 || c == 0x09
+        }
+        while start < end, isSpace(start) { start += 1 }
+        while end > start, isSpace(end - 1) { end -= 1 }
+        var stripped = false
+        peeling: while true {
+            for (prefix, suffix) in Self.inlineMarkupPairs {
+                let p = (prefix as NSString).length, s = (suffix as NSString).length
+                guard end - start > p + s,
+                      content.substring(with: NSRange(location: start, length: p)) == prefix,
+                      content.substring(with: NSRange(location: end - s, length: s)) == suffix
+                else { continue }
+                let inner = content.substring(with: NSRange(location: start + p, length: end - start - p - s))
+                guard !Self.closes(inner, prefix: prefix, suffix: suffix) else { continue }
+                start += p
+                end -= s
+                stripped = true
+                continue peeling
+            }
+            break
+        }
+        return stripped ? NSRange(location: start, length: end - start) : range
+    }
+
+    /// Whether `text` contains the markup's closing marker, so markup at
+    /// both its ends would be two spans: a run of exactly the marker's
+    /// character (`**` in `a** and **b`, but not in `*b*`), or the suffix.
+    static func closes(_ text: String, prefix: String, suffix: String) -> Bool {
+        guard let character = suffix.first, suffix.allSatisfy({ $0 == character }), prefix == suffix else {
+            return text.contains(suffix)
+        }
+        var run = 0
+        for c in text + "\u{0}" {
+            if c == character {
+                run += 1
+            } else {
+                if run == suffix.count { return true }
+                run = 0
+            }
+        }
+        return false
+    }
+
+    /// Toggles inline markup around the selection. With `entersSpans`, a
+    /// selection that covers a whole formatted span, markers included, acts
+    /// like one of its text; links and images wrap the selection as it is.
     ///
     /// - Returns: Whether the markup is now on.
     @discardableResult
-    public func toggleForMarkup(prefix: String, suffix: String) -> Bool {
-        var range = selectedRange()
+    public func toggleForMarkup(prefix: String, suffix: String, entersSpans: Bool = true) -> Bool {
+        var range = entersSpans ? rangeInsideMarkup(selectedRange()) : selectedRange()
         let selection = nsString.substring(with: range)
         let poff = (prefix as NSString).length
         let isOn: Bool

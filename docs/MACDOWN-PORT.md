@@ -92,6 +92,11 @@ fresh, and the original's plist can be copied over to migrate.
 - **Pasting images** (new): image data on the clipboard, such as a
   screenshot, is pasted as an embedded (data URI) image, as dropped image
   files already were. The original ignored it.
+- **Formatting commands on a whole span:** with formatted text selected
+  markers and all (`**Header**`), Bold and the other inline formats act as
+  they do on the text alone: the same format is removed, others go inside.
+  The original wrapped the selection again (`****Header****`). Link and
+  Image still wrap the whole selection.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

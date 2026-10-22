@@ -139,6 +139,25 @@ extension LiveDocumentTests {
         #expect(controller.editor.string.hasSuffix("### **word**"))
     }
 
+    /// With a whole bold span selected, Bold removes it and the inline
+    /// formats go inside; Link wraps the whole selection, as before.
+    @Test func formattingActionsOnAWholeSpan() {
+        let (controller, window) = makeController("**word**")
+        defer { controller.tearDown(); window.close() }
+        let editor = controller.editor
+        editor.setSelectedRange(NSRange(location: 0, length: 8))
+        controller.toggleStrong()
+        #expect(editor.string == "word")
+        editor.string = "**word**"
+        editor.setSelectedRange(NSRange(location: 0, length: 8))
+        controller.toggleStrikethrough()
+        #expect(editor.string == "**~~word~~**")
+        editor.string = "**word**"
+        editor.setSelectedRange(NSRange(location: 0, length: 8))
+        controller.toggleLink()
+        #expect(editor.string.hasPrefix("[**word**]("))
+    }
+
     @Test func wordCountTitlesAreLocalized() {
         let (controller, window) = makeController("one two")
         defer { controller.tearDown(); window.close() }

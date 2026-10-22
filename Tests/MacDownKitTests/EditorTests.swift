@@ -276,6 +276,76 @@ func highlightElements(_ text: String) -> HighlightElements {
         #expect(tv.string == "***a***")
     }
 
+    static let markups: [(prefix: String, suffix: String)] = [
+        ("**", "**"), ("*", "*"), ("~~", "~~"), ("`", "`"), ("<u>", "</u>"), ("==", "=="), ("<!--", "-->"),
+    ]
+
+    /// Toggles markup with the selection on `selected`, a substring of
+    /// `text`; the resulting text and selection.
+    func toggled(_ text: String, selecting selected: String, _ markup: (prefix: String, suffix: String))
+        -> (text: String, selection: String) {
+        let tv = makeTextView(text, selection: (text as NSString).range(of: selected))
+        tv.toggleForMarkup(prefix: markup.prefix, suffix: markup.suffix)
+        return (tv.string, (tv.string as NSString).substring(with: tv.selectedRange()))
+    }
+
+    /// Selecting a whole formatted span, markers included, acts like
+    /// selecting its text: the same formatting is removed, not doubled.
+    @Test(arguments: 0..<7)
+    func wholeSpanActsLikeItsText(_ index: Int) {
+        let markup = Self.markups[index]
+        let text = "x \(markup.prefix)Header 1\(markup.suffix) y"
+        let inner = toggled(text, selecting: "Header 1", markup)
+        let whole = toggled(text, selecting: markup.prefix + "Header 1" + markup.suffix, markup)
+        #expect(inner.text == "x Header 1 y")
+        #expect(whole.text == inner.text)
+        #expect(whole.selection == "Header 1")
+    }
+
+    /// Every other format is added inside the span, as for its text.
+    @Test(arguments: 0..<7)
+    func otherFormatsGoInside(_ index: Int) {
+        let markup = Self.markups[index]
+        for other in Self.markups where other.prefix != markup.prefix {
+            let text = "\(markup.prefix)Header 1\(markup.suffix)"
+            let inner = toggled(text, selecting: "Header 1", other)
+            let whole = toggled(text, selecting: text, other)
+            #expect(whole.text == inner.text, "\(markup.prefix) then \(other.prefix)")
+            #expect(whole.selection == inner.selection)
+        }
+    }
+
+    /// Bold and italic, together or nested.
+    @Test func strongAndEmphasis() {
+        let bold = Self.markups[0], italic = Self.markups[1]
+        #expect(toggled("**Header 1**", selecting: "**Header 1**", bold).text == "Header 1")
+        #expect(toggled("**Header 1**", selecting: "**Header 1**", italic).text == "***Header 1***")
+        #expect(toggled("***Header 1***", selecting: "***Header 1***", bold).text == "*Header 1*")
+        #expect(toggled("***Header 1***", selecting: "***Header 1***", italic).text == "**Header 1**")
+        #expect(toggled("*Header 1*", selecting: "*Header 1*", bold).text == "***Header 1***")
+        #expect(toggled("**a *b* c**", selecting: "**a *b* c**", bold).text == "a *b* c")
+        #expect(toggled("*a **b** c*", selecting: "*a **b** c*", italic).text == "a **b** c")
+    }
+
+    /// Spaces at the edges of the selection don't count.
+    @Test func spacesAroundTheSpan() {
+        let result = toggled("x **Header 1** y", selecting: " **Header 1** ", Self.markups[0])
+        #expect(result.text == "x Header 1 y")
+        #expect(result.selection == "Header 1")
+    }
+
+    /// Without one matching pair at both ends, the selection is wrapped as
+    /// before: separate spans, or markup at one end only.
+    @Test func notOneSpan() {
+        let bold = Self.markups[0]
+        #expect(toggled("**a** and **b**", selecting: "**a** and **b**", bold).text == "****a** and **b****")
+        #expect(toggled("*a* and *b*", selecting: "*a* and *b*", Self.markups[1]).text == "**a* and *b**")
+        #expect(toggled("**Header 1", selecting: "**Header 1", bold).text == "****Header 1**")
+        #expect(toggled("plain text", selecting: "plain text", bold).text == "**plain text**")
+        // Markers alone have no text to keep.
+        #expect(toggled("****", selecting: "****", bold).text == "********")
+    }
+
     @Test func makeHeader() {
         let tv = makeTextView("Title\n", selection: NSRange(location: 0, length: 0))
         tv.makeHeaderForSelectedLines(level: 2)
