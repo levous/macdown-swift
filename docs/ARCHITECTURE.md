@@ -127,6 +127,17 @@ blocks of styled text runs, and renders Markdown with the editing settings
 are grouped into emphasis markers by the renderer because apps like Google
 Docs write every run as a flat styled span.
 
+Rich text and Word for the web have no heading markup, only larger text, so
+when the HTML has no `h1`–`h6` the converter infers headings from font size
+(`HTMLToMarkdown+FontSizeHeadings.swift`): a one-line paragraph, all in one
+size at least 8% above the body size, that doesn't end like a sentence. The
+body size is the largest size holding a quarter of the paragraph text, not
+the most common one, because pasted rich text often has smaller runs inside
+body paragraphs. AppKit's HTML export also loses list structure the rich
+text has: `PasteboardContent` adds `start` to its `ol`s from the
+`NSTextList`s, and the walker joins the sublists and continued numbering it
+splits into separate lists.
+
 The paste is skipped, so the text view pastes plain text, for content that
 looks like code (all monospace, no structure), inside a code block (a fence
 scan above the caret, or the latest parse's blocks for indented code), with

@@ -81,8 +81,9 @@ public struct HTMLToMarkdown: Sendable {
     static func blocks(_ html: String, baseURL: URL? = nil) -> [Block] {
         guard let (document, body) = parse(html) else { return [] }
         let css = ((try? document.nodes(forXPath: "//style")) ?? []).compactMap(\.stringValue)
-        return Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n")), baseURL: baseURL)
-            .blocks(in: body)
+        var walker = Walker(styleSheet: StyleSheet(css: css.joined(separator: "\n")), baseURL: baseURL)
+        walker.sizeHeadings = walker.fontSizeHeadings(in: body)
+        return walker.blocks(in: body)
     }
 
     // MARK: - Parsing

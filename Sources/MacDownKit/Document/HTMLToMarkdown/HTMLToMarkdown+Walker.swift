@@ -60,6 +60,9 @@ extension HTMLToMarkdown {
         var styleSheet = StyleSheet(css: "")
         /// What relative URLs resolve against.
         var baseURL: URL?
+        /// Paragraphs that are headings by their font size, and their levels
+        /// (see HTMLToMarkdown+FontSizeHeadings.swift).
+        var sizeHeadings: [ObjectIdentifier: Int] = [:]
 
         /// Elements that start a block of their own; anything else is inline.
         static let blockElements: Set<String> = [
@@ -175,7 +178,9 @@ extension HTMLToMarkdown {
         /// A block element's blocks.
         func block(_ element: XMLElement, style: TextStyle) -> [Block] {
             let tag = element.localName?.lowercased() ?? ""
-            if tag.count == 2, tag.first == "h", let level = Int(String(tag.last!)), (1...6).contains(level) {
+            let headingLevel = tag.count == 2 && tag.first == "h" ? Int(String(tag.last!)).flatMap { (1...6).contains($0) ? $0 : nil }
+                : sizeHeadings[ObjectIdentifier(element)]
+            if let level = headingLevel {
                 // A heading's weight isn't emphasis, and it's one line.
                 let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
                     .map { inline -> Inline in

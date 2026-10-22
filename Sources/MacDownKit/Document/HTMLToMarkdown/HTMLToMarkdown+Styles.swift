@@ -84,7 +84,7 @@ extension HTMLToMarkdown {
 
         /// The properties the converter reads.
         static let properties: Set<String> = [
-            "display", "font", "font-family", "font-style", "font-weight", "margin",
+            "display", "font", "font-family", "font-size", "font-style", "font-weight", "margin",
             "margin-bottom", "margin-left", "margin-top", "mso-list", "text-align", "text-decoration",
             "text-decoration-line",
         ]

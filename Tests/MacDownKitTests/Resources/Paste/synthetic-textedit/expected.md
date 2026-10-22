@@ -1,4 +1,4 @@
-**Paste Sample**
+# Paste Sample
 
 A sentence with **bold text**, *italic text* and `inline code`.
 

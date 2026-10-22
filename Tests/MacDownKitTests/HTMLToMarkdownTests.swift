@@ -316,6 +316,75 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
     }
 }
 
+/// Rich text and Word for the web mark headings only with a larger font.
+@Suite struct HTMLToMarkdownFontSizeHeadingTests {
+    /// AppKit's HTML for rich text: sizes in `<style>` classes, with runs of
+    /// a smaller size inside larger paragraphs.
+    static let richText = """
+        <style>p.p1 {font: 22.5px 'Helvetica Light'} p.p2 {font: 16.0px 'Helvetica Light'}
+        p.p3 {font: 18.5px 'Helvetica Light'} p.p5 {font: 17.6px Helvetica} span.s1 {font: 12.0px Helvetica}</style>
+        <p class="p1">Title</p>
+        <p class="p2">An introduction long enough to be body text, written in the larger body size.</p>
+        <p class="p3">Section</p>
+        <p class="p2">Mixed <span class="s1">smaller runs inside a larger paragraph, as rich text has them</span>.</p>
+        <p class="p2">An image:</p>
+        <p class="p5">Subsection</p>
+        <p class="p2"><span class="s1">Small text throughout this paragraph, at twelve pixels.</span></p>
+        <ul><li><span style="font-size: 30px">Big list item</span></li></ul>
+        <p class="p3">Another section</p>
+        """
+
+    @Test func richTextHeadings() {
+        #expect(markdown(Self.richText) == """
+            # Title
+
+            An introduction long enough to be body text, written in the larger body size.
+
+            ## Section
+
+            Mixed smaller runs inside a larger paragraph, as rich text has them.
+
+            An image:
+
+            ### Subsection
+
+            Small text throughout this paragraph, at twelve pixels.
+
+            - Big list item
+
+            ## Another section
+
+            """)
+    }
+
+    /// Word for the web: sizes in points on the runs.
+    @Test func wordForTheWebHeadings() {
+        func paragraph(_ size: Double, _ text: String) -> String {
+            #"<p class="Paragraph"><span class="TextRun" style="font-size: \#(size)pt">\#(text)</span><span class="EOP" style="font-size: 9pt">&nbsp;</span></p>"#
+        }
+        let html = paragraph(16.5, "Title") + paragraph(12, "Body text in twelve point, as most of the document is.")
+            + paragraph(13.5, "Section") + paragraph(12, "More body text.") + paragraph(13, "Subsection")
+        #expect(markdown(html) == "# Title\n\nBody text in twelve point, as most of the document is.\n\n## Section\n\nMore body text.\n\n### Subsection\n")
+    }
+
+    @Test func paragraphsThatStayParagraphs() {
+        let body = #"<p style="font-size: 12pt">Body text, the size most of this paste is in, over several sentences.</p>"#
+        // Large but long, or ending like a sentence.
+        #expect(markdown(body + #"<p style="font-size: 18pt">A large paragraph that runs on for well over eighty characters of text, so it isn't a heading.</p>"#)
+                    == "Body text, the size most of this paste is in, over several sentences.\n\nA large paragraph that runs on for well over eighty characters of text, so it isn't a heading.\n")
+        #expect(markdown(body + #"<p style="font-size: 18pt">Short, but a sentence.</p>"#)
+                    == "Body text, the size most of this paste is in, over several sentences.\n\nShort, but a sentence.\n")
+        // Bold at the body size, or only slightly larger.
+        #expect(markdown(body + #"<p style="font-size: 12pt"><b>Bold line</b></p><p style="font-size: 12.5pt">Barely larger</p>"#)
+                    == "Body text, the size most of this paste is in, over several sentences.\n\n**Bold line**\n\nBarely larger\n")
+        // Real headings anywhere mean sizes aren't headings.
+        #expect(markdown(body + #"<h2>Real</h2><p style="font-size: 18pt">Large</p>"#)
+                    == "Body text, the size most of this paste is in, over several sentences.\n\n## Real\n\nLarge\n")
+        // A paste of one large line has nothing to compare it with.
+        #expect(markdown(#"<p style="font-size: 24pt">Just this</p>"#) == "Just this")
+    }
+}
+
 /// Bold, italic and strikethrough.
 @Suite struct HTMLToMarkdownEmphasisTests {
     @Test func markers() {

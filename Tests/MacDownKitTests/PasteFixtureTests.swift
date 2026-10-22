@@ -123,20 +123,11 @@ struct PasteFixture: CustomTestStringConvertible, Sendable {
     }
 
     @Test(arguments: ["synthetic-google-docs", "synthetic-word", "synthetic-textedit", "synthetic-browser",
-                      "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode", "google-docs", "chrome", "safari", "macdown-preview"])
+                      "synthetic-macdown-preview", "synthetic-vscode", "synthetic-xcode", "google-docs", "chrome", "safari", "macdown-preview",
+                      "word", "pages", "textedit"])
     func fixture(_ name: String) throws {
         let fixture = try PasteFixture.load(name)
         #expect(try Self.pasted(fixture) == fixture.expected)
-    }
-
-    /// Captures whose headings are only a larger font: everything but the
-    /// headings matches until those are recognized.
-    @Test(arguments: ["word", "pages", "textedit"])
-    func fixtureApartFromHeadings(_ name: String) throws {
-        let fixture = try PasteFixture.load(name)
-        let expected = try #require(fixture.expected).split(separator: "\n", omittingEmptySubsequences: false)
-            .map { $0.hasPrefix("#") ? $0.drop { $0 == "#" }.dropFirst() : $0 }.joined(separator: "\n")
-        #expect(try Self.pasted(fixture) == expected)
     }
 
     /// Code from Terminal (RTF in a monospace font, with colors) and

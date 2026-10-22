@@ -24,6 +24,7 @@ By default, edits stay in the window until you save, like a classic Mac document
 Copy formatted text from a web page, Google Docs, Word, Pages, Notion or my own preview, paste it here, and I write it as Markdown: headings, bold, italic, strikethrough, links, images, lists, task lists, quotes, code and tables become the Markdown for them.
 
 * Formatting Markdown doesn’t have, like colors, fonts, sizes and underline, is left out; the text stays.
+* Apps that show headings only as larger text, like Pages, TextEdit and Word on the web, get them back as headings: a short line in a clearly larger size becomes one.
 * Tables with merged cells stay as HTML, so nothing is lost.
 * Code copied from a code editor or Terminal pastes exactly as you copied it, and so does anything you paste inside a code block.
 * Lists use your **List marker** and **Insert spaces instead of tabs** settings.
