@@ -10,7 +10,7 @@ Bold and italic together: ***both at once***.
 Links: an [absolute link](https://example.com/guide/start.html "Guide"), a
 [relative link](../notes/next.html) and an [in-page link](#lists).
 
-An image: ![A small square](https://example.com/images/square.png)
+An image: ![A meditative dog](https://images.unsplash.com/photo-1696483902172-25eec40764f4?q=80&w=80&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D)
 
 ### Code
 

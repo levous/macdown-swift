@@ -18,6 +18,9 @@ extension HTMLToMarkdown {
         var italic = false
         var strike = false
         var monospace = false
+        /// In a table header cell, which is bold already: bold isn't written
+        /// there, since browsers copy header cells with the bold they show.
+        var inHeaderCell = false
         /// The link the text is in.
         var link: Link?
     }
@@ -81,8 +84,8 @@ extension HTMLToMarkdown {
 
         /// The properties the converter reads.
         static let properties: Set<String> = [
-            "display", "font", "font-family", "font-style", "font-weight", "margin",
-            "margin-bottom", "margin-top", "mso-list", "text-align", "text-decoration",
+            "display", "font", "font-family", "font-size", "font-style", "font-weight", "margin",
+            "margin-bottom", "margin-left", "margin-top", "mso-list", "text-align", "text-decoration",
             "text-decoration-line",
         ]
 
@@ -220,6 +223,8 @@ extension HTMLToMarkdown {
         for name in ["text-decoration", "text-decoration-line"] {
             if declarations[name]?.lowercased().contains("line-through") == true { style.strike = true }
         }
+        if tag == "th" { style.inHeaderCell = true }
+        if style.inHeaderCell { style.bold = false }
         return style
     }
 }

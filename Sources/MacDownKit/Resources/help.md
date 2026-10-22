@@ -24,6 +24,8 @@ By default, edits stay in the window until you save, like a classic Mac document
 Copy formatted text from a web page, Google Docs, Word, Pages, Notion or my own preview, paste it here, and I write it as Markdown: headings, bold, italic, strikethrough, links, images, lists, task lists, quotes, code and tables become the Markdown for them.
 
 * Formatting Markdown doesn’t have, like colors, fonts, sizes and underline, is left out; the text stays.
+* Apps that show headings only as larger text, like Pages, TextEdit and Word on the web, get them back as headings: a short line in a clearly larger size becomes one.
+* A list whose items all start with `[ ]` or `[x]`, as Notion copies to-dos, becomes a task list, whichever app it comes from.
 * Tables with merged cells stay as HTML, so nothing is lost.
 * Code copied from a code editor or Terminal pastes exactly as you copied it, and so does anything you paste inside a code block.
 * Lists use your **List marker** and **Insert spaces instead of tabs** settings.
@@ -66,6 +68,8 @@ will break
 ~~Strikethrough~~: `~~struck through~~` gives ~~struck through~~ (Command-Hyphen)  
 ***Both***: `***Both***`  
 <u>Underline</u>: `<u>Underline</u>` (Command-U; Markdown has no underline syntax, so I use HTML)
+
+The formatting commands toggle: with formatted text selected, with or without its markers (`**Strong**` or just `Strong`), the same command removes the formatting, and other commands add theirs inside it.
 
 Asterisks work inside words too: `So A*maz*ing` gives So A*maz*ing. Underscores don't, so names like snake_case_name stay as you typed them.
 

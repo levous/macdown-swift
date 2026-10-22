@@ -1,0 +1,29 @@
+Paste Sample
+Generated sample content for clipboard captures (see Tools/capture-pasteboard.swift).
+Inline Formatting
+A sentence with bold text, italic text, struck text and inline code. Bold and italic together: both at once.
+Links: an absolute link, a relative link and an in-page link.
+An image: 
+Code
+let greeting = "Hello"
+print(greeting)
+Lists
+First bullet
+Second bullet
+Nested bullet
+Another nested bullet
+Third bullet
+Third step
+Fourth step
+Sub-step one
+Sub-step two
+Fifth step
+Finished task
+Open task
+Quotes And Rules
+A quoted paragraph.
+A nested quote.
+
+Tables
+
+

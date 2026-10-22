@@ -1,0 +1,30 @@
+{
+  "source" : "google-docs",
+  "types" : [
+    {
+      "file" : "public.html",
+      "size" : 34552,
+      "type" : "public.html"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 651,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "org.chromium.internal.source-rfh-token",
+      "size" : 24,
+      "type" : "org.chromium.internal.source-rfh-token"
+    },
+    {
+      "file" : "org.chromium.web-custom-data",
+      "size" : 325236,
+      "type" : "org.chromium.web-custom-data"
+    },
+    {
+      "file" : "org.chromium.source-url",
+      "size" : 92,
+      "type" : "org.chromium.source-url"
+    }
+  ]
+}

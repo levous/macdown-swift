@@ -1,0 +1,25 @@
+{
+  "source" : "chrome",
+  "types" : [
+    {
+      "file" : "public.html",
+      "size" : 35147,
+      "type" : "public.html"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 669,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "org.chromium.internal.source-rfh-token",
+      "size" : 24,
+      "type" : "org.chromium.internal.source-rfh-token"
+    },
+    {
+      "file" : "org.chromium.source-url",
+      "size" : 48,
+      "type" : "org.chromium.source-url"
+    }
+  ]
+}

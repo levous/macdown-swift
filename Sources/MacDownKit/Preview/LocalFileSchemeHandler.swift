@@ -42,6 +42,8 @@ public enum PreviewURL {
         else { return url }
         var fileComponents = URLComponents()
         fileComponents.scheme = "file"
+        // An empty host writes the usual file:///path rather than file:/path.
+        fileComponents.host = ""
         fileComponents.path = components.path
         fileComponents.query = components.query
         fileComponents.fragment = components.fragment

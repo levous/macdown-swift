@@ -1,0 +1,130 @@
+{
+  "source" : "pages",
+  "types" : [
+    {
+      "file" : "com.apple.iWork.TSPNativeData",
+      "size" : 41643,
+      "type" : "com.apple.iWork.TSPNativeData"
+    },
+    {
+      "file" : "com.apple.iWork.TSPNativeMetadata",
+      "size" : 167,
+      "type" : "com.apple.iWork.TSPNativeMetadata"
+    },
+    {
+      "file" : "com.apple.iWork.TSPData.24",
+      "size" : 1656,
+      "type" : "com.apple.iWork.TSPData.24"
+    },
+    {
+      "file" : "com.apple.iWork.TSPDescription",
+      "size" : 1085,
+      "type" : "com.apple.iWork.TSPDescription"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.largestRowsAndColumnsInTables-3-3",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.largestRowsAndColumnsInTables-3-3"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.numberOfRowsInFirstTable-3",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.numberOfRowsInFirstTable-3"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.countOfObject-1",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.countOfObject-1"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.numberOfTables-2",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.numberOfTables-2"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasNativeDrawables",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasNativeDrawables"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.applicationName-Pages",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.applicationName-Pages"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.maxattachedinlinenestingdepth-1",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.maxattachedinlinenestingdepth-1"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasNativeTypes",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasNativeTypes"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.numberOfDrawables-3",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.numberOfDrawables-3"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasNativeText",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasNativeText"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasTextStoragesAttachmentsNotAllowed",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasTextStoragesAttachmentsNotAllowed"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasTextStoragesAttachmentsAllowed",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasTextStoragesAttachmentsAllowed"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.documentId-16708180113050994285",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.documentId-16708180113050994285"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.numberOfColumnsInFirstTable-3",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.numberOfColumnsInFirstTable-3"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.hasTables",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.hasTables"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.elementKinds-5",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.elementKinds-5"
+    },
+    {
+      "file" : "com.apple.iWork.pasteboardState.attachedElementKinds-5",
+      "size" : 0,
+      "type" : "com.apple.iWork.pasteboardState.attachedElementKinds-5"
+    },
+    {
+      "file" : "com.apple.flat-rtfd",
+      "size" : 15914,
+      "type" : "com.apple.flat-rtfd"
+    },
+    {
+      "file" : "public.rtf",
+      "size" : 14600,
+      "type" : "public.rtf"
+    },
+    {
+      "file" : "public.utf16-external-plain-text",
+      "size" : 1380,
+      "type" : "public.utf16-external-plain-text"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 572,
+      "type" : "public.utf8-plain-text"
+    }
+  ]
+}

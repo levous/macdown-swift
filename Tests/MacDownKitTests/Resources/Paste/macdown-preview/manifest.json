@@ -1,0 +1,40 @@
+{
+  "source" : "macdown-preview",
+  "types" : [
+    {
+      "file" : "com.apple.webarchive",
+      "size" : 47546,
+      "type" : "com.apple.webarchive"
+    },
+    {
+      "file" : "com.apple.flat-rtfd",
+      "size" : 22289,
+      "type" : "com.apple.flat-rtfd"
+    },
+    {
+      "file" : "public.rtf",
+      "size" : 15131,
+      "type" : "public.rtf"
+    },
+    {
+      "file" : "public.html",
+      "size" : 38130,
+      "type" : "public.html"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 675,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "com.apple.WebKit.custom-pasteboard-data",
+      "size" : 50,
+      "type" : "com.apple.WebKit.custom-pasteboard-data"
+    },
+    {
+      "file" : "public.utf16-external-plain-text",
+      "size" : 1296,
+      "type" : "public.utf16-external-plain-text"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "source": "word",
+  "types": [
+    {
+      "file": "com.apple.webarchive",
+      "size": 142281,
+      "type": "com.apple.webarchive"
+    },
+    {
+      "file": "public.rtf",
+      "size": 21527,
+      "type": "public.rtf"
+    },
+    {
+      "file": "public.html",
+      "size": 141930,
+      "type": "public.html"
+    },
+    {
+      "file": "public.utf8-plain-text",
+      "size": 725,
+      "type": "public.utf8-plain-text"
+    },
+    {
+      "file": "com.apple.WebKit.custom-pasteboard-data",
+      "size": 62,
+      "type": "com.apple.WebKit.custom-pasteboard-data"
+    },
+    {
+      "file": "public.utf16-external-plain-text",
+      "size": 1392,
+      "type": "public.utf16-external-plain-text"
+    }
+  ]
+}

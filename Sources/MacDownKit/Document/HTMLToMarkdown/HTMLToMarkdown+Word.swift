@@ -4,7 +4,9 @@
 //
 //  Word's lists: Word writes each list item as a paragraph styled
 //  `mso-list: lN levelM`, its bullet or number as text in a span styled
-//  `mso-list: Ignore`. Consecutive items become nested lists again.
+//  `mso-list: Ignore`. Word for the web writes each item as a list of its
+//  own, in a wrapper `div`, with `data-listid` and `data-aria-level` on the
+//  `li`. Either way, consecutive items become nested lists again.
 //
 
 import Foundation
@@ -32,6 +34,39 @@ extension HTMLToMarkdown.Walker {
         let (ordered, start) = Self.listKind(Self.wordListMarker(in: element) ?? "")
         return WordListItem(list: String(list), level: level, ordered: ordered, start: start,
                             blocks: blocks(in: element, style: style))
+    }
+
+    /// The list items a Word for the web list (or its wrapper `div`) holds,
+    /// or nil if it isn't one: every item must say its list and level.
+    func webWordListItems(_ element: XMLElement, style: HTMLToMarkdown.TextStyle) -> [WordListItem]? {
+        let tag = element.localName?.lowercased()
+        let children = (element.children ?? []).compactMap { $0 as? XMLElement }
+        if tag == "div" {
+            guard !children.isEmpty, (element.children ?? []).allSatisfy({
+                $0 is XMLElement || ($0.stringValue ?? "").allSatisfy(\.isWhitespace)
+            }) else { return nil }
+            var items: [WordListItem] = []
+            for child in children {
+                guard let style = visibleStyle(of: child, inheriting: style),
+                      let childItems = webWordListItems(child, style: style) else { return nil }
+                items += childItems
+            }
+            return items
+        }
+        guard tag == "ul" || tag == "ol", !children.isEmpty else { return nil }
+        let ordered = tag == "ol"
+        let start = element.attribute(forName: "start")?.stringValue
+            .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1
+        var items: [WordListItem] = []
+        for child in children {
+            guard child.localName?.lowercased() == "li",
+                  let list = child.attribute(forName: "data-listid")?.stringValue,
+                  let level = child.attribute(forName: "data-aria-level")?.stringValue.flatMap({ Int($0) })
+            else { return nil }
+            items.append(WordListItem(list: list, level: level, ordered: ordered, start: max(0, start),
+                                      blocks: blocks(in: child, style: self.style(of: child, inheriting: style))))
+        }
+        return items
     }
 
     /// The bullet or number Word wrote for a list paragraph.

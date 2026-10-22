@@ -60,6 +60,12 @@ extension HTMLToMarkdown {
         var styleSheet = StyleSheet(css: "")
         /// What relative URLs resolve against.
         var baseURL: URL?
+        /// Paragraphs that are headings by their font size, and their levels
+        /// (see HTMLToMarkdown+FontSizeHeadings.swift).
+        var sizeHeadings: [ObjectIdentifier: Int] = [:]
+        /// Join the lists AppKit's HTML for rich text splits (see `isIndentedList`
+        /// and `joiningSplitLists`).
+        var repairsAppKitLists = false
 
         /// Elements that start a block of their own; anything else is inline.
         static let blockElements: Set<String> = [
@@ -121,7 +127,16 @@ extension HTMLToMarkdown {
                         wordItems.append(item)
                         continue
                     }
+                    if let items = webWordListItems(element, style: elementStyle) {
+                        wordItems += items
+                        continue
+                    }
                     flushWordList()
+                    if repairsAppKitLists, Self.isIndentedList(element), case .list(var list)? = blocks.last, !list.items.isEmpty {
+                        list.items[list.items.count - 1].blocks += block(element, style: elementStyle)
+                        blocks[blocks.count - 1] = .list(list)
+                        continue
+                    }
                     blocks += block(element, style: elementStyle)
                 } else {
                     flushWordList()
@@ -130,13 +145,45 @@ extension HTMLToMarkdown {
             }
             flush()
             flushWordList()
-            return blocks
+            return repairsAppKitLists ? Self.joiningSplitLists(blocks) : blocks
+        }
+
+        /// Whether an element is Tidy's repair of a list directly inside a
+        /// list (`<ol><ol>`, as AppKit writes a sublist in another list
+        /// object than its parent): an indented `div` holding only the list.
+        static func isIndentedList(_ element: XMLElement) -> Bool {
+            guard element.localName?.lowercased() == "div",
+                  element.attribute(forName: "style")?.stringValue
+                    .map({ StyleSheet.declarations($0)["margin-left"] != nil }) == true
+            else { return false }
+            let children = element.children ?? []
+            return children.count == 1 && ["ul", "ol"].contains(children[0].localName?.lowercased() ?? "")
+        }
+
+        /// Adjacent ordered lists whose numbering carries on read as one
+        /// list; AppKit's HTML for rich text splits a list this way after a
+        /// sublist in another list object.
+        static func joiningSplitLists(_ blocks: [Block]) -> [Block] {
+            var result: [Block] = []
+            for block in blocks {
+                if case .list(let next) = block, case .list(var list)? = result.last,
+                   list.ordered, next.ordered, !list.items.isEmpty,
+                   next.start == list.start + list.items.count {
+                    list.items += next.items
+                    result[result.count - 1] = .list(list)
+                } else {
+                    result.append(block)
+                }
+            }
+            return result
         }
 
         /// A block element's blocks.
         func block(_ element: XMLElement, style: TextStyle) -> [Block] {
             let tag = element.localName?.lowercased() ?? ""
-            if tag.count == 2, tag.first == "h", let level = Int(String(tag.last!)), (1...6).contains(level) {
+            let headingLevel = tag.count == 2 && tag.first == "h" ? Int(String(tag.last!)).flatMap { (1...6).contains($0) ? $0 : nil }
+                : sizeHeadings[ObjectIdentifier(element)]
+            if let level = headingLevel {
                 // A heading's weight isn't emphasis, and it's one line.
                 let content = (element.children ?? []).flatMap { inlines(in: $0, style: style) }
                     .map { inline -> Inline in
@@ -192,6 +239,18 @@ extension HTMLToMarkdown {
                 }
             }
             guard !items.isEmpty else { return [] }
+            // A list whose every item starts with its box as text is a to-do
+            // list, as Notion copies one. This applies to any source: Notion's
+            // HTML has nothing to tell it apart, and a list typed that way
+            // elsewhere is usually a to-do list too. One such item among
+            // others is just text.
+            if items.allSatisfy({ $0.task == nil }) {
+                var tasks = items
+                for index in tasks.indices {
+                    tasks[index].task = Self.removeTaskText(from: &tasks[index].blocks)
+                }
+                if tasks.allSatisfy({ $0.task != nil }) { items = tasks }
+            }
             let ordered = element.localName?.lowercased() == "ol"
             let start = ordered ? element.attribute(forName: "start")?.stringValue
                 .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } ?? 1 : 1
@@ -239,6 +298,28 @@ extension HTMLToMarkdown {
             }
             _ = visit(item)
             return state
+        }
+
+        /// A task written as text before an item, `[x] ` or `[ ] `: removes
+        /// it and returns whether it's checked, or nil if the item doesn't
+        /// start with one.
+        static func removeTaskText(from blocks: inout [Block]) -> Bool? {
+            guard case .paragraph(var inlines)? = blocks.first,
+                  let index = inlines.firstIndex(where: {
+                      if case .text(let text, _) = $0 { !text.allSatisfy(\.isWhitespace) } else { true }
+                  }),
+                  case .text(let text, let style) = inlines[index]
+            else { return nil }
+            let trimmed = text.drop(while: \.isWhitespace)
+            let checked: Bool
+            switch trimmed.prefix(4) {
+            case "[x] ", "[X] ": checked = true
+            case "[ ] ": checked = false
+            default: return nil
+            }
+            inlines[index] = .text(String(trimmed.dropFirst(4)), style)
+            blocks[0] = .paragraph(inlines)
+            return checked
         }
 
         /// An image's address: its `src`, or for lazily loaded images, the
@@ -346,10 +427,23 @@ extension HTMLToMarkdown {
             var url = href
             if let baseURL, let resolved = URL(string: href.replacingOccurrences(of: " ", with: "%20"),
                                                relativeTo: baseURL) {
+                // WebKit writes in-page links as the page's address and a fragment.
+                if resolved.fragment != nil, Self.withoutFragment(resolved) == Self.withoutFragment(baseURL) {
+                    return nil
+                }
                 url = resolved.absoluteString
+            }
+            // The preview's own scheme for local files means nothing outside it.
+            if let parsed = URL(string: url), parsed.scheme == PreviewURL.scheme {
+                url = PreviewURL.fileURL(for: parsed).absoluteString
             }
             let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
             return Link(url: url, title: title?.isEmpty == false ? title : nil)
+        }
+
+        private static func withoutFragment(_ url: URL) -> String {
+            let string = url.absoluteString
+            return string.firstIndex(of: "#").map { String(string[..<$0]) } ?? string
         }
 
         func style(of element: XMLElement, inheriting parent: TextStyle) -> TextStyle {

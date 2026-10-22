@@ -80,7 +80,7 @@ fresh, and the original's plist can be copied over to migrate.
   stylesheets in relative units scale with it. The bundled styles size
   text in `px`, so they don't change with it.
 - **Pasting formatted text** (new): Paste turns HTML or rich text on the
-  clipboard (web pages, Google Docs, Word, Pages, MacDown's preview) into
+  clipboard (web pages, Google Docs, Word, Pages, Notion, MacDown's preview) into
   Markdown, with the list marker and indentation settings; code from code
   editors, and pastes into code blocks, stay plain text. After a converted
   paste, a "Paste as Plain Text" button below it swaps in the plain text.
@@ -88,10 +88,26 @@ fresh, and the original's plist can be copied over to migrate.
   (`editorConvertsPastedFormatting`, a new key; on by default, existing
   installs included) turns it off, and Edit ▸ Paste as Markdown (⌥⌘V) then
   converts on demand. Edit ▸ Paste and Match Style (⌥⇧⌘V) always pastes
-  plain text. The original only pasted plain text.
+  plain text. The original only pasted plain text. A few sources get
+  repairs of their own: rich text (Pages, TextEdit) and Word for the web
+  get headings from larger text and their split lists joined. These
+  guess, so a short larger line in a Pages document can become a heading;
+  web pages and Google Docs, which have real headings, aren't read this
+  way. A list whose items all start with `[x]`/`[ ]` becomes a task list,
+  from any source: that's how Notion copies to-dos, and its HTML can't be
+  told apart. A page whose list shows that syntax as text (about checklist
+  syntax, say) pastes as a task list too; a list with even one item
+  without the brackets stays text.
 - **Pasting images** (new): image data on the clipboard, such as a
   screenshot, is pasted as an embedded (data URI) image, as dropped image
   files already were. The original ignored it.
+- **Formatting commands on a whole span:** with formatted text selected
+  markers and all (`**Header**`), Bold and the other inline formats act as
+  they do on the text alone: the same format is removed, others go inside.
+  With formats nested (`**~~word~~**`), the one chosen is removed where it
+  is, and Undo restores the span in one step.
+  The original wrapped the selection again (`****Header****`). Link and
+  Image still wrap the whole selection.
 - **Ensure newline at end of file** adds the newline to the saved file
   rather than inserting it into the editor.
 - **Window state** is restored by SwiftUI rather than saved per file path;

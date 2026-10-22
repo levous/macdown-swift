@@ -1,0 +1,40 @@
+{
+  "source" : "safari",
+  "types" : [
+    {
+      "file" : "com.apple.webarchive",
+      "size" : 45865,
+      "type" : "com.apple.webarchive"
+    },
+    {
+      "file" : "com.apple.flat-rtfd",
+      "size" : 20242,
+      "type" : "com.apple.flat-rtfd"
+    },
+    {
+      "file" : "public.rtf",
+      "size" : 13953,
+      "type" : "public.rtf"
+    },
+    {
+      "file" : "public.html",
+      "size" : 37244,
+      "type" : "public.html"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 675,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "com.apple.WebKit.custom-pasteboard-data",
+      "size" : 66,
+      "type" : "com.apple.WebKit.custom-pasteboard-data"
+    },
+    {
+      "file" : "public.utf16-external-plain-text",
+      "size" : 1296,
+      "type" : "public.utf16-external-plain-text"
+    }
+  ]
+}

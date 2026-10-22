@@ -1,0 +1,25 @@
+{
+  "source" : "textedit",
+  "types" : [
+    {
+      "file" : "com.apple.flat-rtfd",
+      "size" : 14276,
+      "type" : "com.apple.flat-rtfd"
+    },
+    {
+      "file" : "public.rtf",
+      "size" : 12961,
+      "type" : "public.rtf"
+    },
+    {
+      "file" : "public.utf8-plain-text",
+      "size" : 705,
+      "type" : "public.utf8-plain-text"
+    },
+    {
+      "file" : "public.utf16-external-plain-text",
+      "size" : 1296,
+      "type" : "public.utf16-external-plain-text"
+    }
+  ]
+}
