@@ -105,6 +105,7 @@ fresh, and the original's plist can be copied over to migrate.
   alert (once per version) with a link to it, or the `brew upgrade` command
   for a Homebrew install. The original's Sparkle downloaded and installed
   them. See "Removed rather than ported" below.
+- **Rusty** (new) is a dark editor theme added to the original's 15.
 - **Formatting commands on a whole span:** with formatted text selected
   markers and all (`**Header**`), Bold and the other inline formats act as
   they do on the text alone: the same format is removed, others go inside.
