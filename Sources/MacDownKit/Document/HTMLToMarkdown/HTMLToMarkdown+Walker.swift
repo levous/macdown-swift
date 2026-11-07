@@ -386,7 +386,13 @@ extension HTMLToMarkdown {
         func inlines(in node: XMLNode, style: TextStyle) -> [Inline] {
             switch node.kind {
             case .text:
-                return [.text(node.stringValue ?? "", style)]
+                let text = node.stringValue ?? ""
+                guard style.keepsNewlines else { return [.text(text, style)] }
+                // Spaces still collapse: Markdown would collapse them anyway.
+                let lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+                return lines.enumerated().flatMap { index, line -> [Inline] in
+                    (index == 0 ? [] : [.lineBreak]) + [.text(String(line), style)]
+                }
             case .element:
                 guard let element = node as? XMLElement,
                       let elementStyle = visibleStyle(of: element, inheriting: style)

@@ -199,6 +199,27 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         }
         #expect(runs == ["a\u{a0}b"])
     }
+
+    /// Newlines in `white-space: pre`, `pre-wrap`, `pre-line` or
+    /// `break-spaces` text are line breaks, two or more a new paragraph;
+    /// runs of spaces still collapse.
+    @Test func preservedNewlinesBreakLines() {
+        #expect(markdown(#"<span style="white-space: pre-wrap">One\#ntwo  wide\#n\#nThree</span>"#)
+                    == "One\\\ntwo wide\n\nThree\n")
+        #expect(markdown(#"<div style="white-space:pre-line"><b>Bold</b>\#r\#nnext</div>"#) == "**Bold**\\\nnext")
+        #expect(markdown(#"<p style="white-space: break-spaces">a<span>\#nb</span></p>"#) == "a\\\nb")
+        #expect(markdown(#"<p style="white-space: pre-wrap">a<span style="white-space: normal">\#nb</span></p>"#) == "a b")
+        #expect(markdown("<p>a\nb</p>") == "a b")
+    }
+
+    /// Text newlines reach the walker as character references; tags,
+    /// comments, styles and whitespace between tags are left alone, and
+    /// a stray `<` isn't lost.
+    @Test func newlinesAreReferencedOnlyInText() {
+        #expect(HTMLToMarkdown.referencingNewlines("<p\nclass=\"x\">a\nb</p>\n<!--\n-->\n<style>\np {}\n</style>")
+                    == "<p\nclass=\"x\">a&#10;b</p>\n<!--\n-->\n<style>\np {}\n</style>")
+        #expect(HTMLToMarkdown.referencingNewlines("a\nb <") == "a&#10;b <")
+    }
 }
 
 /// Characters are escaped only where they'd change the Markdown.
