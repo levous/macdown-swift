@@ -199,6 +199,62 @@ func markdown(_ html: String, _ options: HTMLToMarkdown.Options = pasteTestOptio
         }
         #expect(runs == ["a\u{a0}b"])
     }
+
+    /// Newlines in `white-space: pre`, `pre-wrap`, `pre-line` or
+    /// `break-spaces` text are line breaks, two or more a new paragraph;
+    /// runs of spaces still collapse.
+    @Test func preservedNewlinesBreakLines() {
+        #expect(markdown(#"<span style="white-space: pre-wrap">One\#ntwo  wide\#n\#nThree</span>"#)
+                    == "One\\\ntwo wide\n\nThree\n")
+        #expect(markdown(#"<div style="white-space:pre-line"><b>Bold</b>\#r\#nnext</div>"#) == "**Bold**\\\nnext")
+        #expect(markdown(#"<p style="white-space: break-spaces">a<span>\#nb</span></p>"#) == "a\\\nb")
+        #expect(markdown(#"<p style="white-space: pre-wrap">a<span style="white-space: normal">\#nb</span></p>"#) == "a b")
+        #expect(markdown("<p>a\nb</p>") == "a b")
+    }
+
+    /// Text newlines reach the walker as character references; tags,
+    /// comments, styles and whitespace between tags are left alone, and
+    /// a stray `<` isn't lost.
+    @Test func newlinesAreReferencedOnlyInText() {
+        #expect(HTMLToMarkdown.referencingNewlines("<p\nclass=\"x\">a\nb</p>\n<!--\n-->\n<style>\np {}\n</style>")
+                    == "<p\nclass=\"x\">a&#10;b</p>\n<!--\n-->\n<style>\np {}\n</style>")
+        #expect(HTMLToMarkdown.referencingNewlines("a\nb <") == "a&#10;b <")
+    }
+
+    @Test func everyKindOfLineBreakIsReferenced() {
+        #expect(HTMLToMarkdown.referencingNewlines("<p>a\r\nb\rc\nd</p>") == "<p>a&#10;b&#10;c&#10;d</p>")
+        // Entities stay as they are, next to the referenced newline.
+        #expect(HTMLToMarkdown.referencingNewlines("<p>&amp;\n&lt;</p>") == "<p>&amp;&#10;&lt;</p>")
+    }
+
+    /// Script and style bodies are left alone, even with markup inside;
+    /// the closing tag's case doesn't matter.
+    @Test func scriptAndStyleBodiesAreNotText() {
+        let html = "<SCRIPT>\nif (a < b) {}\n</Script >\n<p>x\ny</p><style>\na {}\n</STYLE>"
+        #expect(HTMLToMarkdown.referencingNewlines(html)
+                    == "<SCRIPT>\nif (a < b) {}\n</Script >\n<p>x&#10;y</p><style>\na {}\n</STYLE>")
+    }
+
+    /// Unclosed comments and scripts end at the next `>`, like tags.
+    @Test func unclosedMarkupIsATag() {
+        #expect(HTMLToMarkdown.referencingNewlines("<!-- a>b\nc") == "<!-- a>b&#10;c")
+        #expect(HTMLToMarkdown.referencingNewlines("<script x>b\nc") == "<script x>b&#10;c")
+        #expect(HTMLToMarkdown.referencingNewlines("<p>b\nc <") == "<p>b&#10;c <")
+    }
+
+    /// Unclosed markup used to make each search scan to the end again,
+    /// which took seconds on a paste like this one.
+    @Test func manyUnclosedScriptsStayFast() {
+        let html = String(repeating: "<p>a\nb <script x><!-- </p>\n", count: 2000) + String(repeating: "x", count: 100_000)
+        let start = Date()
+        let result = HTMLToMarkdown.referencingNewlines(html)
+        #expect(Date().timeIntervalSince(start) < 0.5)
+        #expect(result.hasPrefix("<p>a&#10;b <script x><!-- </p>\n<p>"))
+    }
+
+    @Test func newlinesInPreformattedTextSurvive() {
+        #expect(markdown("<pre>a\nb\r\nc</pre>") == "```\na\nb\nc\n```\n")
+    }
 }
 
 /// Characters are escaped only where they'd change the Markdown.

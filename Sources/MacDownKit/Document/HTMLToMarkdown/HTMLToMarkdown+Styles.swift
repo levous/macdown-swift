@@ -18,6 +18,10 @@ extension HTMLToMarkdown {
         var italic = false
         var strike = false
         var monospace = false
+        /// Newlines in the text are line breaks (`white-space: pre`,
+        /// `pre-wrap`, `pre-line` or `break-spaces`), as Twitter's copied
+        /// posts are a single span with the post's newlines in it.
+        var keepsNewlines = false
         /// In a table header cell, which is bold already: bold isn't written
         /// there, since browsers copy header cells with the bold they show.
         var inHeaderCell = false
@@ -86,7 +90,7 @@ extension HTMLToMarkdown {
         static let properties: Set<String> = [
             "display", "font", "font-family", "font-size", "font-style", "font-weight", "margin",
             "margin-bottom", "margin-left", "margin-top", "mso-list", "text-align", "text-decoration",
-            "text-decoration-line",
+            "text-decoration-line", "white-space",
         ]
 
         /// `name: value; …` as a dictionary of lowercased names, keeping
@@ -111,10 +115,10 @@ extension HTMLToMarkdown {
                         end += 1
                     }
                     defer { index = end + 1 }
-                    // Every property read starts with d, f, m or t.
+                    // Every property read starts with d, f, m, t or w.
                     var first = index
                     while first < colon, isSpace(bytes[first]) { first += 1 }
-                    guard colon > first, "dfmtDFMT".utf8.contains(bytes[first]) else { continue }
+                    guard colon > first, "dfmtwDFMTW".utf8.contains(bytes[first]) else { continue }
                     let name = string(first, colon).lowercased()
                     guard properties.contains(name) else { continue }
                     var value = string(colon + 1, end)
@@ -218,6 +222,9 @@ extension HTMLToMarkdown {
         }
         if let family = declarations["font-family"] {
             style.monospace = isMonospace(fontFamily: family)
+        }
+        if let whiteSpace = declarations["white-space"]?.lowercased() {
+            style.keepsNewlines = ["pre", "pre-wrap", "pre-line", "break-spaces"].contains(whiteSpace)
         }
         // A decoration can't be cancelled by a descendant, only added.
         for name in ["text-decoration", "text-decoration-line"] {

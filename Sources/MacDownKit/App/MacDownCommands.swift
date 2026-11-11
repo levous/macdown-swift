@@ -14,6 +14,10 @@ public struct MacDownCommands: Commands {
     public init() {}
 
     public var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates…") { UpdateChecker.shared.checkNow() }
+        }
+
         // Replace SwiftUI's printing items: the preview is what gets printed.
         CommandGroup(replacing: .printItem) {
             Button("Page Setup…") {

@@ -125,7 +125,11 @@ monospace from tags, `<style>` classes and inline styles, walks the tree into
 blocks of styled text runs, and renders Markdown with the editing settings
 (list marker, indentation), escaping only what would change the parse. Runs
 are grouped into emphasis markers by the renderer because apps like Google
-Docs write every run as a flat styled span.
+Docs write every run as a flat styled span. Newlines in text styled
+`white-space: pre`, `pre-wrap`, `pre-line` or `break-spaces` are line breaks
+(two or more start a paragraph): a post copied from X/Twitter is one such
+span. Tidy turns newlines in text into spaces, so they're written as `&#10;`
+before parsing, and the walker collapses them in other text.
 
 Rich text and Word for the web have no heading markup, only larger text, so
 when the HTML comes from AppKit (its `Cocoa HTML Writer` generator) or Word

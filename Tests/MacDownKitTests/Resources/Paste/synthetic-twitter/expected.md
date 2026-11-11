@@ -1,0 +1,14 @@
+Weekend plan for the garden, in order.
+
+Saturday:\
+1\. Turn the compost and spread it on the east beds.\
+2\. Plant the tomato starts 60 cm apart.\
+3\. Water everything before noon.
+
+Bring:\
+• gloves and the small trowel\
+• the blue watering can\
+\# of seed packets: 4
+
+Sunday is for rest.\
+See you at 9.

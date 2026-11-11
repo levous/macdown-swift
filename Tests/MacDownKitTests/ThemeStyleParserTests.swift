@@ -2,9 +2,9 @@
 //  ThemeStyleParserTests.swift
 //  MacDownKitTests
 //
-//  The Swift theme parser must read every stylesheet exactly as
+//  The Swift theme parser must read the original's stylesheets exactly as
 //  pmh_styleparser.c did, errors included, checked against the C parser's
-//  recorded results (EngineSnapshots).
+//  recorded results (EngineSnapshots). Every bundled theme must parse cleanly.
 //
 
 import Foundation
@@ -19,15 +19,27 @@ import Testing
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }()
 
-    @Test func allFifteenThemes() {
-        #expect(Self.themes.count == 15)
+    /// Themes added after the C parser was removed, so it has no recording
+    /// of them to compare with.
+    static let themesWithoutRecordings: Set<String> = ["Rusty.style"]
+
+    static let recordedThemes = themes.filter { !themesWithoutRecordings.contains($0.lastPathComponent) }
+
+    @Test func allBundledThemes() {
+        #expect(Self.themes.count == 16)
+        #expect(Self.recordedThemes.count == 15)
     }
 
-    @Test(arguments: themes)
+    @Test(arguments: recordedThemes)
     func matchesTheCParser(_ url: URL) throws {
         let stylesheet = try String(contentsOf: url, encoding: .utf8)
         let swift = ThemeStyle(parsing: stylesheet)
         #expect(themeDescription(swift) == (try EngineSnapshots.value("theme/" + url.lastPathComponent)))
+    }
+
+    @Test(arguments: themes)
+    func parsesCleanly(_ url: URL) throws {
+        let swift = ThemeStyle(parsing: try String(contentsOf: url, encoding: .utf8))
         #expect(swift.errors.isEmpty)
         #expect(!swift.elements.isEmpty && !swift.editor.isEmpty)
     }

@@ -145,6 +145,7 @@ public final class MacDownAppDelegate: NSObject, NSApplicationDelegate {
             forEventClass: AEEventClass(kInternetEventClass),
             andEventID: AEEventID(kAEGetURL))
         _ = PlugInController.shared
+        UpdateChecker.shared.checkAutomaticallyIfDue()
     }
 
     /// Asks about unsaved drafts (with "Save changes automatically" off;

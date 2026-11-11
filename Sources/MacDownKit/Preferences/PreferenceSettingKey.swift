@@ -17,6 +17,12 @@ public enum PreferenceSettingKey: String, CaseIterable, Sendable {
     case createFileForLinkTarget
     case autosavesDocuments
 
+    // MARK: Updates (the original's Sparkle keys; see UpdateChecker)
+    case SUEnableAutomaticChecks
+    case SULastCheckTime
+    /// The release an automatic check last announced, so each is announced once.
+    case SUSkippedVersion
+
     // MARK: Markdown
     case extensionAutolink
     case extensionSuperscript

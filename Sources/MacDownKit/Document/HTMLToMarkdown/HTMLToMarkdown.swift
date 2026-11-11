@@ -113,6 +113,30 @@ public struct HTMLToMarkdown: Sendable {
     private static let html5InlinePattern = try! NSRegularExpression(
         pattern: "<(/?)(?:\(html5Inlines.joined(separator: "|")))(?=[\\s>/])", options: .caseInsensitive)
 
+    /// The HTML with the newlines in its text written as character
+    /// references. Tidy turns a newline in text into a space, but keeps a
+    /// referenced one, so the walker can tell where `white-space: pre-wrap`
+    /// text (such as a copied tweet) breaks its lines. Elsewhere the walker
+    /// collapses the newline as Tidy would have. Whitespace between tags is
+    /// left as it is.
+    static func referencingNewlines(_ html: String) -> String {
+        guard html.contains(where: \.isNewline) else { return html }
+        var result = ""
+        result.reserveCapacity(html.utf8.count)
+        var tokens = HTMLTokens(html)
+        while let range = tokens.next() {
+            let token = tokens.html.substring(with: range)
+            if token.first != "<", token.contains(where: \.isNewline), token.contains(where: { !$0.isWhitespace }) {
+                result += token.replacingOccurrences(of: "\r\n", with: "&#10;")
+                    .replacingOccurrences(of: "\r", with: "&#10;")
+                    .replacingOccurrences(of: "\n", with: "&#10;")
+            } else {
+                result += token
+            }
+        }
+        return result
+    }
+
     /// The repaired document and its `body`. The document must outlive the
     /// body: nodes don't keep their document alive.
     static func parse(_ html: String) -> (XMLDocument, XMLElement)? {
@@ -123,6 +147,7 @@ public struct HTMLToMarkdown: Sendable {
             in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "<$1div")
         source = html5InlinePattern.stringByReplacingMatches(
             in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "<$1span")
+        source = referencingNewlines(source)
         // XMLDocument only repairs (tidies) input that isn't well-formed XML
         // and is longer than a few bytes; anything else parses as XML
         // without a body, or not at all. An unclosed meta makes sure.
