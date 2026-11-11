@@ -207,4 +207,13 @@ tells the user: it links to the release page, or for a Homebrew install
 shows `brew upgrade --cask levous/tap/macdown-swift`. MacDown ▸ Check for Updates…
 and Settings ▸ General ▸ "Check for updates automatically" keep Sparkle's
 keys (`SUEnableAutomaticChecks`, `SULastCheckTime`, and `SUSkippedVersion`
-for the version last announced).
+for the version last announced). `SULastCheckTime` is only recorded when the
+request reached GitHub, so a launch while offline doesn't put off the next
+check.
+
+**Automatic update checks are on by default (2026-11-10)**, existing installs
+included, without asking first; the original's Sparkle asked on the second
+launch. The check is one anonymous request for GitHub's public "latest
+release" JSON, at most once a day; nothing is downloaded or installed, and
+the Settings toggle turns it off. A user who turned Sparkle's checks off in
+the original keeps that choice when they copy its preferences over.

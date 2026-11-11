@@ -113,13 +113,6 @@ public struct HTMLToMarkdown: Sendable {
     private static let html5InlinePattern = try! NSRegularExpression(
         pattern: "<(/?)(?:\(html5Inlines.joined(separator: "|")))(?=[\\s>/])", options: .caseInsensitive)
 
-    /// Comments, `style` and `script` elements, tags, the text between
-    /// them, and a `<` that starts none of those, so every character is in
-    /// a match.
-    private static let tokenPattern = try! NSRegularExpression(
-        pattern: "<!--.*?-->|<(style|script)\\b.*?</\\1\\s*>|<[^>]*>|[^<]+|<",
-        options: [.caseInsensitive, .dotMatchesLineSeparators])
-
     /// The HTML with the newlines in its text written as character
     /// references. Tidy turns a newline in text into a space, but keeps a
     /// referenced one, so the walker can tell where `white-space: pre-wrap`
@@ -130,10 +123,9 @@ public struct HTMLToMarkdown: Sendable {
         guard html.contains(where: \.isNewline) else { return html }
         var result = ""
         result.reserveCapacity(html.utf8.count)
-        let nsHTML = html as NSString
-        tokenPattern.enumerateMatches(in: html, range: NSRange(location: 0, length: nsHTML.length)) { match, _, _ in
-            guard let match else { return }
-            let token = nsHTML.substring(with: match.range)
+        var tokens = HTMLTokens(html)
+        while let range = tokens.next() {
+            let token = tokens.html.substring(with: range)
             if token.first != "<", token.contains(where: \.isNewline), token.contains(where: { !$0.isWhitespace }) {
                 result += token.replacingOccurrences(of: "\r\n", with: "&#10;")
                     .replacingOccurrences(of: "\r", with: "&#10;")
