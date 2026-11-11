@@ -37,6 +37,27 @@ import Testing
         deinit { UserDefaults.standard.removePersistentDomain(forName: suite) }
     }
 
+    /// Holds fetches until opened.
+    @MainActor final class Gate {
+        private var isOpen = false
+        private var waiting: [CheckedContinuation<Void, Never>] = []
+
+        func wait() async {
+            guard !isOpen else { return }
+            await withCheckedContinuation { waiting.append($0) }
+        }
+
+        func waitUntilAFetchWaits() async {
+            while waiting.isEmpty { await Task.yield() }
+        }
+
+        func open() {
+            isOpen = true
+            waiting.forEach { $0.resume() }
+            waiting = []
+        }
+    }
+
     @Test func versionOrder() {
         #expect(UpdateChecker.isNewer("1.2.4", than: "1.2.3"))
         #expect(UpdateChecker.isNewer("1.2.10", than: "1.2.9"))
@@ -108,6 +129,54 @@ import Testing
         #expect(harness.checker.isAutomaticCheckDue)
         harness.defaults.set(false, forKey: PreferenceSettingKey.SUEnableAutomaticChecks.rawValue)
         #expect(!harness.checker.isAutomaticCheckDue)
+    }
+
+    /// A check that didn't reach GitHub (offline, an error status) leaves
+    /// the next launch due; one that did, even with an answer it can't
+    /// use, waits a day.
+    @Test func onlyChecksThatReachGitHubCount() async {
+        let offline = Harness(latest: nil)
+        offline.defaults.set(true, forKey: PreferenceSettingKey.SUEnableAutomaticChecks.rawValue)
+        await offline.checker.check(userInitiated: false)
+        #expect(offline.defaults.object(forKey: PreferenceSettingKey.SULastCheckTime.rawValue) == nil)
+        #expect(offline.checker.isAutomaticCheckDue)
+
+        let malformed = Harness(latest: Data("<html>rate limited</html>".utf8))
+        malformed.defaults.set(true, forKey: PreferenceSettingKey.SUEnableAutomaticChecks.rawValue)
+        await malformed.checker.check(userInitiated: false)
+        #expect(malformed.shown.isEmpty)
+        #expect(!malformed.checker.isAutomaticCheckDue)
+        await malformed.checker.check(userInitiated: true)
+        #expect(malformed.shown == [.failed])
+    }
+
+    /// The release script only makes plain versions, so a tag with a
+    /// suffix isn't announced.
+    @Test func suffixedTagsAreIgnored() async {
+        let harness = Harness(latest: Self.releaseJSON("v1.3.0-beta"))
+        await harness.checker.check(userInitiated: false)
+        #expect(harness.shown.isEmpty)
+    }
+
+    /// Asking while the launch check runs gives one answer, not two.
+    @Test func overlappingChecksShowOneNotice() async {
+        let harness = Harness(latest: nil)
+        let gate = Gate()
+        let latest = Self.releaseJSON("v1.2.3")
+        harness.checker.fetch = { _ in
+            await gate.wait()
+            return latest
+        }
+        let automatic = Task { await harness.checker.check(userInitiated: false) }
+        await gate.waitUntilAFetchWaits()
+        await harness.checker.check(userInitiated: true)
+        gate.open()
+        await automatic.value
+        // The automatic check answered for the one asked during it.
+        #expect(harness.shown == [.upToDate(current: "1.2.3")])
+        // Once it's done, asking starts a new check.
+        await harness.checker.check(userInitiated: true)
+        #expect(harness.shown.count == 2)
     }
 
     /// On by default, for existing installs too, and keeps the user's choice.

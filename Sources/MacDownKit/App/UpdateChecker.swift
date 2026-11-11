@@ -86,9 +86,26 @@ public final class UpdateChecker {
         Task { await check(userInitiated: true) }
     }
 
+    /// A check that starts while another runs doesn't start a second one,
+    /// which could show two notices. Asking during an automatic check
+    /// makes that check answer as if asked.
+    private var isChecking = false
+    private var runningCheckIsUserInitiated = false
+
     func check(userInitiated: Bool) async {
-        let release = try? Self.release(from: await fetch(Self.latestReleaseURL))
-        defaults.set(now(), forKey: .SULastCheckTime)
+        guard !isChecking else {
+            if userInitiated { runningCheckIsUserInitiated = true }
+            return
+        }
+        isChecking = true
+        runningCheckIsUserInitiated = userInitiated
+        defer { isChecking = false }
+        let data = try? await fetch(Self.latestReleaseURL)
+        // Only a check that reached GitHub counts, so a launch while
+        // offline doesn't put off the next automatic check for a day.
+        if data != nil { defaults.set(now(), forKey: .SULastCheckTime) }
+        let release = data.flatMap(Self.release(from:))
+        let userInitiated = runningCheckIsUserInitiated
         guard let release else {
             if userInitiated { present(.failed) }
             return
