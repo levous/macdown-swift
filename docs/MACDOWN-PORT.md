@@ -79,6 +79,9 @@ fresh, and the original's plist can be copied over to migrate.
   default) sets the root `html` font size in the preview and exports, so
   stylesheets in relative units scale with it. The bundled styles size
   text in `px`, so they don't change with it.
+- **Long lines in exported code blocks:** exports with highlighting make code
+  blocks scroll from their own CSS, so long lines stay inside the block in
+  viewers that don't run Prism's script. The original relied on the script.
 - **Pasting formatted text** (new): Paste turns HTML or rich text on the
   clipboard (web pages, Google Docs, Word, Pages, Notion, MacDown's preview) into
   Markdown, with the list marker and indentation settings; code from code

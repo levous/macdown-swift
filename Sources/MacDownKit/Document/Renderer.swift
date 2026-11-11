@@ -238,6 +238,12 @@ public enum PageBuilder {
         return "<style>html { font-size: \(String(format: "%g", s.baseFontSize))px; }</style>"
     }
 
+    /// Keeps a code block's lines inside its background on narrow screens.
+    /// Prism's themes stop code from wrapping, but only make the block
+    /// scroll once Prism's script has added a class to the `pre`, so in a
+    /// viewer that doesn't run scripts the lines would spill out of it.
+    static let codeBlockOverflowStyleTag = "<style>pre { overflow: auto; }</style>"
+
     // MARK: Pages
 
     nonisolated(unsafe) private static var templateCache: [String: HTMLTemplate] = [:]
@@ -315,6 +321,7 @@ public enum PageBuilder {
         var scriptsOption = AssetOption.none
         var styles: [Asset] = []
         var scripts: [Asset] = []
+        var extraStyleTags = [baseFontSizeStyleTag(settings)].compactMap { $0 }
 
         if withStyles {
             stylesOption = .embedded
@@ -324,6 +331,7 @@ public enum PageBuilder {
             stylesOption = .embedded
             scriptsOption = .embedded
             styles += prismStylesheets(settings)
+            extraStyleTags.append(codeBlockOverflowStyleTag)
             scripts += prismScripts(settings, languages: result.languages)
             if settings.mermaid {
                 styles += mermaidStylesheets()
@@ -341,7 +349,7 @@ public enum PageBuilder {
                     templateName: settings.templateName,
                     styles: styles, styleOption: stylesOption,
                     scripts: scripts, scriptOption: scriptsOption,
-                    extraStyleTags: [baseFontSizeStyleTag(settings)].compactMap { $0 })
+                    extraStyleTags: extraStyleTags)
     }
 }
 
